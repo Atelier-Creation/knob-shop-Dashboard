@@ -1,0 +1,36 @@
+/* index.css or global.css */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: transparent; /* Tailwind gray-300 */
+  border-radius: 6px;
+    transition: background-color 0.3s ease;
+}
+.scrollbar-thin:hover::-webkit-scrollbar-thumb{
+   background-color: #f3f1ef;
+}
+
+
+/* thick */
+.scrollbar-thick::-webkit-scrollbar {
+  width: 5px;
+}
+
+.scrollbar-thick::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thick::-webkit-scrollbar-thumb {
+  background-color: transparent; /* Tailwind gray-300 */
+  border-radius: 6px;
+    transition: background-color 0.3s ease;
+}
+.scrollbar-thick:hover::-webkit-scrollbar-thumb{
+   background-color: #c7dddd;
+}
