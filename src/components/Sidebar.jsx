@@ -10,17 +10,18 @@ import {
   Truck,
   Download,
 } from "lucide-react";
+import { NavLink } from "react-router-dom";
 
 const navItems = [
-  { label: "Dashboard", icon: <LayoutDashboard size={20}/>, active: true },
-  { label: "Categories & Products", icon: <Package size={20}/> },
-  { label: "Homepage Ads", icon: <MonitorSmartphone size={20}/> },
-  { label: "Deals & Discounts", icon: <Percent size={20}/> },
-  { label: "Product & Stock", icon: <Boxes size={20}/> },
-  { label: "Reports & Analytics", icon: <BarChart2 size={20}/> },
-  { label: "Orders & Customers", icon: <Users size={20}/> },
-  { label: "Reviews & Ratings", icon: <Star size={20}/> },
-  { label: "Shipping & Tax", icon: <Truck size={20}/> },
+  { label: "Dashboard", icon: <LayoutDashboard size={20} />, path: "/" },
+  { label: "Categories & Products", icon: <Package size={20} />, path: "/categories-products" },
+  { label: "Homepage Ads", icon: <MonitorSmartphone size={20} />, path: "/homepage-ads" },
+  { label: "Deals & Discounts", icon: <Percent size={20} />, path: "/deals-discounts" },
+  { label: "Product & Stock", icon: <Boxes size={20} />, path: "/product-stock" },
+  { label: "Reports & Analytics", icon: <BarChart2 size={20} />, path: "/reports-analytics" },
+  { label: "Orders & Customers", icon: <Users size={20} />, path: "/orders-customers" },
+  { label: "Reviews & Ratings", icon: <Star size={20} />, path: "/reviews-ratings" },
+  { label: "Shipping & Tax", icon: <Truck size={20} />, path: "/shipping-tax" },
 ];
 
 const Sidebar = () => {
@@ -28,7 +29,7 @@ const Sidebar = () => {
     <aside className="w-[280px] h-screen bg-white px-3 flex flex-col justify-start shadow-sm">
       {/* Logo */}
       <div className="mb-6 mt-4 px-9">
-        <img src="/logo.svg" alt="Knobs Shop" className="w-[152px] h-{84px}" />
+        <img src="/logo.svg" alt="Knobs Shop" className="w-[152px] h-[84px]" />
       </div>
 
       {/* Welcome Message */}
@@ -41,23 +42,25 @@ const Sidebar = () => {
         </p>
       </div>
 
-      {/* Scrollable Nav */}
+      {/* Nav List */}
       <div className="flex-1 overflow-hidden">
         <div className="h-full overflow-y-auto scrollbar-thin bg-[#FAFDFD] rounded-2xl">
-          <nav className="flex flex-col gap-2  p-3.5 ">
-            {navItems.map(({ label, icon, active }) => (
-              <a
+          <nav className="flex flex-col gap-2 p-3.5">
+            {navItems.map(({ label, icon, path }) => (
+              <NavLink
                 key={label}
-                href="#"
-                className={`flex items-center gap-3 px-4 py-3 rounded-full text-sm font-medium text-[#252525] ${
-                  active
-                    ? "bg-[#FFE3CC]"
-                    : "text-gray-600 hover:bg-gray-100 hover:text-orange-500"
-                }`}
+                to={path}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-4 py-3 rounded-full text-sm font-medium ${
+                    isActive
+                      ? "bg-[#FFE3CC] text-[#783904]"
+                      : "text-gray-600 hover:bg-gray-100 hover:text-orange-500"
+                  }`
+                }
               >
-                <span className={`w-5 h-5  ${active ? "text-[#783904]" : "text-gray-600"}`}>{icon}</span>
-                <span>{label}</span>
-              </a>
+                <span className="w-5 h-5">{icon}</span>
+                <span className="truncate">{label}</span>
+              </NavLink>
             ))}
           </nav>
         </div>
@@ -65,6 +68,5 @@ const Sidebar = () => {
     </aside>
   );
 };
-
 
 export default Sidebar;

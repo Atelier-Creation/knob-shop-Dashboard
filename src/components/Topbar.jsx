@@ -13,7 +13,7 @@ const Topbar = () => {
     <header className="flex justify-between items-center px-6 py-4 bg-white">
       {/* Left: Search */}
       <div className="flex items-center w-1/3">
-        <div className="flex  bg-[#F7FAF9] border border-[#DFDFDF] border-r-0 rounded-full overflow-hidden">
+        <div className="flex w-full bg-[#F7FAF9] border border-[#DFDFDF] border-r-0 rounded-full overflow-hidden">
           <input
             type="text"
             placeholder="Search here"

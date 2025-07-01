@@ -9,15 +9,15 @@ export const InfoCard = ({ icon, title, value, selected }) => {
           : "bg-[#EFEFEF] text-gray-800 hover:shadow"
       }`}
     >
-      <div>
-        <h3 className="text-lg font-bold">{value}</h3>
+      <div className="flex flex-col gap-3">
+        <h3 className="text-2xl font-bold">{value}</h3>
         <div className="flex items-center gap-1">
           <div className="text-xl opacity-70">{icon}</div>
           <p className="text-xs mt-1 text-inherit">{title}</p>
         </div>
       </div>
-      <div className="bg-white p-1 rounded-full">
-        <ChevronRight size={16} className="text-black" />
+      <div className="bg-white p-2 rounded-full flex items-center justify-center">
+        <ChevronRight size={"1rem"} className="text-black" />
       </div>
     </div>
   );
