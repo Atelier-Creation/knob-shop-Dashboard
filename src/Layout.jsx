@@ -14,10 +14,10 @@ const Layout = () => {
     <div className="flex h-screen overflow-hidden">
       <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col h-full">
         <Topbar toggleSidebar={toggleSidebar} />
 
-        <div className="bg-[#FAFDFD] rounded-2xl my-3 h-full overflow-y-auto scrollbar-thick">
+        <div className="flex-1 overflow-y-auto bg-[#FAFDFD] rounded-2xl my-3 scrollbar-thick">
           <main className="p-6 space-y-6">
             <Outlet />
           </main>

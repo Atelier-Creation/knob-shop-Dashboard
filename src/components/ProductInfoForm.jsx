@@ -21,16 +21,16 @@ const ICON_OPTIONS = [
 ];
 
 export default function ProductInfoForm() {
-  const [productName, setProductName] = useState("YDME50NxT Smart Door Lock");
-  const [brand, setBrand] = useState("Yale");
+  const [productName, setProductName] = useState("");
+  const [brand, setBrand] = useState("");
   const [category, setCategory] = useState(productName);
 
-  const [offerPrice, setOfferPrice] = useState("90000");
-  const [balanceStock, setBalanceStock] = useState("200");
-  const [discount, setDiscount] = useState("06");
+  const [offerPrice, setOfferPrice] = useState("");
+  const [balanceStock, setBalanceStock] = useState("");
+  const [discount, setDiscount] = useState("");
 
   const [colors, setColors] = useState(["#f0b501", "#303030"]);
-  const [picker, setPicker] = useState("#ff0000");
+  const [picker, setPicker] = useState("#ff00ff");
 
   const [features, setFeatures] = useState([]);
   const [featInput, setFeatInput] = useState("");
@@ -71,21 +71,22 @@ export default function ProductInfoForm() {
 
   return (
    <div className="w-full md:w-1/2 bg-white border border-[#DADADA] rounded-lg p-4 text-[13px] space-y-4">
-      <Field label="Product Name" value={productName} set={syncName} />
-      <Field label="Brand" value={brand} set={setBrand} />
+      <Field label="Product Name" value={productName} set={syncName} placeholder="Enter product name" />
+      <Field label="Brand" value={brand} set={setBrand} placeholder="Enter brand" />
       <Field
         label="Category"
         value={category}
+        placeholder="Auto-generated from product name"
         readOnly
         extra="bg-gray-100 cursor-not-allowed"
       />
 
       <Section title="Price & Stock" />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <Field label="Offer Price" value={offerPrice} set={setOfferPrice} prefix="₹" />
-        <Field label="Balance Stock" value={balanceStock} set={setBalanceStock} />
+        <Field label="Offer Price" value={offerPrice} set={setOfferPrice} prefix="₹" placeholder="Enter offer price"/>
+        <Field label="Balance Stock" value={balanceStock} set={setBalanceStock} placeholder="Enter stock count" />
       </div>
-      <Field label="Discount" value={discount} set={setDiscount} suffix="%" />
+      <Field label="Discount" value={discount} set={setDiscount} suffix="%" placeholder="Enter discount %" />
 
       <Section title="Colors" />
       <div className="flex flex-row mt-4 sm:flex-row items-start sm:items-center justify-between gap-2">
@@ -122,16 +123,19 @@ export default function ProductInfoForm() {
       <Section title="Features" />
       <div className="flex flex-row mt-4 sm:flex-row gap-2 items-start sm:items-center">
 
-      <div className="flex flex-col gap-1 items-center cursor-pointer" title="Pick Icon">
-         <button
-          onClick={() => setShowModal(true)}
-          className="border border-gray-300 p-1.5 cursor-pointer rounded-full bg-gray-200 hover:bg-gray-100"
-          title="Select Icon"
-        >
-          {selectedIcon ? React.createElement(selectedIcon, { size: 14 }) : <BadgePlus size={14} />}
-        </button>
-        <p className="text-xs text-gray-500">Add icon</p>
-       </div>
+          <div className="flex flex-col gap-1 items-center cursor-pointer" title="Pick Icon">
+            <button
+              onClick={() => setShowModal(true)}
+              className="border border-gray-300 p-1.5 cursor-pointer rounded-full bg-gray-200 hover:bg-gray-100"
+              title="Select Icon"
+            >
+              {selectedIcon ? React.createElement(selectedIcon.icon, { size: 14 }) : <BadgePlus size={14} />}
+            </button>
+            <p className="text-xs text-gray-500">
+              {selectedIcon ? selectedIcon.label : "Add icon"}
+            </p>
+          </div>
+
 
         <input
           value={featInput}
@@ -167,13 +171,13 @@ export default function ProductInfoForm() {
         rows={5}
         value={desc}
         onChange={(e) => setDesc(e.target.value)}
-        placeholder="Add Description"
+        placeholder="Upload .txt file or Add Description"
         className="w-full border mt-4 border-gray-300 rounded-md px-3 py-2 resize-none focus:ring-2 focus:ring-[#e0a371] outline-none"
       />
 
       {showModal && (
         <IconPickerModal
-          onSelect={(item) => setSelectedIcon(() => item.icon)}
+          onSelect={(item) => setSelectedIcon(item)}
           onClose={() => setShowModal(false)}
         />
       )}
@@ -181,20 +185,22 @@ export default function ProductInfoForm() {
   );
 }
 
-const Field = ({ label, value, set, readOnly, prefix, suffix, extra = "" }) => (
+const Field = ({ label, value, set, readOnly, prefix, suffix, extra = "", placeholder }) => (
+
   <div>
     <label className="block mb-1 font-medium">{label}</label>
     <div className="relative">
-      {prefix && <span className="absolute left-2 top-[9px]">{prefix}</span>}
+      {prefix && <span className="absolute left-2.5 top-[11px] font-bold">{prefix}</span>}
       <input
         value={value}
         readOnly={readOnly}
+        placeholder={placeholder || label}
         onChange={(e) => set?.(e.target.value)}
         className={`w-full border border-gray-300 rounded-md px-3 py-[10px] ${
           prefix ? "pl-6" : ""
         } ${suffix ? "pr-6" : ""} ${extra} focus:ring-2 focus:ring-[#e0a371] outline-none`}
       />
-      {suffix && <span className="absolute right-2 top-[9px]">{suffix}</span>}
+      {suffix && <span className="absolute right-2.5 top-[11px] font-bold">{suffix}</span>}
     </div>
   </div>
 );

@@ -5,3 +5,7 @@ body{
   font-family: "DM Sans", sans-serif;
   font-optical-sizing: auto;
 }
+
+html, body, #root {
+  height: 100%;
+}

@@ -12,7 +12,7 @@ import {
   Download,
   X,
 } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import clsx from "clsx";
 
 const navItems = [
@@ -26,12 +26,36 @@ const navItems = [
       { label: "Add Category", path: "/categories-products/addcategory" },
     ],
   },
-  { label: "Homepage Ads", icon: <MonitorSmartphone size={20} />, path: "/homepage-ads" },
-  { label: "Deals & Discounts", icon: <Percent size={20} />, path: "/deals-discounts" },
-  { label: "Product & Stock", icon: <Boxes size={20} />, path: "/product-stock" },
-  { label: "Reports & Analytics", icon: <BarChart2 size={20} />, path: "/reports-analytics" },
-  { label: "Orders & Customers", icon: <Users size={20} />, path: "/orders-customers" },
-  { label: "Reviews & Ratings", icon: <Star size={20} />, path: "/reviews-ratings" },
+  {
+    label: "Homepage Ads",
+    icon: <MonitorSmartphone size={20} />,
+    path: "/homepage-ads",
+  },
+  {
+    label: "Deals & Discounts",
+    icon: <Percent size={20} />,
+    path: "/deals-discounts",
+  },
+  {
+    label: "Product & Stock",
+    icon: <Boxes size={20} />,
+    path: "/product-stock",
+  },
+  {
+    label: "Reports & Analytics",
+    icon: <BarChart2 size={20} />,
+    path: "/reports-analytics",
+  },
+  {
+    label: "Orders & Customers",
+    icon: <Users size={20} />,
+    path: "/orders-customers",
+  },
+  {
+    label: "Reviews & Ratings",
+    icon: <Star size={20} />,
+    path: "/reviews-ratings",
+  },
   { label: "Shipping & Tax", icon: <Truck size={20} />, path: "/shipping-tax" },
 ];
 
@@ -54,7 +78,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
       <aside
         className={clsx(
-          "fixed z-40 top-0 left-0 h-full w-[280px] bg-white shadow-sm px-3 flex flex-col justify-start transform transition-transform duration-300 ease-in-out",
+          "fixed z-40 top-0 left-0 h-screen w-[280px] bg-white shadow-sm px-3 flex flex-col justify-start transform transition-transform duration-300 ease-in-out overflow-y-auto scrollbar-thin",
           isOpen ? "translate-x-0" : "-translate-x-full",
           "md:translate-x-0 md:static md:block"
         )}
@@ -67,12 +91,20 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         </button>
 
         <div className="mb-6 mt-4 px-9">
-          <img src="/logo.svg" alt="Knobs Shop" className="w-[152px] h-[84px]" />
+          <Link to="/">
+            <img
+              src="/logo.svg"
+              alt="Knobs Shop"
+              className="w-[152px] h-[84px]"
+            />
+          </Link>
         </div>
 
         <div className="mb-4 text-left px-8">
           <h2 className="text-4xl font-bold text-gray-800">Welcome</h2>
-          <h1 className="text-4xl font-bold text-gray-800 leading-tight">Back, Luna</h1>
+          <h1 className="text-4xl font-bold text-gray-800 leading-tight">
+            Back, Luna
+          </h1>
           <p className="text-[12px] text-gray-400 mt-1 flex items-center">
             Last Update, 21 Jun 2025
             <span className="w-5 h-5 ms-1 inline-block">
@@ -81,8 +113,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           </p>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
-          <div className="h-full overflow-y-auto scrollbar-thin bg-[#FAFDFD] rounded-2xl">
+        <div className="flex-1 overflow-hidden">
+          <div className="h-full bg-[#FAFDFD] rounded-2xl">  
             <nav className="flex flex-col gap-2 p-3.5">
               {navItems.map(({ label, icon, path, children }) => {
                 const isExpanded = expanded === label;
@@ -130,7 +162,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                             key={sub.label}
                             to={sub.path}
                             onClick={() => {
-                               if (isOpen) toggleSidebar();
+                              if (isOpen) toggleSidebar();
                             }}
                             className={({ isActive }) =>
                               `relative flex items-center gap-2 text-sm rounded-full ps-4 py-2 ${
