@@ -44,7 +44,7 @@ const orders = [
     price: "₹ 44,999",
     status: "Received",
     statusColor: "bg-red-500",
-    image: "lock3.png",
+    image: "/lock3.png",
   },
 ];
 
@@ -66,10 +66,10 @@ export default function CurrentOrdersStatus() {
         </a>
       </div>
 
-      {/* Table Header */}
-      <div className="grid grid-cols-4 items-center bg-[#F6F6F6] p-3 rounded-t-xl text-xs text-gray-600 font-medium">
+      {/* Table Header (desktop only) */}
+      <div className="hidden md:grid grid-cols-4 items-center bg-[#F6F6F6] p-3 rounded-t-xl text-xs text-gray-600 font-medium">
         <div className="flex items-center gap-2">
-          <input type="checkbox" className="accent-purple-500" />
+          <input type="checkbox" className="accent-purple-500 hidden md:block" />
           <span>Id Transaction</span>
         </div>
         <div className="text-center">Products</div>
@@ -82,35 +82,33 @@ export default function CurrentOrdersStatus() {
         {orders.map((order, index) => (
           <div
             key={index}
-            className="grid grid-cols-5 items-center px-3 py-4 text-sm"
+            className="px-3 py-4 md:grid md:grid-cols-4 md:items-center flex flex-col gap-3 text-sm"
           >
             {/* ID & Checkbox */}
             <div className="flex items-center gap-2 text-gray-700 text-xs">
-              <input type="checkbox" className="accent-purple-500" />
+              <input type="checkbox" className="accent-purple-500 hidden md:block" />
+              <span className="md:hidden font-medium text-gray-500">Transaction ID:</span>
               {order.id}
             </div>
 
             {/* Product Info */}
-            <div className="flex items-center gap-3 col-span-2 ms-2">
-                {/* fixed 48 px × 48 px square */}
-                <div className="w-12 h-12 shrink-0 overflow-hidden rounded bg-gray-200 flex items-center justify-center">
-                    <img
-                    src={order.image}
-                    alt={order.productName}
-                    className="w-full h-full object-cover"   // fills the square
-                    />
-                </div>
+            <div className="flex items-start gap-3">
+              <div className="w-12 h-12 shrink-0 rounded bg-gray-200 flex items-center justify-center overflow-hidden">
+                <img
+                  src={order.image}
+                  alt={order.productName}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div>
+                <p className="font-semibold text-sm text-gray-800">{order.productName}</p>
+                <p className="text-[11px] text-gray-500">{order.quantity}</p>
+              </div>
+            </div>
 
-                {/* product meta */}
-                <div>
-                    <p className="font-semibold text-sm text-gray-800">{order.productName}</p>
-                    <p className="text-[11px] text-gray-500">{order.quantity}</p>
-                </div>
-                </div>
-
-
-            {/* Status Pill */}
-            <div className="text-center">
+            {/* Status */}
+            <div className="text-left md:text-center">
+              <span className="md:hidden font-medium text-gray-500 mr-1">Status:</span>
               <span
                 className={`text-white text-xs px-3 py-1 rounded-full ${order.statusColor}`}
               >
@@ -118,8 +116,9 @@ export default function CurrentOrdersStatus() {
               </span>
             </div>
 
-            {/* Amount */}
-            <div className="text-right font-medium text-gray-900">
+            {/* Price */}
+            <div className="text-left md:text-right font-medium text-gray-900">
+              <span className="md:hidden font-medium text-gray-500 mr-1">Amount:</span>
               {order.price}
             </div>
           </div>

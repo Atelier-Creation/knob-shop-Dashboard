@@ -137,10 +137,10 @@ const TopSellingProducts = () => {
         {products.map((product) => (
           <div
             key={product.id}
-            className="flex flex-col md:flex-row md:items-center justify-between gap-4"
+            className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-2"
           >
             {/* Left: Image + Info */}
-            <div className="flex items-start md:items-center gap-4 md:w-1/3">
+            <div className="flex items-start md:items-center gap-4 w-full md:w-1/3">
               <div className="bg-gray-200 w-16 h-16 min-w-16 min-h-16 p-1 rounded-md flex items-center justify-center">
                 <img
                   src={product.image}
@@ -149,17 +149,18 @@ const TopSellingProducts = () => {
                 />
               </div>
               <div className="min-w-0">
-              <div className="font-semibold text-gray-800 text-sm sm:text-xs whitespace-nowrap">
-                {product.name}
+                <div className="font-semibold text-gray-800 text-sm sm:text-xs truncate">
+                  {product.name}
+                </div>
+                <div className="text-sm sm:text-xs text-gray-500 truncate">
+                  {product.price}
+                </div>
+                <div
+                  className={`text-xs sm:text-[10px] truncate ${product.changeColor}`}
+                >
+                  {product.change}
+                </div>
               </div>
-              <div className="text-sm sm:text-xs text-gray-500 whitespace-nowrap">
-                {product.price}
-              </div>
-              <div className={`text-xs sm:text-[10px] whitespace-nowrap ${product.changeColor}`}>
-                {product.change}
-              </div>
-            </div>
-
             </div>
 
             {/* Middle: Chart */}
@@ -212,7 +213,7 @@ const TopSellingProducts = () => {
             </div>
 
             {/* Right: % Box */}
-            <div className="ml-auto md:ml-4 text-white bg-green-500 px-3 py-1 rounded text-xs font-bold w-fit">
+            <div className="md:ml-4 mt-2 md:mt-0 text-white bg-green-500 px-3 py-1 rounded text-xs font-bold w-fit self-start md:self-auto">
               {product.changePercent}
             </div>
           </div>
