@@ -20,6 +20,8 @@
 /* thick */
 .scrollbar-thick::-webkit-scrollbar {
   width: 5px;
+  position: absolute;
+  right: 0;
 }
 
 .scrollbar-thick::-webkit-scrollbar-track {
@@ -33,4 +35,13 @@
 }
 .scrollbar-thick:hover::-webkit-scrollbar-thumb{
    background-color: #c7dddd;
+}
+
+@media (max-width: 640px) {
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: #c7dddd !important;
+  }
+  .scrollbar-thick::-webkit-scrollbar-thumb {
+    background-color: #c7dddd !important;
+  }
 }

@@ -17,7 +17,7 @@ const Layout = () => {
       <div className="flex-1 flex flex-col">
         <Topbar toggleSidebar={toggleSidebar} />
 
-        <div className="bg-[#FAFDFD] rounded-2xl my-3 me-2 h-full overflow-y-auto scrollbar-thick">
+        <div className="bg-[#FAFDFD] rounded-2xl my-3 h-full overflow-y-auto scrollbar-thick">
           <main className="p-6 space-y-6">
             <Outlet />
           </main>
