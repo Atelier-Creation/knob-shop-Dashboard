@@ -137,7 +137,7 @@ const TopSellingProducts = () => {
         {products.map((product) => (
           <div
             key={product.id}
-            className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-2"
+            className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-2 md:p-0 p-3 md:rounded-none rounded-2xl md:border-0 border border-gray-100 md:shadow-none shadow"
           >
             {/* Left: Image + Info */}
             <div className="flex items-start md:items-center gap-4 w-full md:w-1/3">
@@ -165,7 +165,7 @@ const TopSellingProducts = () => {
 
             {/* Middle: Chart */}
             <div className="w-full md:w-2/3">
-              <div className="bg-[#F6F6F6] rounded-xl p-2 w-full h-[80px] md:h-[120px]">
+              <div className="bg-[#F6F6F6] rounded-xl p-2 w-full h-[120px] md:h-[120px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart
                     data={product.chartData}
