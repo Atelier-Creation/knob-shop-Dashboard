@@ -227,7 +227,7 @@ const ChipColor = ({ hex, del }) => (
 
 const ChipFeature = ({ text, del, Icon = BadgePlus }) => (
   <div className="flex items-center gap-1 border border-gray-200 rounded-md px-2 py-1">
-    <Icon size={14} className="shrink-0" />
+      {React.createElement(Icon, { size: 14, className: "shrink-0" })}
     <span className="truncate">{text}</span>
     <button onClick={del} className="ml-auto text-gray-500 cursor-pointer hover:text-red-600">
       <Trash2 size={12} />
