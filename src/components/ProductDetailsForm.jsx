@@ -74,7 +74,7 @@ const ProductDetailsForm = () => {
           onClick={() => productImageInput.current.click()}
           onDrop={(e) => handleDrop(e, setProductImages)}
           onDragOver={(e) => e.preventDefault()}
-          className="border-2 border-dashed border-blue-200 p-6 rounded-lg text-center cursor-pointer mb-4 hover:border-blue-400"
+          className="border-2 border-dashed mt-4 border-blue-200 p-6 rounded-lg text-center cursor-pointer mb-4 hover:border-blue-400"
         >
           <div className="flex flex-col items-center gap-2 justify-center text-sm text-gray-600">
             <div className="flex items-center gap-1 text-gray-800 mb-1 ">
@@ -138,7 +138,7 @@ const ProductDetailsForm = () => {
         </div>
 
         {/* Feature Input Form */}
-        <div className="p-2 rounded-md space-y-3 sm:space-y-4">
+        <div className="p-2 mt-4 rounded-md space-y-3 sm:space-y-4">
           {/* Upload */}
           <div
             onClick={() => featureImageInput.current.click()}

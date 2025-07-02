@@ -88,7 +88,7 @@ export default function ProductInfoForm() {
       <Field label="Discount" value={discount} set={setDiscount} suffix="%" />
 
       <Section title="Colors" />
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+      <div className="flex flex-row mt-4 sm:flex-row items-start sm:items-center justify-between gap-2">
         <div className="flex gap-2">
           {colors.map((c) => (
           <ChipColor key={c} hex={c} del={() => delColor(c)} />
@@ -120,7 +120,7 @@ export default function ProductInfoForm() {
       </p>
 
       <Section title="Features" />
-      <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+      <div className="flex flex-row mt-4 sm:flex-row gap-2 items-start sm:items-center">
 
       <div className="flex flex-col gap-1 items-center cursor-pointer" title="Pick Icon">
          <button
@@ -168,7 +168,7 @@ export default function ProductInfoForm() {
         value={desc}
         onChange={(e) => setDesc(e.target.value)}
         placeholder="Add Description"
-        className="w-full border border-gray-300 rounded-md px-3 py-2 resize-none focus:ring-2 focus:ring-[#e0a371] outline-none"
+        className="w-full border mt-4 border-gray-300 rounded-md px-3 py-2 resize-none focus:ring-2 focus:ring-[#e0a371] outline-none"
       />
 
       {showModal && (
