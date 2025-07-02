@@ -12,7 +12,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<Dashboard />} />
-          <Route path="/categories-products" element={<CategoryAndProductPage/>} />
+          <Route path="/categories-products/add" element={<CategoryAndProductPage/>} />
           <Route path="*" element={<DevelopmentOnProcess />} />
         </Route>
       </Routes>
