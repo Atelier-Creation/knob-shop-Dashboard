@@ -45,3 +45,14 @@
     background-color: #c7dddd !important;
   }
 }
+
+
+/* Hide scrollbar in Webkit */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+/* For Firefox */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

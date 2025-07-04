@@ -5,6 +5,7 @@ import Dashboard from "./pages/Dashboard";
 import DevelopmentOnProcess from "./pages/DevelopentOnprocess";
 import Layout from "./Layout";
 import { CategoryAndProductPage } from "./pages/CategoryAndProductPage";
+import ProductManager from "./pages/ProductManager";
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Route path="/" element={<Layout />}>
           <Route index element={<Dashboard />} />
           <Route path="/categories-products/add" element={<CategoryAndProductPage/>} />
+          <Route path="/categories-products/product-list" element={<ProductManager/>} />
           <Route path="*" element={<DevelopmentOnProcess />} />
         </Route>
       </Routes>
