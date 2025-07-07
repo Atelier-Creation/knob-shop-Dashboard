@@ -1,6 +1,7 @@
 import { useState } from "react";
 import CategoryCard from "../components/CategoryCard";
 import ImageUploader from "../components/ImageUploader";
+import { Link } from "react-router-dom";
 
 const categories = [
   {
@@ -56,13 +57,13 @@ export default function CategoryManager() {
             className="w-full border border-gray-300 rounded-sm p-2 text-sm"
           />
           <div className="flex gap-3 flex-wrap">
-            <button className="border rounded-sm px-4 py-2 text-sm">Reset</button>
-            <button className="bg-gray-200 rounded-sm px-4 py-2 text-sm font-medium">
+            <button className="border rounded-sm cursor-pointer px-4 py-2 text-sm">Reset</button>
+            <button className="bg-gray-200 rounded-sm cursor-pointer px-4 py-2 text-sm font-medium">
               + Add Category
             </button>
-            <button className="bg-black text-white rounded-lg px-4 py-2 text-sm font-medium">
+            <Link className="bg-black text-white rounded-sm cursor-pointer px-4 py-2 text-sm font-medium" to={"/categories-products/add"}>
               Continue to Products
-            </button>
+            </Link>
           </div>
         </div>
       </div>

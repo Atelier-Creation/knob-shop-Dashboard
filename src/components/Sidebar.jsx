@@ -21,7 +21,7 @@ const navItems = [
     label: "Categories & Products",
     icon: <Package size={20} />,
     children: [
-      { label: "Add Products", path: "/categories-products/add" },
+      // { label: "Add Products", path: "/categories-products/add" },
       { label: "Add category", path: "/categories-products/category" },
       { label: "Product List", path: "/categories-products/product-list" },
       { label: "Bulk Upload", path: "/categories-products/bulk-add-product" },
