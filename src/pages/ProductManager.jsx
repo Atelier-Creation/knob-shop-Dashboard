@@ -3,7 +3,7 @@ import ProductGrid from '../components/ProductGrid';
 import ProductEditor from '../components/ProductEditor';
 import CategoryTabs from '../components/CategoryTabs';
 
-const categories = ['All Products', 'Living Room', 'Digital Safe lockers', 'Cabinets & Storages', 'Digital Safe lockers', 'Cabinets & Storages'];
+const categories = ['All Products', 'Living Room', 'Digital Safe lockers', 'Cabinets & Storages'];
 
 const dummyProducts = [
   {

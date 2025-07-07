@@ -32,12 +32,12 @@ export default function CategoryManager() {
     const [openIdx, setOpenIdx] = useState(null);
 
   return (
-    <div className="p-4 md:p-10 max-w-screen-xl mx-auto space-y-6">
+    <div className="p-2 md:p-10 max-w-screen-xl mx-auto space-y-6">
       <div className="text-gray-700 text-sm mb-2">
         Categories & Products / <span className="font-medium">Add Categories</span>
       </div>
 
-      <div className="bg-white shadow-sm p-5 rounded-xl grid md:grid-cols-4 gap-6">
+      <div className=" p-5 py-10 order border-b-2 border-gray-300 grid md:grid-cols-4 gap-6">
        
            <ImageUploader />
 
@@ -47,14 +47,14 @@ export default function CategoryManager() {
             placeholder="Category"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="w-full border border-gray-300 rounded-sm p-2 text-sm"
+            className="w-2/3 border border-gray-300 rounded-sm p-2 text-sm"
           />
           <input
             type="text"
             placeholder="Brand"
             value={brand}
             onChange={(e) => setBrand(e.target.value)}
-            className="w-full border border-gray-300 rounded-sm p-2 text-sm"
+            className="w-2/3 border border-gray-300 rounded-sm p-2 text-sm"
           />
           <div className="flex gap-3 flex-wrap">
             <button className="border rounded-sm cursor-pointer px-4 py-2 text-sm">Reset</button>
