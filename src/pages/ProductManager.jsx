@@ -3,7 +3,7 @@ import ProductGrid from '../components/ProductGrid';
 import ProductEditor from '../components/ProductEditor';
 import CategoryTabs from '../components/CategoryTabs';
 
-const categories = ['All Products', 'Living Room', 'Digital Safe lockers', 'Cabinets & Storages'];
+const categories = ['All Products', 'Living Room', 'Digital Safe lockers', 'Cabinets & Storages', 'Digital Safe lockers', 'Cabinets & Storages'];
 
 const dummyProducts = [
   {
@@ -171,7 +171,7 @@ export default function ProductManager() {
   return (
     <div className="relative flex transition-all duration-300 ease-in-out">
       {/* Product Grid - full width or 3/5 */}
-      <div className={`transition-all duration-300 ease-in-out p-4 ${activeProduct ? 'w-3/5' : 'w-full'}`}>
+      <div className={`transition-all duration-300 ease-in-out p-0 md:p-4 ${activeProduct ? 'w-3/5' : 'w-full'}`}>
         <CategoryTabs
           categories={categories}
           selected={selectedCategory}
@@ -188,7 +188,7 @@ export default function ProductManager() {
       {/* Slide-in ProductEditor */}
       <div
         className={`
-          fixed top-0 right-0 h-screen w-[40%] max-w-[440px] bg-white z-0
+          fixed top-0 right-0 h-screen w-[100%] max-w-[440px] bg-white z-0
           transition-transform duration-300 ease-in-out p-4 pb-30 mt-18 overflow-y-auto scrollbar-thick scroll-smooth
           ${activeProduct ? 'translate-x-0' : 'translate-x-full'}
         `}

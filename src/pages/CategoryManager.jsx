@@ -1,0 +1,86 @@
+import { useState } from "react";
+import CategoryCard from "../components/CategoryCard";
+import ImageUploader from "../components/ImageUploader";
+
+const categories = [
+  {
+    title: "Beds & Matt",
+    products: 200,
+    image: "/bed.jpg",
+  },
+  {
+    title: "Cabinets & Storage",
+    products: 50,
+    image: "/cabinet.jpg",
+  },
+  {
+    title: "Dining Room",
+    products: 100,
+    image: "/dining.jpg",
+  },
+  {
+    title: "Study & Home Office",
+    products: 150,
+    image: "/study.jpg",
+  },
+];
+
+export default function CategoryManager() {
+  const [category, setCategory] = useState("");
+  const [brand, setBrand] = useState("");
+    const [openIdx, setOpenIdx] = useState(null);
+
+  return (
+    <div className="p-4 md:p-10 max-w-screen-xl mx-auto space-y-6">
+      <div className="text-gray-700 text-sm mb-2">
+        Categories & Products / <span className="font-medium">Add Categories</span>
+      </div>
+
+      <div className="bg-white shadow-sm p-5 rounded-xl grid md:grid-cols-4 gap-6">
+       
+           <ImageUploader />
+
+        <div className="md:col-span-3 space-y-4">
+          <input
+            type="text"
+            placeholder="Category"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="w-full border border-gray-300 rounded-sm p-2 text-sm"
+          />
+          <input
+            type="text"
+            placeholder="Brand"
+            value={brand}
+            onChange={(e) => setBrand(e.target.value)}
+            className="w-full border border-gray-300 rounded-sm p-2 text-sm"
+          />
+          <div className="flex gap-3 flex-wrap">
+            <button className="border rounded-sm px-4 py-2 text-sm">Reset</button>
+            <button className="bg-gray-200 rounded-sm px-4 py-2 text-sm font-medium">
+              + Add Category
+            </button>
+            <button className="bg-black text-white rounded-lg px-4 py-2 text-sm font-medium">
+              Continue to Products
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h2 className="font-semibold text-lg mb-3">Added Categories</h2>
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2">
+        {categories.map((cat, idx) => (
+        <CategoryCard
+          key={idx}
+          cat={cat}
+          isOpen={openIdx === idx}                       // ⇢ drives visibility
+          onToggle={() => setOpenIdx(openIdx === idx ? null : idx)}
+          onClose={() => setOpenIdx(null)}               // ⇢ called by click‑outside
+        />
+      ))}
+        </div>
+      </div>
+    </div>
+  );
+}
