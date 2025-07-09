@@ -70,17 +70,18 @@ const productData = [
 
 export default function ProductStatusTable() {
   const [openIndex, setOpenIndex] = useState(null);
-
-  const toggleDropdown = (index) =>
-    setOpenIndex(openIndex === index ? null : index);
+  const toggleDropdown = (i) => setOpenIndex(openIndex === i ? null : i);
 
   return (
-    <div className="p-6 font-inter text-[#1c1c1c]">
-      <div className="flex justify-between items-center mb-4">
-        <div className="text-[15px] font-semibold">
-          Categories & Products <span className="font-normal">/ Product Status</span>
-        </div>
-        <div className="flex gap-3">
+    <div className="p-0 md:p-6 font-inter text-[#1c1c1c]">
+      {/* ---------- TOOLBAR ---------- */}
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3 mb-4">
+        <h1 className="text-[15px] font-semibold">
+          Categories &amp; Products{" "}
+          <span className="font-normal">/ Product Status</span>
+        </h1>
+
+        <div className="flex flex-col sm:flex-row gap-2 md:gap-3">
           <button className="flex items-center border px-3 py-1.5 rounded text-sm">
             <Filter className="w-4 h-4 mr-2" />
             Filter
@@ -96,78 +97,85 @@ export default function ProductStatusTable() {
         </div>
       </div>
 
-      <table className="w-full text-sm border-separate border-spacing-y-2">
-        <thead>
-          <tr className="text-left text-gray-500 bg-gray-100 rounded-lg font-medium">
-            <th className="py-3 ps-4">Product Name</th>
-            <th className="py-3">Status</th>
-            <th className="py-3">Stock</th>
-            <th className="py-3">Sold</th>
-            <th className="py-3">Offer Price</th>
-            <th className="py-3">Last Sold</th>
-            <th className="py-3">CTR</th>
-            <th className="py-3">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {productData.map((p, i) => (
-            <tr key={i} className="bg-white shadow-sm rounded">
-              <td className="flex items-center gap-3 py-3 px-2">
-                <img
-                  src={p.image}
-                  alt={p.name}
-                  className="w-10 h-10 rounded object-cover border"
-                />
-                {p.name}
-              </td>
-              <td>
-                <span
-                  className={`text-white px-2 py-1 rounded text-xs font-medium ${p.statusColor}`}
-                >
-                  {p.status}
-                </span>
-              </td>
-              <td>{p.stock}</td>
-              <td>
-                {p.sold}{" "}
-                <span className="text-green-600 text-xs font-medium ml-1">
-                  ↑
-                </span>
-              </td>
-              <td>{p.offerPrice}</td>
-              <td>{p.lastSold}</td>
-              <td>{p.ctr}</td>
-              <td className="relative">
-                <button
-                  className="p-1 cursor-pointer"
-                  onClick={() => toggleDropdown(i)}
-                >
-                  <MoreVertical size={16} />
-                </button>
-                {openIndex === i && (
-                  <div className="absolute right-0 z-10 bg-white border border-[#C7C7C7] rounded shadow w-28 mt-2">
-                    <button className="flex items-center gap-2 px-3 py-2 rounded cursor-pointer hover:bg-gray-50 w-full">
-                      <Edit size={14} />
-                      Edit
-                    </button>
-                    <button className="flex items-center gap-2 px-3 py-2 rounded cursor-pointer hover:bg-red-100 w-full">
-                      <Trash size={14} />
-                      Delete
-                    </button>
-                    <button className="flex items-center gap-2 px-3 py-2 rounded cursor-pointer hover:bg-gray-50 w-full">
-                      <Eye size={14} />
-                      Preview
-                    </button>
-                  </div>
-                )}
-              </td>
+      {/* ---------- TABLE (scrollable on ≤md) ---------- */}
+      <div className="overflow-x-auto">
+        <table className="min-w-[960px] w-full text-sm border-separate border-spacing-y-2">
+          <thead>
+            <tr className="text-left text-gray-500 bg-gray-100 rounded-lg font-medium">
+              <th className="py-3 ps-4 whitespace-nowrap">Product Name</th>
+              <th className="py-3 whitespace-nowrap">Status</th>
+              <th className="py-3">Stock</th>
+              <th className="py-3">Sold</th>
+              <th className="py-3 whitespace-nowrap">Offer Price</th>
+              <th className="py-3 whitespace-nowrap">Last Sold</th>
+              <th className="py-3">CTR</th>
+              <th className="py-3">Action</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
 
-      {/* Pagination */}
-      <div className="flex justify-end items-center mt-4 gap-4">
+          <tbody>
+            {productData.map((p, i) => (
+              <tr key={i} className="bg-white shadow-sm rounded">
+                <td className="flex items-center gap-3 py-3 px-2 whitespace-nowrap">
+                  <img
+                    src={p.image}
+                    alt={p.name}
+                    className="w-10 h-10 rounded object-cover border"
+                  />
+                  {p.name}
+                </td>
+
+                <td>
+                  <span
+                    className={`text-white px-2 py-1 rounded text-xs font-medium ${p.statusColor}`}
+                  >
+                    {p.status}
+                  </span>
+                </td>
+
+                <td className="whitespace-nowrap">{p.stock}</td>
+                <td className="whitespace-nowrap">
+                  {p.sold}
+                  <span className="text-green-600 text-xs font-medium ml-1">
+                    ↑
+                  </span>
+                </td>
+
+                <td className="whitespace-nowrap">{p.offerPrice}</td>
+                <td className="whitespace-nowrap">{p.lastSold}</td>
+                <td className="whitespace-nowrap">{p.ctr}</td>
+
+                {/* Action */}
+                <td className="relative">
+                  <button
+                    className="p-1"
+                    onClick={() => toggleDropdown(i)}
+                  >
+                    <MoreVertical size={16} />
+                  </button>
+
+                  {openIndex === i && (
+                    <div className="absolute right-0 z-10 bg-white border border-[#C7C7C7] rounded shadow w-28 mt-2">
+                      <button className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 w-full">
+                        <Edit size={14} /> Edit
+                      </button>
+                      <button className="flex items-center gap-2 px-3 py-2 hover:bg-red-100 w-full">
+                        <Trash size={14} /> Delete
+                      </button>
+                      <button className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 w-full">
+                        <Eye size={14} /> Preview
+                      </button>
+                    </div>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* ---------- PAGINATION ---------- */}
+      <div className="flex justify-center md:justify-end items-center mt-4 gap-4">
         <button className="border p-1 rounded">
           <ChevronLeft size={16} />
         </button>
