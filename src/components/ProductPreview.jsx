@@ -1,6 +1,6 @@
 import { Bookmark, Eye, X } from "lucide-react";
 
-export default function ProductPreview({ product, onClose }) {
+export default function ProductPreview({ product, onClose, onEdit }) {
   if (!product) return null;
 
   return (
@@ -99,7 +99,10 @@ export default function ProductPreview({ product, onClose }) {
         {/* Action Buttons */}
         <div className="mt-8 flex gap-4">
             
-         <button className="flex-1 text-sm bg-black text-white py-2 rounded-md hover:bg-gray-800 transition"  onClick={onClose}>
+         <button className="flex-1 text-sm bg-black text-white py-2 rounded-md hover:bg-gray-800 transition"  onClick={() => {
+    onEdit(product);
+    onClose();
+  }}>
           <Bookmark className="inline text-sm text-gray-200" size={18}/> Edit Product
           </button>
 

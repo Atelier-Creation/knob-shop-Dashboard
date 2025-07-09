@@ -217,6 +217,10 @@ export default function ProductManager() {
         <ProductPreview
           product={previewProduct}
           onClose={() => setPreviewProduct(null)}
+          onEdit={(product) => {
+    setActiveProduct(product);
+    setPreviewProduct(null);
+  }}
         />
       )}
       </div>
