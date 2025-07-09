@@ -2,6 +2,7 @@ import { useState } from 'react';
 import ProductGrid from '../components/ProductGrid';
 import ProductEditor from '../components/ProductEditor';
 import CategoryTabs from '../components/CategoryTabs';
+import ProductPreview from '../components/ProductPreview'; // <-- Make sure this is imported
 
 const categories = ['All Products', 'Living Room', 'Digital Safe lockers', 'Cabinets & Storages'];
 
@@ -154,7 +155,7 @@ export default function ProductManager() {
   const [activeProduct, setActiveProduct] = useState(null);
   const [previewProduct, setPreviewProduct] = useState(null);
 
-    const handleProductClick = (product, action) => {
+  const handleProductClick = (product, action) => {
     if (action === "edit") {
       setActiveProduct(product);
     } else if (action === "delete") {
@@ -166,7 +167,6 @@ export default function ProductManager() {
       setPreviewProduct(product);
     }
   };
-
 
   return (
     <div className="relative flex transition-all duration-300 ease-in-out">
@@ -188,7 +188,7 @@ export default function ProductManager() {
       {/* Slide-in ProductEditor */}
       <div
         className={`
-          fixed top-0 right-0 h-screen w-[100%] max-w-[440px] bg-white z-0
+          fixed top-0 right-0 h-screen w-full max-w-[440px] bg-white z-10
           transition-transform duration-300 ease-in-out p-4 pb-30 mt-18 overflow-y-auto scrollbar-thick scroll-smooth
           ${activeProduct ? 'translate-x-0' : 'translate-x-full'}
         `}
@@ -206,34 +206,20 @@ export default function ProductManager() {
         )}
       </div>
 
-    {/* Preview Modal */}
+      {/* Preview Modal using new component */}
+      <div
+        className={`
+          fixed top-0 right-0 h-screen w-full max-w-[440px] bg-white z-10
+          transition-transform duration-300 ease-in-out p-4 pb-30 mt-18 overflow-y-auto scrollbar-thick scroll-smooth
+          ${previewProduct ? 'translate-x-0' : 'translate-x-full'}
+        `}>
       {previewProduct && (
-        <div className="fixed inset-0 z-40  flex items-center justify-center" style={{ backgroundColor: "rgba(0, 0, 0, 0.4)" }}>
-          <div className="bg-white rounded-xl p-6 w-[90%] max-w-md relative shadow-lg">
-            <button
-              onClick={() => setPreviewProduct(null)}
-              className="absolute top-2 right-3 text-gray-500 cursor-pointer hover:text-black"
-            >
-              ✕
-            </button>
-            <h2 className="text-xl font-semibold mb-2">{previewProduct.name}</h2>
-            <img src={previewProduct.image} alt={previewProduct.name} className="w-full h-48 object-contain bg-gray-100 rounded mb-4" />
-            <p className="text-sm text-gray-800 mb-1"><strong className='text-black'>Brand:</strong> {previewProduct.brand}</p>
-            <p className="text-sm text-gray-800 mb-1"><strong className='text-black'>Category:</strong> {previewProduct.category}</p>
-            <p className="text-sm text-gray-800 mb-1">
-              <strong className='text-black'>MRP:</strong> <s className='text-red-500'>₹ {previewProduct.mrp}</s> &nbsp; <strong className='text-black'>Offer:</strong><span className='text-green-600'> ₹ {previewProduct.offerPrice}</span>
-            </p>
-            <div className="text-xs text-gray-800 mt-2">
-              <p className="mb-2 text-sm"><strong className='text-black '>Features:</strong></p>
-              <ul className="list-disc list-inside">
-                {previewProduct.features.map((f, i) => (
-                  <li key={i} className='mb-1'>{f}</li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
+        <ProductPreview
+          product={previewProduct}
+          onClose={() => setPreviewProduct(null)}
+        />
       )}
+      </div>
     </div>
   );
 }

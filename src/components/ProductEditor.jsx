@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ArrowRight } from "lucide-react";
-import ColorSelector from "./ColorSelector";
+import ColorSelector from "./ColorVariants";
 import FeatureInput from "./FeatureInput";
 
 export default function ProductEditor({ product, onUpdate, onClose }) {
