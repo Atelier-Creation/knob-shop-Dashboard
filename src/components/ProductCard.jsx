@@ -4,6 +4,7 @@ import { deleteProduct } from '../api/productApi';
 import toast from 'react-hot-toast';
 
 export function ProductCard({ product, onClick }) {
+  const deleteClicked = useRef(false);
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef(null);
 
@@ -29,6 +30,10 @@ export function ProductCard({ product, onClick }) {
 
 const handleMenuAction = async (type) => {
   if (type === 'delete') {
+    if (deleteClicked.current) return; // prevent rapid double clicks
+    deleteClicked.current = true;
+    setTimeout(() => (deleteClicked.current = false), 1000);
+
     try {
       const confirmed = window.confirm(`Are you sure you want to delete "${product.name}"?`);
       if (!confirmed) return;
@@ -47,9 +52,9 @@ const handleMenuAction = async (type) => {
 };
 
   return (
-    <div className="relative bg-white border border-gray-200 rounded-xl w-full min-h-[290px] p-2 shadow-sm hover:shadow-md transition-all duration-200">
+    <div className="relative bg-white border border-gray-200 rounded-xl w-full min-h-[290px] shadow-sm hover:shadow-md transition-all duration-200">
       {/* Comparison Indicator */}
-      <div className="absolute top-3 left-4 flex flex-col items-start text-[10px] font-medium bg-black/40 py-1 px-2 rounded-sm">
+      <div className="absolute top-3 left-4 flex flex-col items-start text-[10px] font-medium">
         <span className={`flex items-center gap-1 ${isGain ? 'text-green-300' : 'text-red-600'}`}>
           {isGain ? '↑' : '↓'} {Math.abs(calculatedPercentage)}%
         </span>
@@ -91,16 +96,16 @@ const handleMenuAction = async (type) => {
       </div>
 
       {/* Product Image */}
-      <div className="mb-4 p-1 flex justify-center bg-gray-100 rounded-sm">
+      <div className="mb-4 p-1 flex justify-center rounded-sm">
         <img
           src={product.images?.[0] || '/no-image.png'}
           alt={product.name}
-          className="h-[150px] object-contain rounded-lg"
+          className="h-[160px] w-full object-cover rounded-lg"
         />
       </div>
 
       {/* Product Info */}
-      <div className="mt-4 text-left">
+      <div className="mt-4 px-2 text-left">
         <h4 className="font-medium text-[13px] text-gray-800 leading-snug truncate">{product.name}</h4>
         <div className="flex flex-col gap-1 mt-1">
           <p className="text-[11px] text-black font-bold">

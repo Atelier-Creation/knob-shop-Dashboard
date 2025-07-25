@@ -72,7 +72,7 @@ export default function ColorVariants({ colors, setColors, picker, setPicker }) 
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               />
             </div>
-            <span className="text-xs font-mono">{picker.toUpperCase()}</span>
+            <span className="text-xs font-mono">{picker}</span>
           </div>
           <button
             onClick={addColor}
@@ -85,7 +85,7 @@ export default function ColorVariants({ colors, setColors, picker, setPicker }) 
       </div>
 
       <div className="flex flex-wrap gap-3 mt-3">
-        {colors.map((c) => (
+        {colors?.map((c) => (
           <div
             key={c.hex}
             className="flex flex-col gap-2 border border-gray-300 p-3 rounded-md w-full sm:w-[230px] bg-white"

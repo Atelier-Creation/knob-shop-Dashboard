@@ -1,13 +1,41 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowRight } from "lucide-react";
-import ColorSelector from "./ColorVariants";
+import ColorVariants from "./ColorVariants";
 import FeatureInput from "./FeatureInput";
 
 export default function ProductEditor({ product, onUpdate, onClose }) {
-  const [form, setForm] = useState({ ...product });
+  console.log(product);
 
-  const handleChange = (field, value) =>
+  const [form, setForm] = useState({
+    name: "",
+    brand: "",
+    image: "",
+    category: "",
+    price: 0,
+    discount: 0,
+    colors: [],
+    features: [],
+    ...product,
+  });
+
+  useEffect(() => {
+    if (product) {
+      setForm({
+        name: product.name || "",
+        brand: product.brand || "",
+        image: product.images?.[0] || "", // get first image
+        category: product.category?.category_name || "",
+        price: product.price || 0,
+        discount: product.discount?.value || 0,
+        colors: product.variant || [],
+        key_features: product.key_features || [],
+      });
+    }
+  }, [product]);
+
+  const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
+  };
 
   const handleSubmit = () => {
     onUpdate(form);
@@ -26,7 +54,6 @@ export default function ProductEditor({ product, onUpdate, onClose }) {
 
       {/* ───────────────── Tabs ───────────────── */}
       <div className="mt-6 flex gap-4 text-sm font-medium">
-        {/* active */}
         <span className="rounded-full bg-orange-100 px-4 py-1 shadow-inner">
           Descriptions
         </span>
@@ -46,7 +73,7 @@ export default function ProductEditor({ product, onUpdate, onClose }) {
         {form.image ? (
           <img
             src={form.image}
-            alt={form.name}
+            alt={form.name || "Product Image"}
             className="h-64 object-contain"
           />
         ) : (
@@ -58,12 +85,10 @@ export default function ProductEditor({ product, onUpdate, onClose }) {
       <div className="mt-6 space-y-4">
         {/* Product Name */}
         <div>
-          <label className="block text-xs font-medium mb-1">
-            Product Name
-          </label>
+          <label className="block text-xs font-medium mb-1">Product Name</label>
           <input
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-[#e0a371] outline-none"
-            value={form.name}
+            value={form.name || ""}
             onChange={(e) => handleChange("name", e.target.value)}
             placeholder="Product Name"
           />
@@ -74,7 +99,7 @@ export default function ProductEditor({ product, onUpdate, onClose }) {
           <label className="block text-xs font-medium mb-1">Brand</label>
           <input
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-[#e0a371] outline-none"
-            value={form.brand}
+            value={form.brand || ""}
             onChange={(e) => handleChange("brand", e.target.value)}
             placeholder="Brand"
           />
@@ -85,7 +110,11 @@ export default function ProductEditor({ product, onUpdate, onClose }) {
           <label className="block text-xs font-medium mb-1">Category</label>
           <input
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-[#e0a371] outline-none"
-            value={form.category}
+            value={
+              typeof form.category === "object"
+                ? form.category?.category_name || ""
+                : form.category || ""
+            }
             onChange={(e) => handleChange("category", e.target.value)}
             placeholder="Category"
           />
@@ -94,7 +123,7 @@ export default function ProductEditor({ product, onUpdate, onClose }) {
         {/* Price & Stock */}
         <div>
           <span className="block text-xs font-medium mb-2">
-            Price & Stock
+            Price & Discount
           </span>
           <div className="grid grid-cols-2 gap-4">
             {/* Price */}
@@ -105,8 +134,8 @@ export default function ProductEditor({ product, onUpdate, onClose }) {
               <input
                 type="number"
                 className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-[#e0a371] outline-none"
-                value={form.price}
-                onChange={(e) => handleChange("price", e.target.value)}
+                value={form.price || 0}
+                onChange={(e) => handleChange("price", Number(e.target.value))}
                 placeholder="₹ 0.00"
               />
             </div>
@@ -119,24 +148,27 @@ export default function ProductEditor({ product, onUpdate, onClose }) {
               <input
                 type="number"
                 className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-[#e0a371] outline-none"
-                value={form.discount}
-                onChange={(e) => handleChange("discount", e.target.value)}
+                value={form.discount || 0}
+                onChange={(e) =>
+                  handleChange("discount", Number(e.target.value))
+                }
                 placeholder="0 %"
               />
             </div>
           </div>
         </div>
 
-        {/* Colors & Features */}
-        <ColorSelector
-          selectedColors={form.colors}
+        {/* Colors */}
+        <ColorVariants
+          selectedColors={form.colors || []}
           onChange={(colors) => handleChange("colors", colors)}
         />
 
-        <FeatureInput
-          features={form.features}
-          onChange={(features) => handleChange("features", features)}
-        />
+        {/* Features */}
+        {/* <FeatureInput
+          features={form.key_features || []}
+          onChange={(features) => handleChange("key_features", features)}
+        /> */}
       </div>
 
       {/* ───────────────── Action Buttons ───────────────── */}

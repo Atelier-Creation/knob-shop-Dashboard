@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 
 export default function CategoryTabs({ categories, selected, onSelect }) {
   const trackRef = useRef(null);
-  const dragData  = useRef({ down: false, startX: 0, scrollX: 0 });
+  const dragData = useRef({ down: false, startX: 0, scrollX: 0 });
   const [dragging, setDragging] = useState(false);
 
   /* ───────── handlers ───────── */
@@ -10,7 +10,7 @@ export default function CategoryTabs({ categories, selected, onSelect }) {
     const track = trackRef.current;
     if (!track) return;
     dragData.current = {
-      down:   true,
+      down: true,
       startX: e.pageX,
       scrollX: track.scrollLeft,
     };
@@ -19,9 +19,9 @@ export default function CategoryTabs({ categories, selected, onSelect }) {
 
   const handlePointerMove = (e) => {
     if (!dragData.current.down) return;
-    e.preventDefault();                     
-    const track   = trackRef.current;
-    const dx      = e.pageX - dragData.current.startX;
+    e.preventDefault();
+    const track = trackRef.current;
+    const dx = e.pageX - dragData.current.startX;
     track.scrollLeft = dragData.current.scrollX - dx;
   };
 
@@ -45,16 +45,17 @@ export default function CategoryTabs({ categories, selected, onSelect }) {
       >
         {categories.map((cat) => (
           <button
-            key={cat}
-            onClick={() => onSelect(cat._id || cat)}
+            key={cat._id}
+            onClick={() => onSelect(cat._id)}
             className={`flex-shrink-0 px-4 py-2 rounded-full cursor-pointer text-sm whitespace-nowrap transition-colors duration-200
-              ${
-                cat === selected
-                  ? "bg-orange-100 text-black font-medium"
-                  : "text-gray-700 hover:bg-gray-100"
-              }`}
+      ${
+        cat._id === selected
+          ? "bg-orange-100 text-black font-medium"
+          : "text-gray-700 hover:bg-gray-100"
+      }
+    `}
           >
-            {cat}
+            {cat.category_name}
           </button>
         ))}
       </div>

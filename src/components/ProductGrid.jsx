@@ -7,9 +7,12 @@ export default function ProductGrid({
   activeProduct,
 }) {
   const filtered =
-    category === "All Products"
+    category === "all"
       ? products
-      : products.filter((p) => p.category === category);
+      : products.filter((p) => {
+        const catId = typeof p.category === 'object' ? p.category._id : p.category;
+        return catId === category;
+      });
 
   return (
     <div

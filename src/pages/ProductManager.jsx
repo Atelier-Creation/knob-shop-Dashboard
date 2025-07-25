@@ -48,9 +48,16 @@ export default function ProductManager() {
 
   // Filter products based on selected category
   const filteredProducts =
-    selectedCategory === 'All Products'
-      ? products
-      : products.filter((p) => p.category === selectedCategory);
+  selectedCategory === 'all'
+    ? products
+    : products.filter((p) => {
+        const catId = typeof p.category === 'object' ? p.category._id : p.category;
+        return catId === selectedCategory;
+      });
+
+      console.log("Selected:", filteredProducts);
+console.log("Products:", products.map(p => p.category));
+
 
   return (
     <div className="relative flex transition-all duration-300 ease-in-out">
