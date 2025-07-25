@@ -1,0 +1,88 @@
+/* index.css or global.css */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: transparent; /* Tailwind gray-300 */
+  border-radius: 6px;
+    transition: background-color 0.3s ease;
+}
+.scrollbar-thin:hover::-webkit-scrollbar-thumb{
+   background-color: #f3f1ef;
+}
+
+
+/* thick */
+.scrollbar-thick::-webkit-scrollbar {
+  width: 5px;
+  position: absolute;
+  right: 0;
+}
+
+.scrollbar-thick::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thick::-webkit-scrollbar-thumb {
+  background-color: transparent; /* Tailwind gray-300 */
+  border-radius: 6px;
+    transition: background-color 0.3s ease;
+}
+.scrollbar-thick:hover::-webkit-scrollbar-thumb{
+   background-color: #c7dddd;
+}
+
+@media (max-width: 640px) {
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: #c7dddd !important;
+  }
+  .scrollbar-thick::-webkit-scrollbar-thumb {
+    background-color: #c7dddd !important;
+  }
+}
+
+
+/* Hide scrollbar in Webkit */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+/* For Firefox */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.ProseMirror ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+}
+
+.ProseMirror ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+}
+.ProseMirror a {
+  text-decoration: underline;
+  color: #1d4ed8; 
+  transition: color 0.3s ease;
+   position: relative;
+  cursor: pointer;
+}
+.ProseMirror a:hover::after {
+  content: attr(href);
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: #111;
+  color: #fff;
+  padding: 4px 8px;
+  font-size: 12px;
+  white-space: nowrap;
+  border-radius: 4px;
+  margin-top: 4px;
+  z-index: 50;
+}

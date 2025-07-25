@@ -1,0 +1,121 @@
+import { useState, useEffect, useRef } from 'react';
+import { MoreVertical, Edit, Trash2, Eye } from 'lucide-react';
+import { deleteProduct } from '../api/productApi';
+import toast from 'react-hot-toast';
+
+export function ProductCard({ product, onClick }) {
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef(null);
+
+  const actualPrice = product.price;
+  const comparePrice = product.compare_price;
+
+  const calculatedPercentage = comparePrice && actualPrice
+    ? Math.round(((comparePrice - actualPrice) / comparePrice) * 100)
+    : 0;
+
+  const isGain = calculatedPercentage > 0;
+
+  // Close dropdown if clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setShowMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+const handleMenuAction = async (type) => {
+  if (type === 'delete') {
+    try {
+      const confirmed = window.confirm(`Are you sure you want to delete "${product.name}"?`);
+      if (!confirmed) return;
+
+      await deleteProduct(product._id); 
+      toast.success('Product deleted successfully');
+      onClick(product, type);
+    } catch (err) {
+      console.error('Delete failed:', err);
+      toast.error('Failed to delete product');
+    }
+  } else {
+    onClick(product, type);
+  }
+  setShowMenu(false);
+};
+
+  return (
+    <div className="relative bg-white border border-gray-200 rounded-xl w-full min-h-[290px] p-2 shadow-sm hover:shadow-md transition-all duration-200">
+      {/* Comparison Indicator */}
+      <div className="absolute top-3 left-4 flex flex-col items-start text-[10px] font-medium bg-black/40 py-1 px-2 rounded-sm">
+        <span className={`flex items-center gap-1 ${isGain ? 'text-green-300' : 'text-red-600'}`}>
+          {isGain ? '↑' : '↓'} {Math.abs(calculatedPercentage)}%
+        </span>
+        <span className="text-[8px] text-gray-100">
+          Compare to<br />Last Price
+        </span>
+      </div>
+
+      {/* Dropdown Menu */}
+      <div className="absolute top-3 right-3" ref={menuRef}>
+        <button
+          onClick={() => setShowMenu(!showMenu)}
+          className="p-1 rounded hover:bg-gray-100"
+        >
+          <MoreVertical className="w-4 h-4 text-gray-500 cursor-pointer" />
+        </button>
+        {showMenu && (
+          <div className="absolute right-0 mt-1 w-[110px] bg-white border border-gray-200 rounded-md shadow z-10 text-sm">
+            <button
+              onClick={() => handleMenuAction("edit")}
+              className="w-full flex items-center px-3 py-2 gap-2 hover:bg-gray-100"
+            >
+              <Edit size={14} /> Edit
+            </button>
+            <button
+              onClick={() => handleMenuAction("delete")}
+              className="w-full flex items-center px-3 py-2 gap-2 hover:bg-red-100 hover:text-red-800"
+            >
+              <Trash2 size={14} /> Delete
+            </button>
+            <button
+              onClick={() => handleMenuAction("preview")}
+              className="w-full flex items-center px-3 py-2 gap-2 hover:bg-gray-100"
+            >
+              <Eye size={14} /> Preview
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Product Image */}
+      <div className="mb-4 p-1 flex justify-center bg-gray-100 rounded-sm">
+        <img
+          src={product.images?.[0] || '/no-image.png'}
+          alt={product.name}
+          className="h-[150px] object-contain rounded-lg"
+        />
+      </div>
+
+      {/* Product Info */}
+      <div className="mt-4 text-left">
+        <h4 className="font-medium text-[13px] text-gray-800 leading-snug truncate">{product.name}</h4>
+        <div className="flex flex-col gap-1 mt-1">
+          <p className="text-[11px] text-black font-bold">
+            MRP <span className="line-through font-semibold text-red-500">₹{comparePrice?.toLocaleString() || '-'}</span>
+          </p>
+          <p className="text-[13px] text-black font-semibold">
+            Offer Price <span className='text-green-600'>₹{actualPrice?.toLocaleString() || '-'}</span>
+          </p>
+        </div>
+        <div className="mt-1 text-[11px] text-gray-500 flex justify-center gap-2">
+          <span>Stock {product.stock}</span>
+          <span className="text-gray-400">|</span>
+          <span>Sold {product.sold || 0}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
