@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { getOrderById } from "../API/orderListApi";
+import { getOrderById } from "../api/orderListApi";
 import { MapPin, Mail, Phone, MessageCircleMore,Loader,
   ChefHat,
   Truck,
