@@ -23,6 +23,8 @@ import ProtectedRoute from "./components/Auth/ProtectedRoute"; // 👈 Add this
 import AuthPage from "./pages/AuthPage"; // 👈 Your login page
 import Brochuer from "./components/Brochure/Brochure";
 import BroucherList from './components/Brochure/BroucherList'
+import 'bootstrap-icons/font/bootstrap-icons.css';
+
 function App() {
   return (
     <>
