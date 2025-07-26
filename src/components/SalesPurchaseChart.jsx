@@ -43,7 +43,6 @@ const SalesPurchaseChart = () => {
       try {
         const result = await getChartData(filter); // 👈 use your function
         setData(result);
-        console.log(result); // Optional debug
       } catch (error) {
         console.error("Error fetching chart data:", error);
       }

@@ -74,7 +74,7 @@ export default function OrderDetailsView() {
             name: data.userId?.name || "Customer",
             email: data.userId?.email || "email@example.com",
             phone: data.shippingAddress?.phone || "+91 XXXXX XXXXX",
-            avatar: "/user-avatar.jpg",
+            avatar: data.userId?.imageUrl || "",
             totalOrders: 1,
           },
           shipping: {
