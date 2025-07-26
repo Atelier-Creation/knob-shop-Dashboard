@@ -21,6 +21,7 @@ import PolicyEditorPage from "./pages/PolicyEditorPage";
 import { Toaster } from "react-hot-toast";
 import ProtectedRoute from "./components/Auth/ProtectedRoute"; // 👈 Add this
 import AuthPage from "./pages/AuthPage"; // 👈 Your login page
+import Brochuer from "./components/Brochure/Brochure";
 
 function App() {
   return (
@@ -42,6 +43,10 @@ function App() {
             <Route
               path="categories-products/hidden"
               element={<CategoryAndProductPage />}
+            />
+            <Route
+              path="/brochure/add"
+              element={<Brochuer/>}
             />
             <Route
               path="categories-products/category/:id"
