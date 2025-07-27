@@ -9,8 +9,8 @@ export function ProductCard({ product, onClick }) {
   const menuRef = useRef(null);
   const fronenturl = import.meta.env.VITE_FRONTEND_URL
 
-  const actualPrice = product.price;
-  const comparePrice = product.compare_price;
+  const actualPrice = product.price || product.variant?.[0]?.sizes?.[0]?.sellingPrice;
+  const comparePrice = product.compare_price || product.variant?.[0]?.sizes?.[0]?.mrp;
 
   const calculatedPercentage = comparePrice && actualPrice
     ? Math.round(((comparePrice - actualPrice) / comparePrice) * 100)
@@ -124,7 +124,7 @@ const handleMenuAction = async (type) => {
           </p>
         </div>
         <div className="mt-1 text-[11px] text-gray-500 flex justify-center gap-2">
-          <span>Stock {product.stock}</span>
+          <span>Stock {product.stock || product.variant?.[0]?.sizes?.[0]?.stock}</span>
           <span className="text-gray-400">|</span>
           <span>Sold {product.sold || 0}</span>
         </div>

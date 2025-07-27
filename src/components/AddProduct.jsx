@@ -30,11 +30,10 @@ export default function AddProduct() {
     images: [],
     video: "",
     brochure: "",
-    // Initialize with one empty feature object
     productFeatures: [{ heading: "", description: "", image: "" }],
-    // Initialize with one empty tech spec object
     techSpecs: [{ title: "", value: "" }],
     variant: [],
+    sizes: [], // ← Add this line
     dimensions: {
       weight: null,
       height: null,
@@ -42,10 +41,18 @@ export default function AddProduct() {
       length: null,
     },
     installation: {
-      videoUrl: "", // For YouTube video URL
-      content: "", // For installation text content
+      videoUrl: "",
+      content: "",
+    },
+    discount: {
+      type: "percentage",
+      value: 0,
+      startDate: new Date().toISOString(),
+      endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      isActive: false,
     },
   });
+  
 
   const [features, setFeatures] = useState([]); // State for "Key Features" (title, icon)
   const [selectedIcon, setSelectedIcon] = useState(null);
@@ -281,37 +288,69 @@ export default function AddProduct() {
       });
       const finalPayload = {
         name: productData.name,
+        productId: productData.productId, // Add if not present already
         stock: Number(productData.stock),
         description: productData.description,
         brand: productData.brand,
-        images: uploadedMainImages,
+        category: localStorage.getItem("selectedCategoryId"), // plain string ID
+        status: productData.status,
+        images: uploadedMainImages, // Array of image URLs
         video: productData.video,
         brochure: productData.brochure,
-        discount: {
-          type: productData.discount.type || "percentage",
-          value: Number(productData.discount.value || 0),
-          startDate: productData.discount.startDate
-            ? new Date(productData.discount.startDate).toISOString()
-            : new Date().toISOString(),
-          endDate: productData.discount.endDate
-            ? new Date(productData.discount.endDate).toISOString()
-            : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-          isActive: productData.discount.isActive,
-        },
-        features: uploadedDetailedFeatures,
+      
+        // Features with heading, description, image
+        features: uploadedDetailedFeatures, // [{ heading, description, image }]
+      
+        // Key features with title and icon
+        key_features: mappedKeyFeatures, // [{ title, image }]
+      
+        // Technical specifications
+        tech_spec: mappedTechSpecs, // [{ title, value }]
+      
+        // Installation info
         installation: {
           videoUrl: productData.installation.videoUrl,
           content: productData.installation.content,
         },
-        key_features: mappedKeyFeatures,
-        tech_spec: mappedTechSpecs,
-        variant: uploadedVariants,
-        category: {
-          _id: localStorage.getItem("selectedCategoryId"),
+      
+        // Dimensions
+        dimensions: {
+          weight: Number(productData.dimensions.weight),
+          height: Number(productData.dimensions.height),
+          width: Number(productData.dimensions.width),
+          length: Number(productData.dimensions.length),
         },
-        status: productData.status,
-        dimensions: productData.dimensions, // Ensure dimensions are included
+      
+        // Discount details
+        discount: {
+          type: productData.discount?.type || "percentage",
+          value: Number(productData.discount?.value || 0),
+          startDate: productData.discount?.startDate
+            ? new Date(productData.discount.startDate).toISOString()
+            : new Date().toISOString(),
+          endDate: productData.discount?.endDate
+            ? new Date(productData.discount.endDate).toISOString()
+            : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          isActive: productData.discount?.isActive || false,
+        },
+      
+        // Color Variants + Nested Sizes
+        variant: uploadedVariants.map(variant => ({
+          title: variant.title,
+          value: variant.value, // Color hex or name
+          price: Number(variant.price),
+          images: variant.images, // [{ url, deleteToken }]
+          sizes: (variant.sizes || []).map(size => ({
+            label: size.label,
+            mrp: Number(size.mrp),
+            discountPercentage: Number(size.discountPercentage),
+            taxPercentage: Number(size.taxPercentage),
+            sellingPrice: Number(size.sellingPrice),
+            stock: Number(size.stock),
+          })),
+        })),
       };
+            
 
       console.log("Final Payload to be sent:", finalPayload);
 
