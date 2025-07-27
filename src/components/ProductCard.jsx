@@ -7,6 +7,7 @@ export function ProductCard({ product, onClick }) {
   const deleteClicked = useRef(false);
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef(null);
+  const fronenturl = import.meta.env.VITE_FRONTEND_URL
 
   const actualPrice = product.price;
   const comparePrice = product.compare_price;
@@ -45,10 +46,17 @@ const handleMenuAction = async (type) => {
       console.error('Delete failed:', err);
       toast.error('Failed to delete product');
     }
-  } else {
-    onClick(product, type);
-  }
-  setShowMenu(false);
+  } else if (type === 'preview') { 
+      if (product._id) {
+        const productUrl = `${fronenturl}/product/${product._id}`;
+        window.open(productUrl, '_blank'); 
+      } else {
+        toast.error("Product ID not available for preview.");
+      }
+    } else {
+      onClick(product, type);
+    }
+    setShowMenu(false);
 };
 
   return (

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { createProduct } from "../api/productApi"; // Make sure this path is correct
+import { createProduct } from "../api/productApi";
 import {
   Plus,
   ImagePlus,
@@ -8,11 +8,11 @@ import {
   BadgePlus,
   UploadCloud,
 } from "lucide-react";
-import ColorVariants from "./ColorVariants"; // Assuming this component handles color variants and their images
+import ColorVariants from "./ColorVariants";
 import ColorNamer from "color-namer";
-import ImageUploader from "./ImageUploader"; // Assuming this component returns a Cloudinary URL
+import ImageUploader from "./ImageUploader";
 import toast from "react-hot-toast";
-
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import app from "/keyfeaturesIcon/app.svg";
 import key from "/keyfeaturesIcon/manual_key.svg";
 import card from "/keyfeaturesIcon/card.png";
@@ -23,9 +23,6 @@ export default function AddProduct() {
   const [productData, setProductData] = useState({
     name: "",
     description: "",
-    sellingPrice: 0,
-    mrp: 0,
-    stock: 0,
     productId: "",
     status: "active",
     category: "",
@@ -38,18 +35,15 @@ export default function AddProduct() {
     // Initialize with one empty tech spec object
     techSpecs: [{ title: "", value: "" }],
     variant: [],
-    discount: {
-      type: "percentage",
-      value: 0,
-      startDate: "",
-      endDate: "",
-      isActive: false,
-    },
     dimensions: {
-      weight: 0,
-      height: 0,
-      width: 0,
-      length: 0,
+      weight: null,
+      height: null,
+      width: null,
+      length: null,
+    },
+    installation: {
+      videoUrl: "", // For YouTube video URL
+      content: "", // For installation text content
     },
   });
 
@@ -64,57 +58,60 @@ export default function AddProduct() {
       hex: "#ffffff",
       name: getSuggestedName("#ffffff"),
       price: null,
-      image: "",
       images: [],
+      sizes: [],
     },
   ]);
+
+  const handleImageReorder = (result) => {
+    if (!result.destination) return;
+
+    const reordered = Array.from(productData.images);
+    const [removed] = reordered.splice(result.source.index, 1);
+    reordered.splice(result.destination.index, 0, removed);
+
+    updateField("images", reordered);
+  };
 
   const resetForm = () => {
-  setProductData({
-    name: "",
-    description: "",
-    sellingPrice: 0,
-    mrp: 0,
-    stock: 0,
-    productId: "",
-    status: "active",
-    category: "",
-    brand: "",
-    images: [],
-    video: "",
-    brochure: "",
-    productFeatures: [{ heading: "", description: "", image: "" }],
-    techSpecs: [{ title: "", value: "" }],
-    variant: [],
-    discount: {
-      type: "percentage",
-      value: 0,
-      startDate: "",
-      endDate: "",
-      isActive: false,
-    },
-    dimensions: {
-      weight: 0,
-      height: 0,
-      width: 0,
-      length: 0,
-    },
-  });
-
-  setFeatures([]);
-  setSelectedIcon(null);
-  setFeatInput("");
-  setColors([
-    {
-      hex: "#ffffff",
-      name: getSuggestedName("#ffffff"),
-      price: null,
-      image: "",
+    setProductData({
+      name: "",
+      description: "",
+      productId: "",
+      status: "active",
+      category: "",
+      brand: "",
       images: [],
-    },
-  ]);
-};
+      video: "",
+      brochure: "",
+      productFeatures: [{ heading: "", description: "", image: "" }],
+      techSpecs: [{ title: "", value: "" }],
+      variant: [],
+      dimensions: {
+        weight: null,
+        height: null,
+        width: null,
+        length: null,
+      },
+      installation: {
+        videoUrl: "",
+        content: "",
+      },
+    });
 
+    setFeatures([]);
+    setSelectedIcon(null);
+    setFeatInput("");
+    setColors([
+      {
+        hex: "#ffffff",
+        name: getSuggestedName("#ffffff"),
+        price: null,
+        images: [],
+        sizes: [],
+      },
+    ]);
+  };
 
   const cloudName = import.meta.env.cloudinery_name || "dpea4iv0b"; // Corrected env variable name
   const uploadPreset =
@@ -154,30 +151,47 @@ export default function AddProduct() {
   }
 
   const handleSaveProduct = async () => {
-    const loadingToast = toast.loading("Saving product...");
+    const loadingToastId = toast.loading("Starting product save process...");
 
     try {
-      // Filter out empty features/tech specs before processing
+      // Stage 1: Filtering data
+      toast.loading("Filtering product data...", { id: loadingToastId });
       const validProductFeatures = productData.productFeatures.filter(
         (f) => f.heading || f.description || f.image
       );
       const validTechSpecs = productData.techSpecs.filter(
         (s) => s.title || s.value
       );
+      toast.success("Product data filtered.", {
+        id: loadingToastId,
+        duration: 1500,
+      }); // Show success briefly, then update
 
+      // Stage 2: Uploading Main Images
+      toast.loading("Uploading main product images...", { id: loadingToastId });
       const uploadedMainImages = await Promise.all(
         productData.images
           .map(async (fileOrUrl) => {
             if (typeof fileOrUrl === "string") {
               return fileOrUrl;
             } else if (fileOrUrl instanceof File) {
-              return await uploadToCloudinary(fileOrUrl);
+              // Assuming uploadToCloudinary returns the URL or {url, deleteToken}
+              const uploaded = await uploadToCloudinary(fileOrUrl);
+              return uploaded.url || uploaded; // Adapt based on what uploadToCloudinary returns
             }
             return null;
           })
           .filter(Boolean)
       );
+      toast.success("Main product images uploaded.", {
+        id: loadingToastId,
+        duration: 1500,
+      });
 
+      // Stage 3: Uploading Detailed Features Images
+      toast.loading("Uploading detailed feature images...", {
+        id: loadingToastId,
+      });
       const uploadedDetailedFeatures = await Promise.all(
         validProductFeatures.map(async (f) => ({
           title: f.heading,
@@ -186,20 +200,62 @@ export default function AddProduct() {
             typeof f.image === "string"
               ? f.image
               : f.image
-              ? await uploadToCloudinary(f.image)
+              ? // Adapt based on what uploadToCloudinary returns
+                (await uploadToCloudinary(f.image)).url ||
+                (await uploadToCloudinary(f.image))
               : "",
         }))
       );
+      toast.success("Detailed feature images uploaded.", {
+        id: loadingToastId,
+        duration: 1500,
+      });
 
+      // Stage 4: Uploading Variant Images and processing sizes
+      toast.loading("Uploading variant images and processing sizes...", {
+        id: loadingToastId,
+      });
       const uploadedVariants = await Promise.all(
         colors.map(async (color) => ({
           title: color.name,
           value: color.hex,
           price: Number(color.price || 0),
-          images: color.images[0],
+          images: await Promise.all(
+            color.images
+              .map(async (imgObj) => {
+                // imgObj is now { url, deleteToken }
+                // If it's a new File, upload it
+                if (imgObj instanceof File) {
+                  const uploaded = await uploadToCloudinary(imgObj);
+                  return {
+                    url: uploaded.url,
+                    deleteToken: uploaded.deleteToken,
+                  }; // Ensure this matches your ImageUploader's return
+                } else if (typeof imgObj === "object" && imgObj.url) {
+                  // If it's an existing uploaded object, keep it as is
+                  return imgObj;
+                }
+                return null;
+              })
+              .filter(Boolean)
+          ),
+          sizes: color.sizes.map((size) => ({
+            label: size.label,
+            mrp: Number(size.mrp || 0), // Add MRP
+            discountPercentage: Number(size.discountPercentage || 0), // Add Discount %
+            taxPercentage: Number(size.taxPercentage || 0), // Add Tax %
+            sellingPrice: Number(size.sellingPrice || 0), // Add Selling Price
+            stock: Number(size.stock || 0),
+          })),
         }))
       );
+      toast.success("Variant images uploaded and sizes processed.", {
+        id: loadingToastId,
+        duration: 1500,
+      });
 
+      // Stage 5: Mapping other data
+      toast.loading("Preparing final product data...", { id: loadingToastId });
       // Map key features to the required format
       const mappedKeyFeatures = features.map((f) => {
         const pathParts = f.icon.split("/");
@@ -214,15 +270,20 @@ export default function AddProduct() {
         title: s.title || "",
         value: s.value || "",
       }));
+      toast.success("Final product data prepared.", {
+        id: loadingToastId,
+        duration: 1500,
+      });
 
+      // Stage 6: Constructing Payload and Sending to API
+      toast.loading("Sending product data to server...", {
+        id: loadingToastId,
+      });
       const finalPayload = {
         name: productData.name,
-        productId: productData.productId,
-        price: Number(productData.sellingPrice),
-        compare_price: Number(productData.mrp),
         stock: Number(productData.stock),
         description: productData.description,
-        brand: localStorage.getItem("selectedDescriptionName"),
+        brand: productData.brand,
         images: uploadedMainImages,
         video: productData.video,
         brochure: productData.brochure,
@@ -238,6 +299,10 @@ export default function AddProduct() {
           isActive: productData.discount.isActive,
         },
         features: uploadedDetailedFeatures,
+        installation: {
+          videoUrl: productData.installation.videoUrl,
+          content: productData.installation.content,
+        },
         key_features: mappedKeyFeatures,
         tech_spec: mappedTechSpecs,
         variant: uploadedVariants,
@@ -252,14 +317,16 @@ export default function AddProduct() {
 
       const response = await createProduct(finalPayload);
 
-      toast.success("Product created successfully!", { id: loadingToast });
+      toast.success("Product created successfully!", { id: loadingToastId });
       resetForm();
       console.log("Product created:", response);
     } catch (err) {
       console.error("Failed to create product:", err);
-      toast.error("Failed to create product", { id: loadingToast });
+      // Use toast.error for final error message
+      toast.error("Failed to create product", { id: loadingToastId });
     } finally {
-      toast.dismiss(loadingToast);
+      // Ensure the loading toast is dismissed even if there's an uncaught error
+      toast.dismiss(loadingToastId);
     }
   };
 
@@ -375,43 +442,32 @@ export default function AddProduct() {
       <div className="text-lg font-semibold">
         Categories & Products / Add Category / Add Product
       </div>
-      <Section title="Product Name" />
-      <Field
-        label="Product Name*"
-        value={productData.name}
-        set={(val) => updateField("name", val)}
-        isLabel={false}
-        extra="bg-white"
-      />
-      <Section title="Product Pricing" />
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+      <Section />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 mt-4">
         <Field
-          label="MRP Price*"
-          type="number"
-          value={productData.mrp}
-          set={(val) => updateField("mrp", val)}
-          isLabel={false}
+          label="Product Name*"
+          value={productData.name}
+          set={(val) => updateField("name", val)}
+          isLabel={true}
           extra="bg-white"
-          prefix="₹"
         />
         <Field
-          label="Selling Price*"
-          type="number"
-          value={productData.sellingPrice}
-          set={(val) => updateField("sellingPrice", val)}
-          isLabel={false}
-          extra="bg-white"
-          prefix="₹"
-        />
-        <Field
-          label="Stock Quantity*"
-          type="number"
-          value={productData.stock}
-          set={(val) => updateField("stock", val)}
-          isLabel={false}
+          label="Brand Name*"
+          value={productData.brand}
+          set={(val) => updateField("brand", val)}
+          isLabel={true}
           extra="bg-white"
         />
       </div>
+
+      <Section title="SKU / Product Id" />
+      <Field
+        label="SKU / Product Id*"
+        value={productData.productId}
+        isLabel={false}
+        set={(val) => updateField("productId", val)}
+        extra="bg-white"
+      />
       <Section title="Product Dimensions" subtitle="(for shipping purpose)" />
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
         <Field
@@ -451,14 +507,6 @@ export default function AddProduct() {
           suffix="(Mm)"
         />
       </div>
-      <Section title="Stock Keeping Unit" />
-      <Field
-        label="SKU*"
-        value={productData.productId}
-        isLabel={false}
-        set={(val) => updateField("productId", val)}
-        extra="bg-white"
-      />
 
       <ColorVariants
         colors={colors}
@@ -539,43 +587,89 @@ export default function AddProduct() {
           />
         </label>
 
-        {productData.images.length > 0 && (
-          <div className="flex flex-wrap gap-3 mt-4">
-            {productData.images.map((img, i) => (
+        <DragDropContext onDragEnd={handleImageReorder}>
+          <Droppable droppableId="images" direction="horizontal">
+            {(provided) => (
               <div
-                key={i}
-                className="relative w-24 h-24 rounded-md overflow-hidden border shadow-sm"
+                className="flex flex-wrap gap-3 mt-4"
+                ref={provided.innerRef}
+                {...provided.droppableProps}
               >
-                <img
-                  src={typeof img === "string" ? img : URL.createObjectURL(img)}
-                  alt={`Product ${i}`}
-                  className="w-full h-full object-cover"
-                />
-                <button
-                  type="button"
-                  onClick={() =>
-                    updateField(
-                      "images",
-                      productData.images.filter((_, index) => index !== i)
-                    )
-                  }
-                  className="absolute top-1 right-1 w-5 h-5 rounded-full bg-white border border-gray-300 flex items-center justify-center text-gray-500 hover:text-red-500"
-                >
-                  <X size={12} />
-                </button>
+                {productData.images.map((img, index) => (
+                  <Draggable
+                    key={index}
+                    draggableId={`img-${index}`}
+                    index={index}
+                  >
+                    {(provided) => (
+                      <div
+                        className={`relative rounded-md overflow-hidden border border-gray-300 shadow-sm ${
+                          index === 0 ? "w-48 h-48" : "w-24 h-24"
+                        }`}
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
+                      >
+                        <img
+                          src={
+                            typeof img === "string"
+                              ? img
+                              : URL.createObjectURL(img)
+                          }
+                          alt={`Product ${index}`}
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updateField(
+                              "images",
+                              productData.images.filter((_, i) => i !== index)
+                            )
+                          }
+                          className="absolute top-1 right-1 w-8 h-8 rounded-full bg-black/30 border-2 border-gray-100 flex items-center justify-center text-white/80 hover:bg-red-500 hover:text-white"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    )}
+                  </Draggable>
+                ))}
+                {provided.placeholder}
               </div>
-            ))}
-          </div>
-        )}
+            )}
+          </Droppable>
+        </DragDropContext>
+        <p className="text-xs mt-4 text-gray-500">
+          Please Upload 1:1 Size images only
+        </p>
       </div>
       <Section title="Product Video URL" />
       <Field
-        label="Product Video URL"
+        label="YouTube Video URL (Installation)"
         extra="bg-white"
-        isLabel={false}
+        isLabel={false} // Changed to true to show label clearly
         value={productData.video}
         set={(val) => updateField("video", val)}
+        placeholder="e.g., https://www.youtube.com/watch?v=dQw4w9WgXcQ"
       />
+      {productData.video && (
+        <div className="mt-2">
+          <h5 className="text-sm font-medium mb-1">Video Preview:</h5>
+          <div className="aspect-video w-full max-w-md border border-gray-300 rounded-md overflow-hidden">
+            <iframe
+              className="w-full h-full"
+              src={`https://www.youtube.com/embed/${getYouTubeVideoId(
+                productData.video
+              )}`}
+              title="YouTube video player"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            ></iframe>
+          </div>
+        </div>
+      )}
       <Section title="Brochure (PDF)" />
       <div>
         <label className="block mb-1 font-medium">Upload Brochure (PDF)</label>
@@ -619,6 +713,45 @@ export default function AddProduct() {
         )}
       </div>
 
+      <Section title="Installation Guide" />
+      <div className="space-y-4">
+        <Field
+          label="YouTube Video URL (Installation)"
+          extra="bg-white"
+          isLabel={true} // Changed to true to show label clearly
+          value={productData.installation.videoUrl}
+          set={(val) => updateField("installation.videoUrl", val)}
+          placeholder="e.g., https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        />
+        {productData.installation.videoUrl && (
+          <div className="mt-2">
+            <h5 className="text-sm font-medium mb-1">Video Preview:</h5>
+            <div className="aspect-video w-full max-w-md border border-gray-300 rounded-md overflow-hidden">
+              <iframe
+                className="w-full h-full"
+                src={`https://www.youtube.com/embed/${getYouTubeVideoId(
+                  productData.installation.videoUrl
+                )}`}
+                title="YouTube video player"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              ></iframe>
+            </div>
+          </div>
+        )}
+
+        <TextAreaField
+          label="Installation Content"
+          option={true} // Keep the .txt upload option
+          extra="bg-white h-36"
+          isLabel={true} // Changed to true to show label clearly
+          value={productData.installation.content}
+          set={(val) => updateField("installation.content", val)}
+          placeholder="Provide detailed installation instructions here..."
+        />
+      </div>
+
       {/* Description and Features */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="space-y-6">
@@ -637,7 +770,7 @@ export default function AddProduct() {
             {productData.productFeatures.map((feature, index) => (
               <div
                 key={index}
-                className="border border-gray-300 bg-gray-50 rounded-lg p-4 space-y-3 relative"
+                className="border border-gray-300 bg-white rounded-lg p-4 space-y-3 relative"
               >
                 <button
                   className="absolute top-2 right-2 text-red-500 cursor-pointer"
@@ -876,10 +1009,19 @@ const ChipFeature = ({ text, del, Icon }) => (
 const Section = ({ title, action, subtitle = "" }) => (
   <>
     <hr className="border-t border-dashed border-gray-300" />
-    <div className="flex gap-2 items-center mt-2 mb-4">
+    { title &&
+      <div className="flex gap-2 items-center mt-2 mb-4">
       <h4 className="font-medium">{title}</h4>
       <p className="text-xs text-gray-500">{subtitle}</p>
       {action}
     </div>
+    }
   </>
 );
+
+function getYouTubeVideoId(url) {
+  const regExp =
+    /(?:https?:\/\/)?(?:www\.)?(?:m\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=|embed\/|v\/|)([\w-]{11})(?:\S+)?/g;
+  const match = regExp.exec(url);
+  return match && match[1].length === 11 ? match[1] : null;
+}
