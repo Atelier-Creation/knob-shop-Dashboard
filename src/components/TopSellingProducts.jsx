@@ -9,6 +9,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { CustomTooltip } from "./CustomTooltip";
 
 const TopSellingProducts = () => {
   const [selectedRange, setSelectedRange] = useState("Weekly");
@@ -24,7 +25,6 @@ const TopSellingProducts = () => {
     setLoading(true);
     try {
       const { topSellingProducts } = await getLatestAnalyticsSnapshot(range);
-      console.log("Top products:", topSellingProducts); // ✅ For confirmation
 
       const updatedProducts = topSellingProducts.map((product, index) => ({
         id: product.productId || index,
@@ -218,6 +218,7 @@ const TopSellingProducts = () => {
                           domain={[0, "auto"]}
                         />
                         <Tooltip
+                        content={<CustomTooltip/>}
                           cursor={false}
                           contentStyle={{
                             backgroundColor: "#fff",

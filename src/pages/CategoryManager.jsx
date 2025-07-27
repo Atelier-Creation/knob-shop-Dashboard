@@ -36,7 +36,6 @@ export default function CategoryManager() {
       </div>
     );
   }
-  console.log(categories);
 
   const resetForm = () => {
     setCategoryName("");

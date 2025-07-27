@@ -60,7 +60,6 @@ export default function CurrentOrdersStatus() {
       setLoading(true);
       try {
         const data = await getLatestAnalyticsSnapshot("Weekly");
-
         // Attach statusColor dynamically based on logic (you can improve this)
         const statusMapping = ["success", "pending", "received", "cancelled"];
         const statusColorMap = {

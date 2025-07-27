@@ -8,7 +8,6 @@ export const fetchCategories = () => {
 // Create a new category
 export const createCategory = (categoryData) => {
   const token = localStorage.getItem("token"); // ✅ Get token from localStorage
-  console.log("token from categoryApi page",token)
   return axiosInstance.post("/api/categories", categoryData, {
     headers: {
       Authorization: `Bearer ${token}`, // ✅ Send Bearer token properly

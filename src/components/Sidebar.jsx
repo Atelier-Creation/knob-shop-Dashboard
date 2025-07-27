@@ -60,6 +60,14 @@ const navItems = [
     ],
   },
   {
+    label: "Brochure Management",
+    icon: <Download size={20} />,
+    children: [
+      { label: "Add Brochure", path: "/brochure/add" },
+      { label: "Brochure List", path: "/brochure/list" },
+    ],
+  },
+  {
     label: "Reviews & Ratings",
     icon: <Star size={20} />,
     path: "/reviews-ratings",

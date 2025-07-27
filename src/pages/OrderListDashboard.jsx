@@ -211,7 +211,6 @@ export default function OrderListDashboard() {
       try {
         setLoading(true);
         const res = await getAllOrders();
-        console.log("All Orders",res)
         setOrders(res.orders || []); // Adjust key if different
       } catch (error) {
         console.error("Error fetching orders:", error);
@@ -226,14 +225,17 @@ export default function OrderListDashboard() {
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {
       const customer = order?.userId?.name || "";
-      const id = order?._id || "";
-      const status = order?.status || "";
+      const id = order?.orderId || "";
+      const status = order?.paymentStatus || "";
       const date = order?.createdAt || "";
       const total = order?.totalAmount ?? "";
   
-      const statusMatch = activeTab === "All" || status === activeTab;
+      const statusMatch =
+      activeTab === "All" || status.toLowerCase() === activeTab.toLowerCase();
+
       const paymentMatch =
-        paymentStatus === "All" || order?.paymentStatus === paymentStatus;
+      paymentStatus === "All" || status.toLowerCase() === paymentStatus.toLowerCase();
+    
       const searchMatch =
         customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
         id.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -393,12 +395,12 @@ export default function OrderListDashboard() {
         renderRow={(order) => (
           <>
             <td className="p-3 font-medium text-black whitespace-nowrap">
-              {order._id}
+            {order.orderId}
             </td>
             <td className="p-3">{order?.userId?.name}</td>
             <td className="p-3">{order.totalAmount}</td>
             <td className="p-3">
-              <StatusBadge status={order.status} />
+              <StatusBadge status={order.paymentStatus} />
             </td>
             <td className="p-3">{new Date(order.createdAt).toLocaleDateString()}</td>
             <td className="p-3">
