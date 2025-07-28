@@ -33,6 +33,7 @@ function Brochure() {
       }
 
       const data = await res.json();
+      toast.success("Broucher Uploaded")
       return data.secure_url; // The PDF URL
     } catch (error) {
       console.error("Error uploading to Cloudinary:", error);
@@ -63,6 +64,8 @@ function Brochure() {
     try {
       const response = await createBrochure(payload);
       toast.success("Brochure created successfully!");
+      console.log("Brochure",response);
+      
 
       // Reset form
       setName("");

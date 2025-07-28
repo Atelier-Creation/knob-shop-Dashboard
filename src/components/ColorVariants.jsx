@@ -1,6 +1,6 @@
-import React, { useRef, useState, useEffect, useCallback } from "react"; // Added useEffect and useCallback
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import ColorNamer from "color-namer";
-import { Plus, Trash2, X } from "lucide-react";
+import { Plus, Trash2, X } from "lucide-react"; // Changed Trash2 to X for image delete button
 import toast from "react-hot-toast";
 import ImageUploader from "./ImageUploader";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
@@ -40,15 +40,14 @@ const ColorVariants = ({ colors, setColors }) => {
     const newColor = {
       hex: picker,
       name: getSuggestedName(picker),
-      // price: null, // Removed color-level price
       images: [],
       sizes: [
         {
           label: "",
-          mrp: null, // MRP per size
-          discountPercentage: null, // Discount per size
-          taxPercentage: null, // Tax per size
-          sellingPrice: null, // Calculated selling price per size
+          mrp: null,
+          discountPercentage: null,
+          taxPercentage: null,
+          sellingPrice: null,
           stock: null,
         },
       ],
@@ -85,7 +84,7 @@ const ColorVariants = ({ colors, setColors }) => {
 
           if (removedImage && removedImage.deleteToken) {
             const cloudName =
-              import.meta.env.VITE_CLOUDINARY_NAME || "dpea4iv0b"; // Corrected env variable name
+              import.meta.env.VITE_CLOUDINARY_NAME || "dpea4iv0b";
             fetch(
               `https://api.cloudinary.com/v1_1/${cloudName}/delete_by_token`,
               {
@@ -209,7 +208,6 @@ const ColorVariants = ({ colors, setColors }) => {
     updateColor(oldHex, { hex: newHex, name: getSuggestedName(newHex) });
   };
 
-  // Memoized function for calculating selling price to avoid re-renders
   const calculateSellingPrice = useCallback((mrp, discount, tax) => {
     const numMrp = Number(mrp) || 0;
     const numDiscount = Number(discount) || 0;
@@ -220,7 +218,6 @@ const ColorVariants = ({ colors, setColors }) => {
     return parseFloat(finalSellingPrice.toFixed(2));
   }, []);
 
-  // UseEffect to recalculate selling price for each size variant
   useEffect(() => {
     setColors((prevColors) => {
       let changed = false;
@@ -246,10 +243,9 @@ const ColorVariants = ({ colors, setColors }) => {
       });
       return changed ? newColors : prevColors;
     });
-  }, [colors, calculateSellingPrice]); // Depend on colors and the memoized calculation function
+  }, [colors, calculateSellingPrice]);
 
   console.log(colors);
-  
 
   return (
     <div className="mt-5">
@@ -284,7 +280,7 @@ const ColorVariants = ({ colors, setColors }) => {
       </div>
 
       <div className="space-y-6">
-        {colors.map((c) => (
+        {colors.map((c, colorIndex) => (
           <div
             key={c.hex}
             className="p-4 border border-gray-300 bg-white rounded-md shadow-sm relative"
@@ -346,59 +342,60 @@ const ColorVariants = ({ colors, setColors }) => {
               />
             </div>
 
-            {colors.map((color, colorIndex) => (
-              <div key={colorIndex}>
-                {/* Wrap this DragDropContext for this specific color */}
-                <DragDropContext
-                  onDragEnd={(result) => handleImageDragEnd(result, colorIndex)}
+            {/* CORRECTED SECTION: Render images for the current color variant 'c' */}
+            {c.images && c.images.length > 0 && (
+              <DragDropContext
+                onDragEnd={(result) => handleImageDragEnd(result, colorIndex)}
+              >
+                <Droppable
+                  droppableId={`droppable-${c.hex}`}
+                  direction="horizontal"
                 >
-                  <Droppable
-                    droppableId={`droppable-${colorIndex}`}
-                    direction="horizontal"
-                  >
-                    {(provided) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        className="flex gap-2"
-                      >
-                        {color.images.map((img, imgIndex) => (
-                          <Draggable
-                            key={img.url}
-                            draggableId={img.url}
-                            index={imgIndex}
-                          >
-                            {(provided) => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                
-                                className={`relative ${imgIndex === 0 ? "w-48 h-48" : "w-24 h-24"} border border-gray-400 rounded overflow-hidden`}
-                              >
-                                <img
-                                  src={img.url}
-                                  alt=""
-                                  className="w-full h-full object-cover"
-                                />
-                                 <button
-                                type="button"
-                                onClick={() => removeVariantImage(c.hex, imgIndex)}
-                                className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/30 border-2 border-gray-100 flex items-center justify-center text-white/80 hover:bg-red-500 hover:text-white"
+                  {(provided) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      className="flex gap-2 mt-2"
+                    >
+                      {c.images.map((img, imgIndex) => (
+                        <Draggable
+                          key={img.url}
+                          draggableId={img.url}
+                          index={imgIndex}
+                        >
+                          {(provided) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              className={`relative ${
+                                imgIndex === 0 ? "w-48 h-48" : "w-24 h-24"
+                              } border border-gray-400 rounded overflow-hidden`}
                             >
-                                <Trash2 size={12} /> {/* Using X icon for close */}
-                            </button>
-                              </div>
-                            )}
-                          </Draggable>
-                        ))}
-                        {provided.placeholder}
-                      </div>
-                    )}
-                  </Droppable>
-                </DragDropContext>
-              </div>
-            ))}
+                              <img
+                                src={img.url}
+                                alt=""
+                                className="w-full h-full object-cover"
+                              />
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  removeVariantImage(c.hex, imgIndex)
+                                }
+                                className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/30 border-2 border-gray-100 flex items-center justify-center text-white/80 hover:bg-red-500 hover:text-white"
+                              >
+                                <X size={12} />
+                              </button>
+                            </div>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+                    </div>
+                  )}
+                </Droppable>
+              </DragDropContext>
+            )}
 
             <div className="mt-2">
               <label className="block text-xs font-semibold text-gray-700 mb-1">
@@ -417,7 +414,6 @@ const ColorVariants = ({ colors, setColors }) => {
                     <Trash2 size={16} />
                   </button>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mt-2">
-                    {/* Size Label */}
                     <div>
                       <label className="block text-[10px] font-medium text-gray-700 mb-1">
                         Label
@@ -432,7 +428,6 @@ const ColorVariants = ({ colors, setColors }) => {
                         className="border border-gray-300 focus:ring-0 outline-0 px-2 py-2 rounded text-xs w-full"
                       />
                     </div>
-                    {/* MRP Price */}
                     <div>
                       <label className="block text-[10px] font-medium text-gray-700 mb-1">
                         MRP Price
@@ -457,7 +452,6 @@ const ColorVariants = ({ colors, setColors }) => {
                         />
                       </div>
                     </div>
-                    {/* Discount % */}
                     <div>
                       <label className="block text-[10px] font-medium text-gray-700 mb-1">
                         Discount %
@@ -465,6 +459,8 @@ const ColorVariants = ({ colors, setColors }) => {
                       <div className="relative">
                         <input
                           type="number"
+                          max={100}
+                          min={0}
                           value={size.discountPercentage ?? ""}
                           onChange={(e) =>
                             updateSize(
@@ -482,7 +478,6 @@ const ColorVariants = ({ colors, setColors }) => {
                         </span>
                       </div>
                     </div>
-                    {/* Tax % */}
                     <div>
                       <label className="block text-[10px] font-medium text-gray-700 mb-1">
                         Tax %
@@ -490,6 +485,8 @@ const ColorVariants = ({ colors, setColors }) => {
                       <div className="relative">
                         <input
                           type="number"
+                          max={100}
+                          min={0}
                           value={size.taxPercentage ?? ""}
                           onChange={(e) =>
                             updateSize(
@@ -507,7 +504,6 @@ const ColorVariants = ({ colors, setColors }) => {
                         </span>
                       </div>
                     </div>
-                    {/* Selling Price (Calculated) */}
                     <div>
                       <label className="block text-[10px] font-medium text-gray-700 mb-1">
                         Selling Price
@@ -525,7 +521,6 @@ const ColorVariants = ({ colors, setColors }) => {
                         />
                       </div>
                     </div>
-                    {/* Stock */}
                     <div>
                       <label className="block text-[10px] font-medium text-gray-700 mb-1">
                         Stock

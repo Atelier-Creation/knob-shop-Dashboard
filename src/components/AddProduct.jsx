@@ -33,7 +33,7 @@ export default function AddProduct() {
     productFeatures: [{ heading: "", description: "", image: "" }],
     techSpecs: [{ title: "", value: "" }],
     variant: [],
-    sizes: [], // ← Add this line
+    sizes: [], 
     dimensions: {
       weight: null,
       height: null,
@@ -52,13 +52,13 @@ export default function AddProduct() {
       isActive: false,
     },
   });
-  
 
-  const [features, setFeatures] = useState([]); // State for "Key Features" (title, icon)
+  const [features, setFeatures] = useState([]); 
   const [selectedIcon, setSelectedIcon] = useState(null);
   const [featInput, setFeatInput] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [picker, setPicker] = useState("#000000");
+  const [isSaving, setIsSaving] = useState(false);
 
   const [colors, setColors] = useState([
     {
@@ -70,15 +70,15 @@ export default function AddProduct() {
     },
   ]);
 
-  const handleImageReorder = (result) => {
-    if (!result.destination) return;
+  // const handleImageReorder = (result) => {
+  //   if (!result.destination) return;
 
-    const reordered = Array.from(productData.images);
-    const [removed] = reordered.splice(result.source.index, 1);
-    reordered.splice(result.destination.index, 0, removed);
+  //   const reordered = Array.from(productData.images);
+  //   const [removed] = reordered.splice(result.source.index, 1);
+  //   reordered.splice(result.destination.index, 0, removed);
 
-    updateField("images", reordered);
-  };
+  //   updateField("images", reordered);
+  // };
 
   const resetForm = () => {
     setProductData({
@@ -130,146 +130,118 @@ export default function AddProduct() {
   }
 
   async function uploadToCloudinary(file) {
-    if (!file) return null;
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", uploadPreset);
+  if (!file) return null;
 
-    try {
-      const res = await fetch(
-        `https://api.cloudinary.com/v1_1/${cloudName}/upload`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error.message || "Cloudinary upload failed");
-      }
-
-      const data = await res.json();
-      return data.secure_url;
-    } catch (error) {
-      console.error("Error uploading to Cloudinary:", error);
-      throw error;
-    }
+  // ✅ Skip if already a Cloudinary URL
+  if (typeof file === "string" && file.startsWith("https://res.cloudinary.com")) {
+    console.log("Skipping upload: already a Cloudinary URL");
+    return file;
   }
 
+  // ✅ Ensure it's a File or Blob
+  if (!(file instanceof File || file instanceof Blob)) {
+    console.warn("Invalid file type. Must be a File or Blob.");
+    return null;
+  }
+
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", uploadPreset);
+
+  try {
+    const res = await fetch(
+      `https://api.cloudinary.com/v1_1/${cloudName}/upload`,
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.error.message || "Cloudinary upload failed");
+    }
+
+    const data = await res.json();
+    return data.secure_url;
+  } catch (error) {
+    console.error("Error uploading to Cloudinary:", error);
+    throw error;
+  }
+}
+
+
   const handleSaveProduct = async () => {
-    const loadingToastId = toast.loading("Starting product save process...");
+    setIsSaving(true);
+    const loadingToastId = toast.loading("Product Saving...");
 
     try {
-      // Stage 1: Filtering data
-      toast.loading("Filtering product data...", { id: loadingToastId });
       const validProductFeatures = productData.productFeatures.filter(
         (f) => f.heading || f.description || f.image
       );
       const validTechSpecs = productData.techSpecs.filter(
         (s) => s.title || s.value
       );
-      toast.success("Product data filtered.", {
-        id: loadingToastId,
-        duration: 1500,
-      }); // Show success briefly, then update
 
-      // Stage 2: Uploading Main Images
-      toast.loading("Uploading main product images...", { id: loadingToastId });
-      const uploadedMainImages = await Promise.all(
-        productData.images
-          .map(async (fileOrUrl) => {
-            if (typeof fileOrUrl === "string") {
-              return fileOrUrl;
-            } else if (fileOrUrl instanceof File) {
-              // Assuming uploadToCloudinary returns the URL or {url, deleteToken}
-              const uploaded = await uploadToCloudinary(fileOrUrl);
-              return uploaded.url || uploaded; // Adapt based on what uploadToCloudinary returns
-            }
-            return null;
-          })
-          .filter(Boolean)
-      );
-      toast.success("Main product images uploaded.", {
-        id: loadingToastId,
-        duration: 1500,
+      // Upload main product images concurrently
+      const mainImageUploadTasks = productData.images.map((fileOrUrl) => {
+        if (typeof fileOrUrl === "string") return Promise.resolve(fileOrUrl);
+        if (fileOrUrl instanceof File)
+          return uploadToCloudinary(fileOrUrl).then((res) => res.url || res);
+        return Promise.resolve(null);
       });
 
-      // Stage 3: Uploading Detailed Features Images
-      toast.loading("Uploading detailed feature images...", {
-        id: loadingToastId,
-      });
-      const uploadedDetailedFeatures = await Promise.all(
-        validProductFeatures.map(async (f) => ({
-          title: f.heading,
-          description: f.description,
-          image:
-            typeof f.image === "string"
-              ? f.image
-              : f.image
-              ? // Adapt based on what uploadToCloudinary returns
-                (await uploadToCloudinary(f.image)).url ||
-                (await uploadToCloudinary(f.image))
-              : "",
-        }))
-      );
-      toast.success("Detailed feature images uploaded.", {
-        id: loadingToastId,
-        duration: 1500,
-      });
+      const uploadedMainImages = (
+        await Promise.all(mainImageUploadTasks)
+      ).filter(Boolean);
 
-      // Stage 4: Uploading Variant Images and processing sizes
-      toast.loading("Uploading variant images and processing sizes...", {
-        id: loadingToastId,
-      });
+      // Upload variant images concurrently
       const uploadedVariants = await Promise.all(
-        colors.map(async (color) => ({
-          title: color.name,
-          value: color.hex,
-          price: Number(color.price || 0),
-          images: await Promise.all(
-            color.images
-              .map(async (imgObj) => {
-                // imgObj is now { url, deleteToken }
-                // If it's a new File, upload it
-                if (imgObj instanceof File) {
-                  const uploaded = await uploadToCloudinary(imgObj);
-                  return {
-                    url: uploaded.url,
-                    deleteToken: uploaded.deleteToken,
-                  }; // Ensure this matches your ImageUploader's return
-                } else if (typeof imgObj === "object" && imgObj.url) {
-                  // If it's an existing uploaded object, keep it as is
-                  return imgObj;
-                }
-                return null;
-              })
-              .filter(Boolean)
-          ),
-          sizes: color.sizes.map((size) => ({
-            label: size.label,
-            mrp: Number(size.mrp || 0), // Add MRP
-            discountPercentage: Number(size.discountPercentage || 0), // Add Discount %
-            taxPercentage: Number(size.taxPercentage || 0), // Add Tax %
-            sellingPrice: Number(size.sellingPrice || 0), // Add Selling Price
-            stock: Number(size.stock || 0),
-          })),
-        }))
-      );
-      toast.success("Variant images uploaded and sizes processed.", {
-        id: loadingToastId,
-        duration: 1500,
-      });
+        colors.map(async (color) => {
+          const variantImageTasks = color.images.map((imgObj) => {
+            if (imgObj instanceof File) {
+              return uploadToCloudinary(imgObj).then((res) => ({
+                url: res.url,
+                deleteToken: res.deleteToken,
+              }));
+            } else if (typeof imgObj === "object" && imgObj.url) {
+              return Promise.resolve(imgObj);
+            }
+            return Promise.resolve(null);
+          });
 
-      // Stage 5: Mapping other data
-      toast.loading("Preparing final product data...", { id: loadingToastId });
-      // Map key features to the required format
+          const images = (await Promise.all(variantImageTasks)).filter(Boolean);
+
+          return {
+            title: color.name,
+            value: color.hex,
+            price: Number(color.price || 0),
+            images,
+            sizes: color.sizes.map((size) => ({
+              label: size.label,
+              mrp: Number(size.mrp || 0),
+              discountPercentage: Number(size.discountPercentage || 0),
+              taxPercentage: Number(size.taxPercentage || 0),
+              sellingPrice: Number(size.sellingPrice || 0),
+              stock: Number(size.stock || 0),
+            })),
+          };
+        })
+      );
+
+      // No actual upload happening here, just reshaping features
+      const uploadedDetailedFeatures = validProductFeatures.map((f) => ({
+        title: f.heading,
+        description: f.description,
+        image: f.image,
+      }));
+
       const mappedKeyFeatures = features.map((f) => {
         const pathParts = f.icon.split("/");
         const filename = pathParts[pathParts.length - 1];
         return {
           title: f.label,
-          image: filename || "", // Store only the filename
+          image: filename || "",
         };
       });
 
@@ -277,51 +249,31 @@ export default function AddProduct() {
         title: s.title || "",
         value: s.value || "",
       }));
-      toast.success("Final product data prepared.", {
-        id: loadingToastId,
-        duration: 1500,
-      });
 
-      // Stage 6: Constructing Payload and Sending to API
-      toast.loading("Sending product data to server...", {
-        id: loadingToastId,
-      });
       const finalPayload = {
         name: productData.name,
-        productId: productData.productId, // Add if not present already
+        productId: productData.productId,
         stock: Number(productData.stock),
         description: productData.description,
         brand: productData.brand,
-        category: localStorage.getItem("selectedCategoryId"), // plain string ID
+        category: localStorage.getItem("selectedCategoryId"),
         status: productData.status,
-        images: uploadedMainImages, // Array of image URLs
+        images: uploadedMainImages,
         video: productData.video,
         brochure: productData.brochure,
-      
-        // Features with heading, description, image
-        features: uploadedDetailedFeatures, // [{ heading, description, image }]
-      
-        // Key features with title and icon
-        key_features: mappedKeyFeatures, // [{ title, image }]
-      
-        // Technical specifications
-        tech_spec: mappedTechSpecs, // [{ title, value }]
-      
-        // Installation info
+        features: uploadedDetailedFeatures,
+        key_features: mappedKeyFeatures,
+        tech_spec: mappedTechSpecs,
         installation: {
           videoUrl: productData.installation.videoUrl,
           content: productData.installation.content,
         },
-      
-        // Dimensions
         dimensions: {
           weight: Number(productData.dimensions.weight),
           height: Number(productData.dimensions.height),
           width: Number(productData.dimensions.width),
           length: Number(productData.dimensions.length),
         },
-      
-        // Discount details
         discount: {
           type: productData.discount?.type || "percentage",
           value: Number(productData.discount?.value || 0),
@@ -333,39 +285,21 @@ export default function AddProduct() {
             : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
           isActive: productData.discount?.isActive || false,
         },
-      
-        // Color Variants + Nested Sizes
-        variant: uploadedVariants.map(variant => ({
-          title: variant.title,
-          value: variant.value, // Color hex or name
-          price: Number(variant.price),
-          images: variant.images, // [{ url, deleteToken }]
-          sizes: (variant.sizes || []).map(size => ({
-            label: size.label,
-            mrp: Number(size.mrp),
-            discountPercentage: Number(size.discountPercentage),
-            taxPercentage: Number(size.taxPercentage),
-            sellingPrice: Number(size.sellingPrice),
-            stock: Number(size.stock),
-          })),
-        })),
+        variant: uploadedVariants,
       };
-            
 
       console.log("Final Payload to be sent:", finalPayload);
 
       const response = await createProduct(finalPayload);
-
-      toast.success("Product created successfully!", { id: loadingToastId });
       resetForm();
+      toast.success("Product created successfully!", { id: loadingToastId });
       console.log("Product created:", response);
     } catch (err) {
       console.error("Failed to create product:", err);
-      // Use toast.error for final error message
       toast.error("Failed to create product", { id: loadingToastId });
     } finally {
-      // Ensure the loading toast is dismissed even if there's an uncaught error
       toast.dismiss(loadingToastId);
+      setIsSaving(false);
     }
   };
 
@@ -387,10 +321,10 @@ export default function AddProduct() {
     });
   };
 
-  const handleImageUpload = async (event) => {
-    const files = Array.from(event.target.files);
-    updateField("images", [...productData.images, ...files]);
-  };
+  // const handleImageUpload = async (event) => {
+  //   const files = Array.from(event.target.files);
+  //   updateField("images", [...productData.images, ...files]);
+  // };
 
   const handleFeatureImage = (imageUrl, index) => {
     updateFeatureField(index, "image", imageUrl);
@@ -554,6 +488,33 @@ export default function AddProduct() {
         setPicker={setPicker}
       />
 
+      <Section title="Product Video URL" />
+      <Field
+        label="YouTube Video URL (Installation)"
+        extra="bg-white"
+        isLabel={false} // Changed to true to show label clearly
+        value={productData.video}
+        set={(val) => updateField("video", val)}
+        placeholder="e.g., https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      />
+      {productData.video && (
+        <div className="mt-2">
+          <h5 className="text-sm font-medium mb-1">Video Preview:</h5>
+          <div className="aspect-video w-full max-w-md border border-gray-300 rounded-md overflow-hidden">
+            <iframe
+              className="w-full h-full"
+              src={`https://www.youtube.com/embed/${getYouTubeVideoId(
+                productData.video
+              )}`}
+              title="YouTube video player"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            ></iframe>
+          </div>
+        </div>
+      )}
+
       <Section title="Key Features" />
       <div className="flex flex-row mt-4 sm:flex-row gap-2 items-start sm:items-center">
         <div
@@ -604,7 +565,7 @@ export default function AddProduct() {
       </div>
 
       {/* Product Images Upload Section */}
-      <div className="mb-6">
+      {/* <div className="mb-6">
         <label className="block mb-2 font-medium text-sm text-gray-700">
           Product Images *
         </label>
@@ -682,33 +643,8 @@ export default function AddProduct() {
         <p className="text-xs mt-4 text-gray-500">
           Please Upload 1:1 Size images only
         </p>
-      </div>
-      <Section title="Product Video URL" />
-      <Field
-        label="YouTube Video URL (Installation)"
-        extra="bg-white"
-        isLabel={false} // Changed to true to show label clearly
-        value={productData.video}
-        set={(val) => updateField("video", val)}
-        placeholder="e.g., https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-      />
-      {productData.video && (
-        <div className="mt-2">
-          <h5 className="text-sm font-medium mb-1">Video Preview:</h5>
-          <div className="aspect-video w-full max-w-md border border-gray-300 rounded-md overflow-hidden">
-            <iframe
-              className="w-full h-full"
-              src={`https://www.youtube.com/embed/${getYouTubeVideoId(
-                productData.video
-              )}`}
-              title="YouTube video player"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            ></iframe>
-          </div>
-        </div>
-      )}
+      </div> */}
+      
       <Section title="Brochure (PDF)" />
       <div>
         <label className="block mb-1 font-medium">Upload Brochure (PDF)</label>
@@ -898,8 +834,9 @@ export default function AddProduct() {
             <button
               className="bg-black text-white px-4 py-2 rounded-md font-medium cursor-pointer"
               onClick={handleSaveProduct}
+              disabled={isSaving}
             >
-              Save Product
+              {isSaving ? "Saving Product..." : "Save Product"}
             </button>
             <button className="border border-black text-black px-4 py-2 rounded-md font-medium">
               Preview Product
@@ -1048,13 +985,13 @@ const ChipFeature = ({ text, del, Icon }) => (
 const Section = ({ title, action, subtitle = "" }) => (
   <>
     <hr className="border-t border-dashed border-gray-300" />
-    { title &&
+    {title && (
       <div className="flex gap-2 items-center mt-2 mb-4">
-      <h4 className="font-medium">{title}</h4>
-      <p className="text-xs text-gray-500">{subtitle}</p>
-      {action}
-    </div>
-    }
+        <h4 className="font-medium">{title}</h4>
+        <p className="text-xs text-gray-500">{subtitle}</p>
+        {action}
+      </div>
+    )}
   </>
 );
 
