@@ -46,6 +46,9 @@ export default function ProductManager() {
     }
   };
 
+  console.log(activeProduct);
+  
+
   // Filter products based on selected category
   const filteredProducts =
   selectedCategory === 'all'

@@ -7,6 +7,8 @@ import {
   Trash2,
   BadgePlus,
   UploadCloud,
+  CircleArrowLeft,
+  RotateCcw,
 } from "lucide-react";
 import ColorVariants from "./ColorVariants";
 import ColorNamer from "color-namer";
@@ -66,7 +68,16 @@ export default function AddProduct() {
       name: getSuggestedName("#ffffff"),
       price: null,
       images: [],
-      sizes: [],
+      sizes: [
+        {
+          label: "",
+          mrp: "",
+          discountPercentage: "",
+          taxPercentage: "",
+          sellingPrice: "",
+          stock: "",
+        },
+      ],
     },
   ]);
 
@@ -95,10 +106,10 @@ export default function AddProduct() {
       techSpecs: [{ title: "", value: "" }],
       variant: [],
       dimensions: {
-        weight: null,
-        height: null,
-        width: null,
-        length: null,
+        weight: "",
+        height: "",
+        width: "",
+        length: "",
       },
       installation: {
         videoUrl: "",
@@ -115,7 +126,16 @@ export default function AddProduct() {
         name: getSuggestedName("#ffffff"),
         price: null,
         images: [],
-        sizes: [],
+        sizes: [
+          {
+            label: "",
+            mrp: "",
+            discountPercentage: "",
+            taxPercentage: "",
+            sellingPrice: "",
+            stock: "",
+          },
+        ],
       },
     ]);
   };
@@ -173,7 +193,52 @@ export default function AddProduct() {
     }
   }
 
+  const validateProductData = () => {
+    const errors = [];
+
+    if (!productData.name.trim()) errors.push("Product Name is required.");
+    if (!productData.brand.trim()) errors.push("Brand Name is required.");
+    if (!productData.productId.trim())
+      errors.push("Product ID (SKU) is required.");
+    if (
+      !productData.dimensions ||
+      !productData.dimensions.height ||
+      !productData.dimensions.weight ||
+      !productData.dimensions.length ||
+      !productData.dimensions.width
+    )
+      errors.push("Product Dimensions is required.");
+    if (!productData.description.trim())
+      errors.push("Product Description is required.");
+    if (!colors.length || !colors[0].images.length)
+      errors.push("At least one color variant with images is required.");
+
+    for (const color of colors) {
+      if (!color.sizes || !color.sizes.length) {
+        errors.push(`Add sizes for variant "${color.name}"`);
+      }
+      if (
+        !color.sizes.mrp ||
+        !color.sizes.sellingPrice ||
+        !color.sizes.discountPercentage ||
+        !color.sizes.taxPercentage ||
+        !color.sizes.stock
+      ) {
+        errors.push("All the Fields in Size is required.");
+      }
+      if (!color.sizes.stock < 0) {
+        errors.push("Stock cannot Be less than 0");
+      }
+    }
+    return errors;
+  };
+
   const handleSaveProduct = async () => {
+    const errors = validateProductData();
+    if (errors.length > 0) {
+      toast.error(errors[0]); // Show the first error
+      return;
+    }
     setIsSaving(true);
     const loadingToastId = toast.loading("Product Saving...");
 
@@ -300,7 +365,7 @@ export default function AddProduct() {
 
       const response = await createProduct(finalPayload);
       resetForm();
-      toast.success("Product created successfully!", { id: loadingToastId });
+      toast.success("Product created successfully!");
       console.log("Product created:", response);
     } catch (err) {
       console.error("Failed to create product:", err);
@@ -420,8 +485,13 @@ export default function AddProduct() {
 
   return (
     <div className="pe-16 ps-8 py-6 space-y-6 font-inter text-sm text-[#1c1c1c]">
-      <div className="text-lg font-semibold">
-        Categories & Products / Add Category / Add Product
+      <div className="flex justify-between items-center">
+        <div className="text-lg font-semibold">
+          Categories & Products / Add Category / Add Product
+        </div>
+        <button className="text-blue-300 flex items-center gap-1 px-4 py-2 rounded-md font-medium cursor-pointer focus:ring-0 outline-0" onClick={()=> resetForm()}>
+          <RotateCcw size={16} /> <span className="text-blue-300 text-sm">Reset Form</span>
+        </button>
       </div>
       <Section />
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 mt-4">

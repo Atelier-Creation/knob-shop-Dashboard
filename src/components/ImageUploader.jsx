@@ -4,7 +4,11 @@ import { toast } from "react-hot-toast";
 import { Trash2, CloudUpload } from "lucide-react"; // Import CloudUpload for the empty state icon
 
 // Add a 'multiple' prop to control single/multiple file uploads
-export default function ImageUploader({ image, onImageUpload, multiple = false }) {
+export default function ImageUploader({
+  image,
+  onImageUpload,
+  multiple = false,
+}) {
   // Only use internal preview and deleteToken if we're dealing with a single image
   const [singlePreview, setSinglePreview] = useState(image || null);
   const [singleDeleteToken, setSingleDeleteToken] = useState(null);
@@ -14,7 +18,8 @@ export default function ImageUploader({ image, onImageUpload, multiple = false }
   const fileInputRef = useRef(null); // Keep for direct input click
 
   const cloudName = import.meta.env.cloudinery_name || "dpea4iv0b";
-  const uploadPreset = import.meta.env.cloudinery_presetName || "product_upload";
+  const uploadPreset =
+    import.meta.env.cloudinery_presetName || "product_upload";
 
   useEffect(() => {
     // Only update internal preview if it's a single image uploader
@@ -27,11 +32,14 @@ export default function ImageUploader({ image, onImageUpload, multiple = false }
   const handleSingleImageDelete = async () => {
     if (singleDeleteToken) {
       try {
-        await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/delete_by_token`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token: singleDeleteToken }),
-        });
+        await fetch(
+          `https://api.cloudinary.com/v1_1/${cloudName}/delete_by_token`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token: singleDeleteToken }),
+          }
+        );
         toast.success("Image removed");
       } catch (err) {
         console.error("Image delete failed", err);
@@ -46,45 +54,51 @@ export default function ImageUploader({ image, onImageUpload, multiple = false }
   };
 
   // Helper to upload a single file to Cloudinary
-  const uploadFileToCloudinary = useCallback(async (file) => {
-    return new Promise((resolve, reject) => {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", uploadPreset);
+  const uploadFileToCloudinary = useCallback(
+    async (file) => {
+      return new Promise((resolve, reject) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", uploadPreset);
 
-      const xhr = new XMLHttpRequest();
+        const xhr = new XMLHttpRequest();
 
-      xhr.upload.addEventListener("progress", (e) => {
-        if (e.lengthComputable) {
-          // This progress is for the current *individual* file being uploaded if multiple
-          setUploadProgress(Math.round((e.loaded * 100) / e.total));
-        }
-      });
-
-      xhr.onreadystatechange = function () {
-        if (xhr.readyState === XMLHttpRequest.DONE) {
-          try {
-            const res = JSON.parse(xhr.responseText);
-            if (res.secure_url) {
-              resolve({ url: res.secure_url, deleteToken: res.delete_token });
-            } else {
-              reject(new Error("Cloudinary upload failed: " + JSON.stringify(res)));
-            }
-          } catch (error) {
-            reject(new Error("Error parsing Cloudinary response: " + error.message));
+        xhr.upload.addEventListener("progress", (e) => {
+          if (e.lengthComputable) {
+            // This progress is for the current *individual* file being uploaded if multiple
+            setUploadProgress(Math.round((e.loaded * 100) / e.total));
           }
-        }
-      };
+        });
 
-      xhr.open(
-        "POST",
-        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-        true
-      );
-      xhr.send(formData);
-    });
-  }, [cloudName, uploadPreset]);
+        xhr.onreadystatechange = function () {
+          if (xhr.readyState === XMLHttpRequest.DONE) {
+            try {
+              const res = JSON.parse(xhr.responseText);
+              if (res.secure_url) {
+                resolve({ url: res.secure_url, deleteToken: res.delete_token });
+              } else {
+                reject(
+                  new Error("Cloudinary upload failed: " + JSON.stringify(res))
+                );
+              }
+            } catch (error) {
+              reject(
+                new Error("Error parsing Cloudinary response: " + error.message)
+              );
+            }
+          }
+        };
 
+        xhr.open(
+          "POST",
+          `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+          true
+        );
+        xhr.send(formData);
+      });
+    },
+    [cloudName, uploadPreset]
+  );
 
   const onDrop = useCallback(
     async (acceptedFiles) => {
@@ -97,38 +111,36 @@ export default function ImageUploader({ image, onImageUpload, multiple = false }
         const uploadedImagesData = [];
         try {
           for (const file of acceptedFiles) {
-            // For multiple, we might want to show individual progress or just a global one
-            // Here, uploadProgress will show the progress of the *last* file being uploaded
             const { url, deleteToken } = await uploadFileToCloudinary(file);
             uploadedImagesData.push({ url, deleteToken });
           }
-          if (onImageUpload) onImageUpload(uploadedImagesData); // Pass array of {url, deleteToken}
-          toast.success(`${acceptedFiles.length} image(s) uploaded successfully`);
+          if (onImageUpload) onImageUpload(uploadedImagesData);
+          toast.success(
+            `${acceptedFiles.length} image(s) uploaded successfully`
+          );
         } catch (err) {
           console.error("Multi-image upload failed", err);
           toast.error("Failed to upload all images.");
         } finally {
           setIsUploading(false);
-          setUploadProgress(0); // Clear progress bar after all done
+          setUploadProgress(0); 
         }
       } else {
-        // Single image upload logic (mostly as before)
         const file = acceptedFiles[0];
         const localUrl = URL.createObjectURL(file);
-        setSinglePreview(localUrl); // Show local preview immediately
-
+        setSinglePreview(localUrl);
         try {
           const { url, deleteToken } = await uploadFileToCloudinary(file);
           setSingleDeleteToken(deleteToken);
-          if (onImageUpload) onImageUpload(url); // Pass single URL
+          if (onImageUpload) onImageUpload(url);
           toast.success("Image uploaded successfully");
         } catch (err) {
           console.error("Single image upload failed", err);
           toast.error("Upload failed");
-          setSinglePreview(null); // Clear preview on failure
+          setSinglePreview(null);
         } finally {
           setIsUploading(false);
-          setUploadProgress(0); // Clear progress
+          setUploadProgress(0);
         }
       }
     },
@@ -154,14 +166,18 @@ export default function ImageUploader({ image, onImageUpload, multiple = false }
     };
   }, [singleDeleteToken, multiple]);
 
-  const currentPreview = !multiple ? singlePreview : null; 
+  const currentPreview = !multiple ? singlePreview : null;
 
   return (
     <div
       {...getRootProps()}
       className={`group border-2 border-dashed rounded-md p-4 min-h-[160px] text-gray-600 text-sm font-medium flex items-center justify-center cursor-pointer text-center relative overflow-hidden transition-colors duration-200
-        ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 bg-gray-50'}
-        ${isUploading ? 'opacity-70 cursor-not-allowed' : ''}
+        ${
+          isDragActive
+            ? "border-blue-500 bg-blue-50"
+            : "border-gray-300 bg-gray-50"
+        }
+        ${isUploading ? "opacity-70 cursor-not-allowed" : ""}
       `}
     >
       <input ref={fileInputRef} {...getInputProps()} />
@@ -172,7 +188,10 @@ export default function ImageUploader({ image, onImageUpload, multiple = false }
           {/* A simple overall progress bar for multiple files */}
           {uploadProgress > 0 && (
             <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
-              <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${uploadProgress}%` }}></div>
+              <div
+                className="bg-blue-600 h-2.5 rounded-full"
+                style={{ width: `${uploadProgress}%` }}
+              ></div>
             </div>
           )}
         </div>
@@ -219,7 +238,10 @@ export default function ImageUploader({ image, onImageUpload, multiple = false }
             <div className="flex flex-col items-center justify-center space-y-2">
               <CloudUpload size={24} className="text-gray-400" />
               <p className="text-sm text-gray-600">
-                <span className="text-blue-600 cursor-pointer hover:underline">Click to Upload</span> or
+                <span className="text-blue-600 cursor-pointer hover:underline">
+                  Click to Upload
+                </span>{" "}
+                or
               </p>
               <p className="text-xs text-gray-500">Drag & Drop</p>
             </div>
