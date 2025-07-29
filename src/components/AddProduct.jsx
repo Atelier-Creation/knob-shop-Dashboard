@@ -33,7 +33,7 @@ export default function AddProduct() {
     productFeatures: [{ heading: "", description: "", image: "" }],
     techSpecs: [{ title: "", value: "" }],
     variant: [],
-    sizes: [], 
+    sizes: [],
     dimensions: {
       weight: null,
       height: null,
@@ -53,7 +53,7 @@ export default function AddProduct() {
     },
   });
 
-  const [features, setFeatures] = useState([]); 
+  const [features, setFeatures] = useState([]);
   const [selectedIcon, setSelectedIcon] = useState(null);
   const [featInput, setFeatInput] = useState("");
   const [showModal, setShowModal] = useState(false);
@@ -130,46 +130,48 @@ export default function AddProduct() {
   }
 
   async function uploadToCloudinary(file) {
-  if (!file) return null;
+    if (!file) return null;
 
-  // ✅ Skip if already a Cloudinary URL
-  if (typeof file === "string" && file.startsWith("https://res.cloudinary.com")) {
-    console.log("Skipping upload: already a Cloudinary URL");
-    return file;
-  }
-
-  // ✅ Ensure it's a File or Blob
-  if (!(file instanceof File || file instanceof Blob)) {
-    console.warn("Invalid file type. Must be a File or Blob.");
-    return null;
-  }
-
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("upload_preset", uploadPreset);
-
-  try {
-    const res = await fetch(
-      `https://api.cloudinary.com/v1_1/${cloudName}/upload`,
-      {
-        method: "POST",
-        body: formData,
-      }
-    );
-
-    if (!res.ok) {
-      const errorData = await res.json();
-      throw new Error(errorData.error.message || "Cloudinary upload failed");
+    // ✅ Skip if already a Cloudinary URL
+    if (
+      typeof file === "string" &&
+      file.startsWith("https://res.cloudinary.com")
+    ) {
+      console.log("Skipping upload: already a Cloudinary URL");
+      return file;
     }
 
-    const data = await res.json();
-    return data.secure_url;
-  } catch (error) {
-    console.error("Error uploading to Cloudinary:", error);
-    throw error;
-  }
-}
+    // ✅ Ensure it's a File or Blob
+    if (!(file instanceof File || file instanceof Blob)) {
+      console.warn("Invalid file type. Must be a File or Blob.");
+      return null;
+    }
 
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", uploadPreset);
+
+    try {
+      const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${cloudName}/upload`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error.message || "Cloudinary upload failed");
+      }
+
+      const data = await res.json();
+      return data.secure_url;
+    } catch (error) {
+      console.error("Error uploading to Cloudinary:", error);
+      throw error;
+    }
+  }
 
   const handleSaveProduct = async () => {
     setIsSaving(true);
@@ -184,16 +186,16 @@ export default function AddProduct() {
       );
 
       // Upload main product images concurrently
-      const mainImageUploadTasks = productData.images.map((fileOrUrl) => {
-        if (typeof fileOrUrl === "string") return Promise.resolve(fileOrUrl);
-        if (fileOrUrl instanceof File)
-          return uploadToCloudinary(fileOrUrl).then((res) => res.url || res);
-        return Promise.resolve(null);
-      });
+      // const mainImageUploadTasks = productData.images.map((fileOrUrl) => {
+      //   if (typeof fileOrUrl === "string") return Promise.resolve(fileOrUrl);
+      //   if (fileOrUrl instanceof File)
+      //     return uploadToCloudinary(fileOrUrl).then((res) => res.url || res);
+      //   return Promise.resolve(null);
+      // });
 
-      const uploadedMainImages = (
-        await Promise.all(mainImageUploadTasks)
-      ).filter(Boolean);
+      // const uploadedMainImages = (
+      //   await Promise.all(mainImageUploadTasks)
+      // ).filter(Boolean);
 
       // Upload variant images concurrently
       const uploadedVariants = await Promise.all(
@@ -229,6 +231,12 @@ export default function AddProduct() {
         })
       );
 
+      const allVariantImages = uploadedVariants.flatMap((variant) =>
+        (variant.images || []).map((img) =>
+          typeof img === "string" ? img : img.url
+        )
+      );
+
       // No actual upload happening here, just reshaping features
       const uploadedDetailedFeatures = validProductFeatures.map((f) => ({
         title: f.heading,
@@ -258,7 +266,7 @@ export default function AddProduct() {
         brand: productData.brand,
         category: localStorage.getItem("selectedCategoryId"),
         status: productData.status,
-        images: uploadedMainImages,
+        images: allVariantImages,
         video: productData.video,
         brochure: productData.brochure,
         features: uploadedDetailedFeatures,
@@ -644,7 +652,7 @@ export default function AddProduct() {
           Please Upload 1:1 Size images only
         </p>
       </div> */}
-      
+
       <Section title="Brochure (PDF)" />
       <div>
         <label className="block mb-1 font-medium">Upload Brochure (PDF)</label>

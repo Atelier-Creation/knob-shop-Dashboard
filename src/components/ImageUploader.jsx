@@ -154,8 +154,7 @@ export default function ImageUploader({ image, onImageUpload, multiple = false }
     };
   }, [singleDeleteToken, multiple]);
 
-  // Determine which preview to show based on 'multiple' prop
-  const currentPreview = !multiple ? singlePreview : null; // Variant images are managed by parent
+  const currentPreview = !multiple ? singlePreview : null; 
 
   return (
     <div
