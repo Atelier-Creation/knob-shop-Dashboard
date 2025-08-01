@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   fetchCategories,
   createCategory,
   deleteCategory,
+  updateCategory,
 } from "../api/categoryAPI";
 import CategoryCard from "../components/CategoryCard";
 import ImageUploader from "../components/ImageUploader";
@@ -11,6 +12,7 @@ import toast from "react-hot-toast";
 
 export default function CategoryManager() {
   const navigate = useNavigate();
+  const formRef = useRef(null);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [categories, setCategories] = useState([]);
   const [categoryName, setCategoryName] = useState("");
@@ -18,6 +20,8 @@ export default function CategoryManager() {
   const [brand, setBrand] = useState("");
   const [imageData, setImageData] = useState(null);
   const [openIdx, setOpenIdx] = useState(null);
+  const [editMode, setEditMode] = useState(false);
+  const [editCategoryId, setEditCategoryId] = useState(null);
 
   useEffect(() => {
     setLoadingCategories(true);
@@ -41,7 +45,9 @@ export default function CategoryManager() {
     setCategoryName("");
     setBrand("");
     setImageData(null);
-    toast.success("Form reseted");
+    setEditMode(false);
+    setEditCategoryId(null);
+    toast.success("Form reset");
   };
 
   const handleDeleteCategory = async (id) => {
@@ -57,7 +63,7 @@ export default function CategoryManager() {
 
     toast.custom(
       (t) => (
-        <div className="p-3 bg-white shadow-md rounded text-sm border relative">
+        <div className="p-3 bg-white shadow-md rounded text-sm relative">
           <div className="flex justify-between items-center">
             <span>Category deleted</span>
             <button
@@ -67,14 +73,14 @@ export default function CategoryManager() {
                 clearTimeout(timeoutId);
                 toast.dismiss(t.id);
               }}
-              className="ml-4 text-blue-600 font-medium hover:underline"
+              className="ml-4 text-black font-medium hover:underline"
             >
               Undo
             </button>
           </div>
           <div className="mt-2 h-1 bg-gray-200 overflow-hidden rounded">
             <div
-              className="h-full bg-blue-500 animate-toast-progress"
+              className="h-full bg-[#ab7b53] animate-toast-progress"
               style={{ animationDuration: `${TOAST_DURATION}ms` }}
             />
           </div>
@@ -109,20 +115,53 @@ export default function CategoryManager() {
       categoryImageUrl: imageData,
     };
 
-    createCategory(payload)
-      .then((res) => {
-        setCategories((prev) => [...prev, res.data]);
-        resetForm();
-      })
-      .catch((err) => console.error("Create error:", err))
-      .finally(() => setLoading(false));
+    if (editMode && editCategoryId) {
+      // Update flow
+      updateCategory(editCategoryId, payload)
+        .then((res) => {
+          setCategories((prev) =>
+            prev.map((cat) => (cat._id === editCategoryId ? res.data : cat))
+          );
+          toast.success("Category updated");
+          resetForm();
+        })
+        .catch((err) => {
+          console.error("Update error:", err);
+          toast.error("Update failed");
+        })
+        .finally(() => setLoading(false));
+    } else {
+      // Create flow
+      createCategory(payload)
+        .then((res) => {
+          setCategories((prev) => [...prev, res.data]);
+          toast.success("Category added");
+          resetForm();
+        })
+        .catch((err) => {
+          console.error("Create error:", err);
+          toast.error("Create failed");
+        })
+        .finally(() => setLoading(false));
+    }
+  };
+
+  const handleEditClick = (cat) => {
+    setEditMode(true);
+    setEditCategoryId(cat._id);
+    setCategoryName(cat.category_name);
+    setBrand(cat.description);
+    setImageData(cat.categoryImageUrl);
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   return (
     <div className="max-w-screen-xl mx-auto space-y-6">
-      <div className="text-gray-700 text-sm mb-2">
+      <div className="text-gray-700 text-sm mb-2" ref={formRef}>
         Categories & Products /{" "}
-        <span className="font-medium">Add Categories</span>
+        <span className="font-medium">
+          {editMode ? "Edit Category" : "Add Category"}
+        </span>
       </div>
 
       <div className="p-5 py-10 border-b-2 border-gray-300 grid md:grid-cols-4 gap-6">
@@ -158,7 +197,13 @@ export default function CategoryManager() {
               disabled={!categoryName || !imageData}
               className="bg-gray-800 text-white rounded-sm px-4 py-2 text-sm disabled:opacity-70 cursor-pointer"
             >
-              {loading ? "Adding..." : "Add Category"}
+              {loading
+                ? editMode
+                  ? "Updating..."
+                  : "Adding..."
+                : editMode
+                ? "Update Category"
+                : "Add Category"}
             </button>
             <button
               className="bg-gray-800 text-white rounded-sm px-4 py-2 text-sm font-medium disabled:opacity-70 cursor-pointer"
@@ -190,6 +235,7 @@ export default function CategoryManager() {
                   onToggle={() => setOpenIdx(openIdx === idx ? null : idx)}
                   onClose={() => setOpenIdx(null)}
                   onDelete={handleDeleteCategory}
+                  onEdit={() => handleEditClick(cat)}
                 />
               ))}
         </div>

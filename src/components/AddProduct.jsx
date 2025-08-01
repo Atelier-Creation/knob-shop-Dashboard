@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { createProduct } from "../api/productApi";
 import {
   Plus,
@@ -7,7 +7,6 @@ import {
   Trash2,
   BadgePlus,
   UploadCloud,
-  CircleArrowLeft,
   RotateCcw,
 } from "lucide-react";
 import ColorVariants from "./ColorVariants";
@@ -21,7 +20,59 @@ import card from "/keyfeaturesIcon/card.png";
 import biometric from "/keyfeaturesIcon/biometric.svg";
 import remote from "/keyfeaturesIcon/remote.svg";
 
-export default function AddProduct() {
+export default function AddProduct({
+  mode = "create",
+  initialData,
+  onSave,
+  onCancel,
+}) {
+  console.log("initial data", initialData);
+  const brochureInputRef = React.useRef(null);
+
+  useEffect(() => {
+  if (initialData) {
+    setProductData({
+      dimensions: {
+        weight: initialData?.dimensions?.weight || "",
+        height: initialData?.dimensions?.height || "",
+        width: initialData?.dimensions?.width || "",
+        length: initialData?.dimensions?.length || "",
+      },
+      ...initialData,
+      productFeatures: initialData.features?.length
+        ? initialData.features.map((f) => ({
+            heading: f.title || "",
+            description: f.description || "",
+            image: f.image || "",
+          }))
+        : [{ heading: "", description: "", image: "" }],
+      techSpecs: initialData.tech_spec?.length
+        ? initialData.tech_spec.map((s) => ({
+            title: s.title || "",
+            value: s.value || "",
+          }))
+        : [{ title: "", value: "" }],
+      
+      installation: {
+        videoUrl: initialData?.installation?.videoUrl || "",
+        content: initialData?.installation?.content || "",
+      },
+    });
+
+    const normalizedColors = (initialData.variant || []).map((v) => ({
+      hex: v.value,
+      name: v.title || getSuggestedName(v?.value),
+      price: v.price || 0,
+      images: v.images || [],
+      sizes: v.sizes || [],
+    }));
+    setColors(normalizedColors);
+
+    setFeatures(initialData.key_features || []);
+  }
+}, [initialData]);
+
+
   const [productData, setProductData] = useState({
     name: "",
     description: "",
@@ -138,6 +189,10 @@ export default function AddProduct() {
         ],
       },
     ]);
+    if (brochureInputRef.current) {
+      brochureInputRef.current.value = "";
+    }
+    toast.success("Form reset successfully");
   };
 
   const cloudName = import.meta.env.cloudinery_name || "dpea4iv0b"; // Corrected env variable name
@@ -210,24 +265,24 @@ export default function AddProduct() {
       errors.push("Product Dimensions is required.");
     if (!productData.description.trim())
       errors.push("Product Description is required.");
-    if (!colors.length || !colors[0].images.length)
-      errors.push("At least one color variant with images is required.");
+    if (!colors.length) {
+      errors.push("At least one color variant is required.");
+    } else {
+      colors.forEach((color, idx) => {
+        if (!color.images || color.images.length < 2) {
+          errors.push(`Color variant ${idx + 1} must have at least 2 images.`);
+        }
+      });
+    }
 
     for (const color of colors) {
       if (!color.sizes || !color.sizes.length) {
         errors.push(`Add sizes for variant "${color.name}"`);
       }
-      if (
-        !color.sizes.mrp ||
-        !color.sizes.sellingPrice ||
-        !color.sizes.discountPercentage ||
-        !color.sizes.taxPercentage ||
-        !color.sizes.stock
-      ) {
-        errors.push("All the Fields in Size is required.");
-      }
-      if (!color.sizes.stock < 0) {
-        errors.push("Stock cannot Be less than 0");
+      if (!color.sizes.stock <= 0) {
+        errors.push(
+          "Stock cannot Be less than or equal to 0,it leads to move product state Out Off Stock"
+        );
       }
     }
     return errors;
@@ -243,10 +298,10 @@ export default function AddProduct() {
     const loadingToastId = toast.loading("Product Saving...");
 
     try {
-      const validProductFeatures = productData.productFeatures.filter(
+      const validProductFeatures = productData.productFeatures?.filter(
         (f) => f.heading || f.description || f.image
       );
-      const validTechSpecs = productData.techSpecs.filter(
+      const validTechSpecs = productData.techSpecs?.filter(
         (s) => s.title || s.value
       );
 
@@ -296,20 +351,20 @@ export default function AddProduct() {
         })
       );
 
-      const allVariantImages = uploadedVariants.flatMap((variant) =>
+      const allVariantImages = uploadedVariants?.flatMap((variant) =>
         (variant.images || []).map((img) =>
           typeof img === "string" ? img : img.url
         )
       );
 
       // No actual upload happening here, just reshaping features
-      const uploadedDetailedFeatures = validProductFeatures.map((f) => ({
+      const uploadedDetailedFeatures = validProductFeatures?.map((f) => ({
         title: f.heading,
         description: f.description,
         image: f.image,
       }));
 
-      const mappedKeyFeatures = features.map((f) => {
+      const mappedKeyFeatures = features?.map((f) => {
         const pathParts = f.icon.split("/");
         const filename = pathParts[pathParts.length - 1];
         return {
@@ -318,7 +373,7 @@ export default function AddProduct() {
         };
       });
 
-      const mappedTechSpecs = validTechSpecs.map((s) => ({
+      const mappedTechSpecs = validTechSpecs?.map((s) => ({
         title: s.title || "",
         value: s.value || "",
       }));
@@ -362,11 +417,14 @@ export default function AddProduct() {
       };
 
       console.log("Final Payload to be sent:", finalPayload);
-
-      const response = await createProduct(finalPayload);
-      resetForm();
-      toast.success("Product created successfully!");
-      console.log("Product created:", response);
+      if (onSave) {
+        await onSave(finalPayload);
+      } else {
+        const response = await createProduct(finalPayload);
+        resetForm();
+        toast.success("Product created successfully!");
+        console.log("product Added", response);
+      }
     } catch (err) {
       console.error("Failed to create product:", err);
       toast.error("Failed to create product", { id: loadingToastId });
@@ -425,11 +483,13 @@ export default function AddProduct() {
   };
 
   const addTechSpec = () => {
-    setProductData((prev) => ({
-      ...prev,
-      techSpecs: [...prev.techSpecs, { title: "", value: "" }],
-    }));
-  };
+  const existingSpecs = productData.techSpecs || [];
+  setProductData((prev) => ({
+    ...prev,
+    techSpecs: [...existingSpecs, { title: "", value: "" }],
+  }));
+};
+
 
   const removeTechSpec = (i) => {
     const updated = productData.techSpecs.filter((_, index) => index !== i);
@@ -447,14 +507,15 @@ export default function AddProduct() {
   };
 
   const addProductFeature = () => {
-    setProductData((prev) => ({
-      ...prev,
-      productFeatures: [
-        ...prev.productFeatures,
-        { heading: "", description: "", image: "" },
-      ],
-    }));
-  };
+  const existingFeatures = productData.productFeatures || [];
+  setProductData((prev) => ({
+    ...prev,
+    productFeatures: [
+      ...existingFeatures,
+      { heading: "", description: "", image: "" },
+    ],
+  }));
+};
 
   const removeFeature = (index) => {
     const updated = [...productData.productFeatures];
@@ -486,11 +547,23 @@ export default function AddProduct() {
   return (
     <div className="pe-16 ps-8 py-6 space-y-6 font-inter text-sm text-[#1c1c1c]">
       <div className="flex justify-between items-center">
-        <div className="text-lg font-semibold">
-          Categories & Products / Add Category / Add Product
-        </div>
-        <button className="text-blue-300 flex items-center gap-1 px-4 py-2 rounded-md font-medium cursor-pointer focus:ring-0 outline-0" onClick={()=> resetForm()}>
-          <RotateCcw size={16} /> <span className="text-blue-300 text-sm">Reset Form</span>
+        {mode === "edit" ? (
+          <div className="p-5 text-lg font-semibold text-gray-700">
+            Categories & Products / Product list /{" "}
+            {productData?.name || "Product"} / Edit Product
+          </div>
+        ) : (
+          <div className="text-lg font-semibold">
+            Categories & Products / Add Category / Add Product
+          </div>
+        )}
+
+        <button
+          className="text-blue-300 flex items-center gap-1 px-4 py-2 rounded-md font-medium cursor-pointer focus:ring-0 outline-0"
+          onClick={() => resetForm()}
+        >
+          <RotateCcw size={16} />{" "}
+          <span className="text-blue-300 text-sm">Reset Form</span>
         </button>
       </div>
       <Section />
@@ -727,7 +800,9 @@ export default function AddProduct() {
       <div>
         <label className="block mb-1 font-medium">Upload Brochure (PDF)</label>
         <input
+          id="brochure-upload"
           type="file"
+          ref={brochureInputRef}
           accept="application/pdf"
           onChange={async (e) => {
             const file = e.target.files[0];
@@ -820,7 +895,7 @@ export default function AddProduct() {
               Product Features*
             </label>
             {/* Render product features */}
-            {productData.productFeatures.map((feature, index) => (
+            {productData.productFeatures?.map((feature, index) => (
               <div
                 key={index}
                 className="border border-gray-300 bg-white rounded-lg p-4 space-y-3 relative"
@@ -837,6 +912,7 @@ export default function AddProduct() {
                   </label>
 
                   <ImageUploader
+                    image={feature.image}
                     onImageUpload={(imageUrl) =>
                       handleFeatureImage(imageUrl, index)
                     }
@@ -876,7 +952,7 @@ export default function AddProduct() {
               Technical Specifications*
             </label>
             {/* Render technical specifications */}
-            {productData.techSpecs.map((spec, index) => (
+            {productData.techSpecs?.map((spec, index) => (
               <div key={index} className="flex items-center gap-2">
                 <Field
                   value={spec.title}
@@ -909,16 +985,49 @@ export default function AddProduct() {
           </div>
 
           <div className="flex justify-end gap-4 mt-6">
-            <button
-              className="bg-black text-white px-4 py-2 rounded-md font-medium cursor-pointer"
-              onClick={handleSaveProduct}
-              disabled={isSaving}
-            >
-              {isSaving ? "Saving Product..." : "Save Product"}
-            </button>
-            <button className="border border-black text-black px-4 py-2 rounded-md font-medium">
+            {mode === "edit" ? (
+              <>
+                <button
+                  className={`px-4 py-2 rounded-md text-white ${
+                    isSaving
+                      ? "bg-gray-500 cursor-not-allowed"
+                      : "bg-black cursor-pointer"
+                  }`}
+                  onClick={handleSaveProduct}
+                  disabled={isSaving}
+                >
+                  {isSaving ? "Saving..." : "Save Changes"}
+                </button>
+
+                <button
+                  className="border px-4 py-2 rounded-md cursor-pointer"
+                  onClick={onCancel}
+                >
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  className="bg-black text-white px-4 py-2 rounded-md font-medium cursor-pointer"
+                  onClick={handleSaveProduct}
+                  disabled={isSaving}
+                >
+                  {isSaving ? "Saving Product..." : "Save Product"}
+                </button>
+
+                <button
+                  className="border px-4 py-2 rounded-md cursor-pointer"
+                  onClick={() => window.history.back()}
+                >
+                  Cancel
+                </button>
+              </>
+            )}
+
+            {/* <button className="border border-black text-black px-4 py-2 rounded-md font-medium cursor-pointer">
               Preview Product
-            </button>
+            </button> */}
           </div>
         </div>
       </div>
@@ -979,6 +1088,7 @@ const Field = ({
         readOnly={readOnly}
         placeholder={placeholder || label}
         onChange={(e) => set?.(e.target.value)}
+        onWheel={(e) => e.target.blur()}
         className={`w-full border border-gray-300 rounded-md px-3 py-[10px] focus:ring-1 ring-gray-300 outline-0 ${
           prefix ? "pl-6" : ""
         } ${suffix ? "pr-6" : ""} ${extra}`}

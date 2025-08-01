@@ -25,6 +25,8 @@ const TopSellingProducts = () => {
     setLoading(true);
     try {
       const { topSellingProducts } = await getLatestAnalyticsSnapshot(range);
+      console.log(topSellingProducts);
+      
 
       const updatedProducts = topSellingProducts.map((product, index) => ({
         id: product.productId || index,
@@ -74,7 +76,7 @@ const TopSellingProducts = () => {
             lastWeek: product.revenue * 0.9,
           },
         ],
-        image: product.image,
+        image: product?.image,
       }));
 
       setTopProducts(updatedProducts);

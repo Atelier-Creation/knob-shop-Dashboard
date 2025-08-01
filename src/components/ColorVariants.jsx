@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 import ImageUploader from "./ImageUploader";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
-const ColorVariants = ({ colors, setColors }) => {
+const ColorVariants = ({ colors = [], setColors }) => {
   const inputRef = useRef(null);
   const inlineColorInputRefs = useRef({});
   const [picker, setPicker] = useState("#f1c40f");
@@ -283,7 +283,7 @@ const ColorVariants = ({ colors, setColors }) => {
         {colors.map((c, colorIndex) => (
           <div
             key={c.hex}
-            className="p-4 border border-gray-300 bg-white rounded-md shadow-sm relative"
+            className="p-4 border border-gray-300 bg-white rounded-md shadow-sm relative max-w-[950px]"
           >
             <button
               type="button"
@@ -355,7 +355,7 @@ const ColorVariants = ({ colors, setColors }) => {
                     <div
                       ref={provided.innerRef}
                       {...provided.droppableProps}
-                      className="flex gap-2 mt-2"
+                      className="flex flex-wrap gap-2 mt-2"
                     >
                       {c.images.map((img, imgIndex) => (
                         <Draggable
@@ -439,6 +439,7 @@ const ColorVariants = ({ colors, setColors }) => {
                         <input
                           type="number"
                           value={size.mrp ?? ""}
+                          onWheel={(e) => e.target.blur()}
                           onChange={(e) =>
                             updateSize(
                               c.hex,
@@ -462,6 +463,7 @@ const ColorVariants = ({ colors, setColors }) => {
                           max={100}
                           min={0}
                           value={size.discountPercentage ?? ""}
+                          onWheel={(e) => e.target.blur()}
                           onChange={(e) =>
                             updateSize(
                               c.hex,
@@ -496,6 +498,7 @@ const ColorVariants = ({ colors, setColors }) => {
                               Number(e.target.value)
                             )
                           }
+                          onWheel={(e) => e.target.blur()}
                           placeholder="Tax"
                           className="border border-gray-300 focus:ring-0 outline-0 px-2 py-2 rounded text-xs w-full pr-6"
                         />
@@ -536,6 +539,7 @@ const ColorVariants = ({ colors, setColors }) => {
                             Number(e.target.value)
                           )
                         }
+                        onWheel={(e) => e.target.blur()}
                         placeholder="Stock"
                         className="border border-gray-300 focus:ring-0 outline-0 px-2 py-2 rounded text-xs w-full"
                       />

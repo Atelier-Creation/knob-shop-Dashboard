@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap');
 /* index.css or global.css */
 .scrollbar-thin::-webkit-scrollbar {
   width: 3px;
@@ -15,7 +16,9 @@
 .scrollbar-thin:hover::-webkit-scrollbar-thumb{
    background-color: #f3f1ef;
 }
-
+button{
+  cursor: pointer;
+}
 
 /* thick */
 .scrollbar-thick::-webkit-scrollbar {

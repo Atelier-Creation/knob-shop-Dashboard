@@ -27,6 +27,7 @@ export default function CategoryCard({
   onToggle,
   onClose,
   onDelete,
+  onEdit,
 }) {
   const menuRef = useRef(null);
   useClickOutside(menuRef, onClose); // closes on outside click
@@ -78,12 +79,14 @@ export default function CategoryCard({
                   onClick={(e) => {
                     e.stopPropagation();
                     console.log("Edit clicked for:", cat._id);
+                    onEdit?.(cat); 
                     onClose();
                   }}
                   className="w-full px-3 py-2 flex items-center cursor-pointer text-sm text-gray-700 hover:bg-gray-100 rounded-t-lg"
                 >
                   <Edit className="w-4 h-4 mr-2" /> Edit
                 </button>
+
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -104,14 +107,14 @@ export default function CategoryCard({
 
         {/* ─── CTA button ─────────────────────────────── */}
         <Link
-        onClick={() => {
+          onClick={() => {
             localStorage.setItem("selectedCategoryId", cat._id); // ✅ Store in localStorage
             console.log(cat.category_name);
-            
+
             localStorage.setItem("selectedCategoryName", cat.category_name);
             localStorage.setItem("selectedDescriptionName", cat.description);
           }}
-          to={`/categories-products/category/${cat._id}`}          
+          to={`/categories-products/category/${cat._id}`}
           className="w-full flex items-center justify-center gap-2 text-sm font-medium py-2 bg-black text-white rounded-lg hover:bg-gray-900 transition"
         >
           <Plus className="w-4 h-4" /> Add Products

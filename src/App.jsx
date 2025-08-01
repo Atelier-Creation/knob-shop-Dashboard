@@ -24,6 +24,8 @@ import AuthPage from "./pages/AuthPage"; // 👈 Your login page
 import Brochuer from "./components/Brochure/Brochure";
 import BroucherList from "./components/Brochure/BroucherList";
 import "bootstrap-icons/font/bootstrap-icons.css";
+import ViewEditProduct from "./pages/ViewEditProduct";
+import LockScreen from "./pages/LockScreen";
 
 function App() {
   return (
@@ -32,6 +34,7 @@ function App() {
       <Router>
         <Routes>
           <Route path="/login" element={<AuthPage />} />
+          <Route path="/lockscreen" element={<LockScreen />} />
 
           <Route
             path="/"
@@ -56,6 +59,7 @@ function App() {
               path="categories-products/product-list"
               element={<ProductManager />}
             />
+            <Route path="/products/:id/edit" element={<ViewEditProduct />} />
             <Route
               path="categories-products/category"
               element={<CategoryManager />}
