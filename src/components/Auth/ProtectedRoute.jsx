@@ -3,33 +3,37 @@ import { useEffect } from "react";
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem("authToken");
-  const expiry = localStorage.getItem("authExpiry");
+  const lastActivity = localStorage.getItem("lastActivity");
+  const INACTIVITY_LIMIT = 30 * 60 * 1000; // 30 minutes in ms
 
   useEffect(() => {
-    // Check and set up auto-logout timer
-    if (expiry) {
-      const timeout = parseInt(expiry) - Date.now();
+    const checkInactivity = () => {
+      if (lastActivity) {
+        const inactiveTime = Date.now() - parseInt(lastActivity, 10);
 
-      if (timeout > 0) {
-        const timer = setTimeout(() => {
+        if (inactiveTime > INACTIVITY_LIMIT) {
           localStorage.removeItem("authToken");
-          localStorage.removeItem("authExpiry");
-          window.location.href = "/lockscreen"; // hard redirect to avoid rendering stale state
-        }, timeout);
-
-        return () => clearTimeout(timer);
-      } else {
-        // Expired already
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("authExpiry");
-        window.location.href = "/login";
+          localStorage.removeItem("authEmail");
+          localStorage.removeItem("lastActivity");
+          window.location.href = "/login"; // full reload to reset state
+        }
       }
-    }
-  }, [expiry]);
+    };
 
-  if (!token || !expiry || Date.now() > parseInt(expiry)) {
+    // Run once on mount
+    checkInactivity();
+
+    // Re-run periodically (e.g., every minute)
+    const interval = setInterval(checkInactivity, 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [lastActivity]);
+
+  // Redirect immediately if not authenticated
+  if (!token || !lastActivity || Date.now() - parseInt(lastActivity, 10) > INACTIVITY_LIMIT) {
     localStorage.removeItem("authToken");
-    localStorage.removeItem("authExpiry");
+    localStorage.removeItem("authEmail");
+    localStorage.removeItem("lastActivity");
     return <Navigate to="/login" replace />;
   }
 

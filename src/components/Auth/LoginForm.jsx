@@ -49,11 +49,10 @@ export default function LoginForm() {
         return;
       }
 
-      const expiryTime = Date.now() + 60 * 60 * 1000; // 30 mins
-
+      const now = Date.now();
       localStorage.setItem("authEmail", data.role === "admin" ? data.email : email.value);
       localStorage.setItem("authToken", token);
-      localStorage.setItem("authExpiry", expiryTime.toString());
+      localStorage.setItem("lastActivity", now.toString());
       toast.success("Login successful");
       console.log("localStorage:", localStorage);
       

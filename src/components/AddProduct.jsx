@@ -199,10 +199,11 @@ export default function AddProduct({
   const uploadPreset =
     import.meta.env.cloudinery_presetName || "product_upload"; // Corrected env variable name
 
-  function getSuggestedName(hex) {
-    const name = ColorNamer(hex).ntc[0]?.name || "Custom Color";
-    return name === "Grey" ? "Custom Color" : name;
-  }
+function getSuggestedName(hex) {
+  if (typeof hex !== "string" || !hex.startsWith("#")) return "Custom Color";
+  const name = ColorNamer(hex)?.ntc?.[0]?.name || "Custom Color";
+  return name === "Grey" ? "Custom Color" : name;
+}
 
   async function uploadToCloudinary(file) {
     if (!file) return null;
