@@ -31,39 +31,36 @@ export default function LoginForm() {
   }
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    const { email, password } = e.target;
-    setLoading(true);
-    try {
-      const res = await login({
-        email: email.value,
-        password: password.value,
-      });
+  e.preventDefault();
+  const { email, password } = e.target;
+  setLoading(true);
+  try {
+    const res = await login({
+      email: email.value,
+      password: password.value,
+    });
 
-      const data = res.data;
-      const role = data.role;
-      const token = data.token;
-      
-      if (role !== "admin") {
-        toast.error("Access denied: Admins only");
-        return;
-      }
+    const data = res.data;
+    const role = data.role;
+    const token = data.token;
 
-      const now = Date.now();
-      localStorage.setItem("authEmail", data.role === "admin" ? data.email : email.value);
-      localStorage.setItem("authToken", token);
-      localStorage.setItem("lastActivity", now.toString());
-      toast.success("Login successful");
-      console.log("localStorage:", localStorage);
-      
-      navigate("/");
-    } catch (err) {
-      console.error("Login failed", err);
-      toast.error("Invalid email or password");
-    } finally {
-      setLoading(false);
+    if (role !== "admin") {
+      toast.error("Access denied: Admins only");
+      return;
     }
-  };
+
+    localStorage.setItem("authEmail", data.email);
+    localStorage.setItem("authToken", token);
+    toast.success("Login successful");
+    navigate("/");
+  } catch (err) {
+    console.error("Login failed", err);
+    toast.error("Invalid email or password");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 text-sm text-gray-700">

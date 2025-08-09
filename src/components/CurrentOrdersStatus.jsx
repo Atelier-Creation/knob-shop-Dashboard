@@ -172,7 +172,7 @@ export default function CurrentOrdersStatus() {
                 <div className="flex items-start gap-3">
                   <div className="w-12 h-12 shrink-0 rounded bg-gray-200 flex items-center justify-center overflow-hidden">
                     <img
-                      src={order.image}
+                      src={order.image || null}
                       alt={order.productName}
                       className="w-full h-full object-cover"
                     />

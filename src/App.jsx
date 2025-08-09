@@ -34,7 +34,7 @@ function App() {
     <>
       <Toaster position="bottom-center" />
       <Router>
-        <InactivityHandler />
+        {/* <InactivityHandler /> */}
         <Routes>
           <Route path="/login" element={<AuthPage />} />
           <Route path="/lockscreen" element={<LockScreen />} />
