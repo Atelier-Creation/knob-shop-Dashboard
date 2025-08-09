@@ -179,22 +179,22 @@ const TopSellingProducts = () => {
                 <div className="flex items-start md:items-center gap-4 w-full md:w-1/3">
                   <div className="bg-gray-200 w-16 h-16 min-w-16 min-h-16 p-1 rounded-md flex items-center justify-center">
                     <img
-                      src={product.image}
-                      alt={product.name}
+                      src={product.image || null}
+                      alt={product.name || null}
                       className="w-full h-full object-contain"
                     />
                   </div>
                   <div className="min-w-0">
                     <div className="font-semibold text-gray-800 text-sm sm:text-xs truncate">
-                      {product.name}
+                      {product.name || null}
                     </div>
                     <div className="text-sm sm:text-xs text-gray-500 truncate">
-                      {product.price}
+                      {product.price || null}
                     </div>
                     <div
                       className={`text-xs sm:text-[10px] truncate ${product.changeColor}`}
                     >
-                      {product.change}
+                      {product.change || null}
                     </div>
                   </div>
                 </div>
