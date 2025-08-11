@@ -16,6 +16,7 @@ export default function CategoryManager() {
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [categories, setCategories] = useState([]);
   const [categoryName, setCategoryName] = useState("");
+  const [bannerImageData, setBannerImageData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [brand, setBrand] = useState("");
   const [imageData, setImageData] = useState(null);
@@ -45,9 +46,9 @@ export default function CategoryManager() {
     setCategoryName("");
     setBrand("");
     setImageData(null);
+    setBannerImageData(null);
     setEditMode(false);
     setEditCategoryId(null);
-    toast.success("Form reset");
   };
 
   const handleDeleteCategory = async (id) => {
@@ -99,12 +100,12 @@ export default function CategoryManager() {
           setCategories((prev) => [deletedCategory, ...prev]);
         }
       }
-    }, TOAST_DURATION - 1000);
+    }, TOAST_DURATION - 4000);
   };
 
   const handleAddCategory = () => {
     setLoading(true);
-    if (!categoryName || !imageData) {
+    if (!categoryName || !imageData || !bannerImageData) {
       toast.error("Please fill all fields");
       setLoading(false);
       return;
@@ -113,6 +114,7 @@ export default function CategoryManager() {
       category_name: categoryName,
       description: brand,
       categoryImageUrl: imageData,
+      bannerImageUrl: bannerImageData,
     };
 
     if (editMode && editCategoryId) {
@@ -152,6 +154,7 @@ export default function CategoryManager() {
     setCategoryName(cat.category_name);
     setBrand(cat.description);
     setImageData(cat.categoryImageUrl);
+    setBannerImageData(cat.bannerImageUrl);
     formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
@@ -164,28 +167,42 @@ export default function CategoryManager() {
         </span>
       </div>
 
-      <div className="p-5 py-10 border-b-2 border-gray-300 grid md:grid-cols-4 gap-6">
-        <ImageUploader
-          image={imageData}
-          onImageUpload={(base64) => setImageData(base64)}
-        />
+      <div className="p-5 py-10 border-b-2 border-gray-300 items-end grid md:grid-cols-4 gap-6">
+        <div>
+          <p className="mb-2 text-sm font-medium">Category Image</p>
+          <ImageUploader
+            image={imageData}
+            onImageUpload={(base64) => setImageData(base64)}
+          />
+        </div>
 
-        <div className="md:col-span-3 space-y-4">
-          <input
+        {/* Banner image */}
+        <div>
+          <p className="mb-2 text-sm font-medium">Banner Image</p>
+          <ImageUploader
+            image={bannerImageData}
+            onImageUpload={(base64) => setBannerImageData(base64)}
+          />
+        </div>
+
+        <div className="md:col-span-2 space-y-4">
+          <p className="mb-2 text-sm font-medium">Category Details</p>
+          <div className="space-y-4 min-h-[160px]">
+            <input
             type="text"
             placeholder="Category"
             value={categoryName}
             onChange={(e) => setCategoryName(e.target.value)}
-            className="w-2/3 border border-gray-300 rounded-sm p-2 text-sm"
+            className="w-full border border-gray-300 rounded-sm p-2 text-sm"
           />
           <input
             type="text"
             placeholder="Brand/Description"
             value={brand}
             onChange={(e) => setBrand(e.target.value)}
-            className="w-2/3 border border-gray-300 rounded-sm p-2 text-sm"
+            className="w-full border border-gray-300 rounded-sm p-2 text-sm"
           />
-          <div className="flex gap-3 flex-wrap">
+          <div className="flex gap-3 flex-wrap justify-end">
             <button
               onClick={resetForm}
               className="border rounded-sm px-4 py-2 text-sm cursor-pointer"
@@ -216,6 +233,7 @@ export default function CategoryManager() {
             >
               Continue to Products
             </button>
+          </div>
           </div>
         </div>
       </div>
