@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getOrderById } from "../api/orderListApi";
+import {getProductById} from '../api/productApi'
 import { MapPin, Mail, Phone, MessageCircleMore,Loader,
   ChefHat,
   Truck,
@@ -51,15 +52,24 @@ export default function OrderDetailsView() {
       try {
         const res = await getOrderById(id);
         const data = res.order;
-
+        console.log("order details page data",data)
         // Transform backend order into frontend-friendly shape
+        const productIds = data.items.map(item => item.productId);
+        const productDetails = await Promise.all(
+          productIds.map(pid => getProductById(pid))
+        );
+        const enrichedItems = data.items.map((item, index) => ({
+          ...item,
+          productData: productDetails || {}, // adjust key based on your API
+        }));
+        console.log("enrichedItems :",enrichedItems)
         const transformedOrder = {
           id: data._id,
           date: new Date(data.createdAt).toDateString(),
           status: data.status || "Paid",
           product: {
-            image: data.items?.[0]?.productId?.images?.[0] || "/placeholder.png",
-            name: data.items?.[0]?.productId?.name || "Product Name",
+            image: data.items?.[0]?.productId?.images?.[0] ||enrichedItems[0].productData[0].images?.[0] || "/placeholder.png",
+            name: data.items?.[0]?.productId?.name || data.items?.[0]?.productName||"Product Name",
             sku: data.items?.[0]?.productId?.sku || "SKU",
             price: data.items?.[0]?.price || 0,
           },

@@ -212,6 +212,7 @@ export default function OrderListDashboard() {
         setLoading(true);
         const res = await getAllOrders();
         setOrders(res.orders || []); // Adjust key if different
+        console.log("all orders",res)
       } catch (error) {
         console.error("Error fetching orders:", error);
       } finally {
@@ -400,7 +401,7 @@ export default function OrderListDashboard() {
             <td className="p-3">{order?.userId?.name}</td>
             <td className="p-3">{order.totalAmount}</td>
             <td className="p-3">
-              <StatusBadge status={order.paymentStatus} />
+              <StatusBadge status={order.paymentStatus} orderId={order._id} />
             </td>
             <td className="p-3">{new Date(order.createdAt).toLocaleDateString()}</td>
             <td className="p-3">
@@ -421,10 +422,10 @@ export default function OrderListDashboard() {
             </td>
             <td className="p-3 relative">
               <ActionMenu
-                isOpen={selectedMenu === order.id}
+                isOpen={selectedMenu === order._id}
                 onClose={() => setSelectedMenu(null)}
                 onToggle={() =>
-                  setSelectedMenu(selectedMenu === order.id ? null : order.id)
+                  setSelectedMenu(selectedMenu === order._id ? null : order._id)
                 }
               />
             </td>
@@ -433,15 +434,15 @@ export default function OrderListDashboard() {
         renderCard={(paginatedOrders) => (
           <>
             <div className="flex justify-between items-center mb-2">
-              <h3 className="text-base font-semibold">{paginatedOrders.id}</h3>
+              <h3 className="text-base font-semibold">{paginatedOrders._id}</h3>
               <ActionMenu
-                isOpen={selectedMenu === paginatedOrders.id}
+                isOpen={selectedMenu === paginatedOrders._id}
                 onClose={() => setSelectedMenu(null)}
                 onToggle={() =>
                   setSelectedMenu(
-                    selectedMenu === paginatedOrders.id
+                    selectedMenu === paginatedOrders._id
                       ? null
-                      : paginatedOrders.id
+                      : paginatedOrders._id
                   )
                 }
               />
@@ -457,7 +458,7 @@ export default function OrderListDashboard() {
               </div>
               <div>
                 <span className="font-medium text-gray-900">Status:</span>{" "}
-                <StatusBadge status={paginatedOrders.status} />
+                <StatusBadge status={paginatedOrders.status} orderId={paginatedOrders._id}/>
               </div>
               <div>
                 <span className="font-medium text-gray-900">Date:</span>{" "}

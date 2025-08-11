@@ -12,3 +12,7 @@ export const getOrderById = async (orderId) => {
     const res = await axios.get(`${BASE_URL}/${orderId}`);
     return res.data;
   };
+  export const updateOrderByOrderId = async (orderId, updates) => {
+    const res = await axios.put(`${BASE_URL}/${orderId}`, updates);
+    return res.data;
+  };
