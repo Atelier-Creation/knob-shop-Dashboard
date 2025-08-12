@@ -28,6 +28,7 @@ export default function CategoryCard({
   onClose,
   onDelete,
   onEdit,
+  children,
 }) {
   const menuRef = useRef(null);
   useClickOutside(menuRef, onClose); // closes on outside click
@@ -37,13 +38,15 @@ export default function CategoryCard({
       className="relative rounded-lg border flex border-gray-200 bg-white shadow-sm overflow-hidden transition hover:shadow-md"
       key={cat?._id}
     >
-      <img
-        src={cat.categoryImageUrl}
-        alt={cat.title}
-        className="w-1/2 h-40 object-cover"
-      />
+      <div className="w-1/2 h-52">
+        <img
+          src={cat.categoryImageUrl}
+          alt={cat.title}
+          className="w-full h-full object-cover"
+        />
+      </div>
 
-      <div className="p-4 w-1/2 flex flex-col justify-between">
+      <div className="p-4 w-1/2 flex flex-col justify-between space-y-2">
         {/* ─── Title + 3‑dot menu ─────────────────────── */}
         <div className="flex justify-between items-start mb-4">
           <div>
@@ -79,7 +82,7 @@ export default function CategoryCard({
                   onClick={(e) => {
                     e.stopPropagation();
                     console.log("Edit clicked for:", cat._id);
-                    onEdit?.(cat); 
+                    onEdit?.(cat);
                     onClose();
                   }}
                   className="w-full px-3 py-2 flex items-center cursor-pointer text-sm text-gray-700 hover:bg-gray-100 rounded-t-lg"
@@ -119,6 +122,7 @@ export default function CategoryCard({
         >
           <Plus className="w-4 h-4" /> Add Products
         </Link>
+        <div>{children}</div>
       </div>
     </div>
   );

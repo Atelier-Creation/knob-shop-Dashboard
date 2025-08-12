@@ -4,6 +4,10 @@ import axiosInstance from "./axiosInstance";
 export const fetchCategories = () => {
   return axiosInstance.get("/api/categories");
 };
+// Get all category by id
+export const getCategoryById = (categoryId) => {
+  return axiosInstance.get(`/api/categories/${categoryId}`);
+};
 
 // Create a new category
 export const createCategory = (categoryData) => {

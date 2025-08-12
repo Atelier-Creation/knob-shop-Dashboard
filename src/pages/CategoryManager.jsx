@@ -10,6 +10,8 @@ import ImageUploader from "../components/ImageUploader";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
+import CategoryFiltersEditor from "../components/CategoryFiltersEditor";
+
 export default function CategoryManager() {
   const navigate = useNavigate();
   const formRef = useRef(null);
@@ -23,6 +25,19 @@ export default function CategoryManager() {
   const [openIdx, setOpenIdx] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [editCategoryId, setEditCategoryId] = useState(null);
+
+  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+
+  const openFilterModal = (categoryId) => {
+    setSelectedCategoryId(categoryId);
+    setIsFilterModalOpen(true);
+  };
+
+  const closeFilterModal = () => {
+    setSelectedCategoryId(null);
+    setIsFilterModalOpen(false);
+  };
 
   useEffect(() => {
     setLoadingCategories(true);
@@ -189,51 +204,51 @@ export default function CategoryManager() {
           <p className="mb-2 text-sm font-medium">Category Details</p>
           <div className="space-y-4 min-h-[160px]">
             <input
-            type="text"
-            placeholder="Category"
-            value={categoryName}
-            onChange={(e) => setCategoryName(e.target.value)}
-            className="w-full border border-gray-300 rounded-sm p-2 text-sm"
-          />
-          <input
-            type="text"
-            placeholder="Brand/Description"
-            value={brand}
-            onChange={(e) => setBrand(e.target.value)}
-            className="w-full border border-gray-300 rounded-sm p-2 text-sm"
-          />
-          <div className="flex gap-3 flex-wrap justify-end">
-            <button
-              onClick={resetForm}
-              className="border rounded-sm px-4 py-2 text-sm cursor-pointer"
-            >
-              Reset
-            </button>
-            <button
-              onClick={handleAddCategory}
-              disabled={!categoryName || !imageData}
-              className="bg-gray-800 text-white rounded-sm px-4 py-2 text-sm disabled:opacity-70 cursor-pointer"
-            >
-              {loading
-                ? editMode
-                  ? "Updating..."
-                  : "Adding..."
-                : editMode
-                ? "Update Category"
-                : "Add Category"}
-            </button>
-            <button
-              className="bg-gray-800 text-white rounded-sm px-4 py-2 text-sm font-medium disabled:opacity-70 cursor-pointer"
-              onClick={() => {
-                handleAddCategory();
-                navigate("/categories-products/category/add");
-              }}
-              disabled={!categoryName || !imageData}
-              to="/categories-products/category/add"
-            >
-              Continue to Products
-            </button>
-          </div>
+              type="text"
+              placeholder="Category"
+              value={categoryName}
+              onChange={(e) => setCategoryName(e.target.value)}
+              className="w-full border border-gray-300 rounded-sm p-2 text-sm"
+            />
+            <input
+              type="text"
+              placeholder="Brand/Description"
+              value={brand}
+              onChange={(e) => setBrand(e.target.value)}
+              className="w-full border border-gray-300 rounded-sm p-2 text-sm"
+            />
+            <div className="flex gap-3 flex-wrap justify-end">
+              <button
+                onClick={resetForm}
+                className="border rounded-sm px-4 py-2 text-sm cursor-pointer"
+              >
+                Reset
+              </button>
+              <button
+                onClick={handleAddCategory}
+                disabled={!categoryName || !imageData}
+                className="bg-gray-800 text-white rounded-sm px-4 py-2 text-sm disabled:opacity-70 cursor-pointer"
+              >
+                {loading
+                  ? editMode
+                    ? "Updating..."
+                    : "Adding..."
+                  : editMode
+                  ? "Update Category"
+                  : "Add Category"}
+              </button>
+              <button
+                className="bg-gray-800 text-white rounded-sm px-4 py-2 text-sm font-medium disabled:opacity-70 cursor-pointer"
+                onClick={() => {
+                  handleAddCategory();
+                  navigate("/categories-products/category/add");
+                }}
+                disabled={!categoryName || !imageData}
+                to="/categories-products/category/add"
+              >
+                Continue to Products
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -254,10 +269,41 @@ export default function CategoryManager() {
                   onClose={() => setOpenIdx(null)}
                   onDelete={handleDeleteCategory}
                   onEdit={() => handleEditClick(cat)}
-                />
+                >
+                  <button
+                    onClick={() => openFilterModal(cat._id)}
+                    className="w-full flex items-center justify-center gap-2 text-sm font-medium py-2 bg-black text-white rounded-lg hover:bg-gray-900 transition"
+                  >
+                    Customize Filters
+                  </button>
+                </CategoryCard>
               ))}
         </div>
       </div>
+      {isFilterModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={closeFilterModal}
+        >
+          <div
+            className="bg-white rounded-lg shadow-lg max-w-4xl w-full max-h-[95vh] overflow-y-auto p-6 relative"
+            onClick={(e) => e.stopPropagation()} // prevent closing when clicking inside
+          >
+            {/* Close button */}
+            <button
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
+              onClick={closeFilterModal}
+            >
+              ✕
+            </button>
+
+            <h3 className="text-lg font-semibold mb-4">Customize Filters</h3>
+            {selectedCategoryId && (
+              <CategoryFiltersEditor categoryId={selectedCategoryId} />
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

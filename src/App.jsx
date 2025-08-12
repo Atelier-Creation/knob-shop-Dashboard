@@ -26,7 +26,6 @@ import BroucherList from "./components/Brochure/BroucherList";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import ViewEditProduct from "./pages/ViewEditProduct";
 import LockScreen from "./pages/LockScreen";
-import { InactivityHandler } from "./components/Auth/InactivityHandler";
 
 function App() {
 
