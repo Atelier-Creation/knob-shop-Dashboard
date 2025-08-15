@@ -1,13 +1,21 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getOrderById } from "../api/orderListApi";
-import {getProductById} from '../api/productApi'
-import { MapPin, Mail, Phone, MessageCircleMore,Loader,
+import { getProductById } from "../api/productApi";
+import {
+  MapPin,
+  Mail,
+  Phone,
+  MessageCircleMore,
+  Loader,
   ChefHat,
   Truck,
   CheckCircle,
   ChevronRight,
-  Dot, } from "lucide-react";
+  Dot,
+  Building2,
+} from "lucide-react";
+import { TbBrandOffice, TbTax } from "react-icons/tb";
 
 // Dummy data for now
 // const dummyOrder = {
@@ -52,29 +60,49 @@ export default function OrderDetailsView() {
       try {
         const res = await getOrderById(id);
         const data = res.order;
-        console.log("order details page data",data)
+        console.log("order details page data", data);
         // Transform backend order into frontend-friendly shape
-        const productIds = data.items.map(item => item.productId);
+        const productIds = data.items.map((item) => item.productId);
         const productDetails = await Promise.all(
-          productIds.map(pid => getProductById(pid))
+          productIds.map((pid) => getProductById(pid))
         );
         const enrichedItems = data.items.map((item, index) => ({
           ...item,
           productData: productDetails || {}, // adjust key based on your API
         }));
-        console.log("enrichedItems :",enrichedItems)
+        console.log("enrichedItems :", enrichedItems);
+        // Build full shipping address
+        const fullAddress = [
+          data.shippingAddress?.street,
+          data.shippingAddress?.district,
+          data.shippingAddress?.city,
+          data.shippingAddress?.state,
+          data.shippingAddress?.pincode,
+        ]
+          .filter(Boolean)
+          .join(", ");
+
+        // Encode for Google Maps embed
+        const encodedAddress = encodeURIComponent(fullAddress);
+        const mapurl = `https://www.google.com/maps?q=${encodedAddress}&output=embed`;
         const transformedOrder = {
           id: data._id,
           date: new Date(data.createdAt).toDateString(),
           status: data.status || "Paid",
           product: {
-            image: data.items?.[0]?.productId?.images?.[0] ||enrichedItems[0].productData[0].images?.[0] || "/placeholder.png",
-            name: data.items?.[0]?.productId?.name || data.items?.[0]?.productName||"Product Name",
+            image:
+              data.items?.[0]?.productId?.images?.[0] ||
+              enrichedItems[0].productData[0].images?.[0] ||
+              "/placeholder.png",
+            name:
+              data.items?.[0]?.productId?.name ||
+              data.items?.[0]?.productName ||
+              "Product Name",
             sku: data.items?.[0]?.productId?.sku || "SKU",
             price: data.items?.[0]?.price || 0,
           },
           payment: {
-            method: "Online Payment", // adjust if you have a field
+            method: data.paymentMethod,
             subtotal: data.items.reduce((sum, item) => sum + item.total, 0),
             shippingFee: 1000,
             tax: 1000,
@@ -88,17 +116,12 @@ export default function OrderDetailsView() {
             totalOrders: 1,
           },
           shipping: {
-            address: [
-              data.shippingAddress?.street,
-              data.shippingAddress?.district,
-              data.shippingAddress?.city,
-              data.shippingAddress?.state,
-              data.shippingAddress?.pincode,
-            ]
-              .filter(Boolean)
-              .join(", "),
-            mapurl:
-              "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d62667.59892589007!2d76.88565980039739!3d10.984122690171313!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ba859ea1af32219%3A0x8f1d8575c98a6250!2sCANARA%20BANK%20-%20COIMBATORE%20SELVAPURAM!5e0!3m2!1sen!2sin!4v1752749443244!5m2!1sen!2sin",
+            address: fullAddress,
+            mapurl,
+          },
+          company: {
+            companyName: data.companyName,
+            GST: data.gstNumber,
           },
         };
 
@@ -127,65 +150,77 @@ export default function OrderDetailsView() {
             <p className="text-sm text-gray-600 mt-1">{order.date}</p>
           </div>
           <span className="bg-green-200 text-green-700 rounded-full flex items-center text-sm font-medium ps-1 pe-3 py-1">
-           <Dot/> {order.status}
+            <Dot /> {order.status}
           </span>
         </div>
 
-         <div className="border-b border-gray-200 p-4 space-y-4 text-sm text-gray-800">
-      {/* Top Row */}
-      <div className="flex justify-between text-xs text-gray-500">
-        <span>
-          Return to{" "}
-          <span className="text-black font-medium cursor-pointer hover:underline">
-            Knobs Shop
-          </span>
-        </span>
-        <span>
-          Estimated arrived at{" "}
-          <span className="text-black font-medium">18th – 20th of July</span>
-        </span>
-      </div>
+        <div className="border-b border-gray-200 p-4 space-y-4 text-sm text-gray-800">
+          {/* Top Row */}
+          <div className="flex justify-between text-xs text-gray-500">
+            <span>
+              Return to{" "}
+              <span className="text-black font-medium cursor-pointer hover:underline">
+                Knobs Shop
+              </span>
+            </span>
+            <span>
+              Estimated arrived at{" "}
+              <span className="text-black font-medium">
+                18th – 20th of July
+              </span>
+            </span>
+          </div>
 
-      {/* Progress Steps */}
-      <div className="grid grid-cols-4 items-center gap-2">
-        {/* Step 1: Active */}
-        <div className="flex flex-col items-center">
-          <Loader className="w-4 h-4 animate-spin text-black" />
-          <span className="text-[10px] md:text-xs mt-1 font-medium text-black">Review order</span>
-          <div className="mt-2 w-full h-1 bg-black rounded-full" />
+          {/* Progress Steps */}
+          <div className="grid grid-cols-4 items-center gap-2">
+            {/* Step 1: Active */}
+            <div className="flex flex-col items-center">
+              <Loader className="w-4 h-4 animate-spin text-black" />
+              <span className="text-[10px] md:text-xs mt-1 font-medium text-black">
+                Review order
+              </span>
+              <div className="mt-2 w-full h-1 bg-black rounded-full" />
+            </div>
+
+            {/* Step 2: Inactive */}
+            <div className="flex flex-col items-center">
+              <ChefHat className="w-4 h-4 text-gray-400" />
+              <span className="text-[10px] md:text-xs mt-1 text-gray-500">
+                Preparing order
+              </span>
+              <div className="mt-2 w-full h-1 bg-gray-200 rounded-full" />
+            </div>
+
+            {/* Step 3: Inactive */}
+            <div className="flex flex-col items-center">
+              <Truck className="w-4 h-4 text-gray-400" />
+              <span className="text-[10px] md:text-xs mt-1 text-gray-500">
+                Shipping
+              </span>
+              <div className="mt-2 w-full h-1 bg-gray-200 rounded-full" />
+            </div>
+
+            {/* Step 4: Inactive */}
+            <div className="flex flex-col items-center">
+              <CheckCircle className="w-4 h-4 text-gray-400" />
+              <span className="text-[10px] md:text-xs mt-1 text-gray-500">
+                Delivered
+              </span>
+              <div className="mt-2 w-full h-1 bg-gray-200 rounded-full" />
+            </div>
+          </div>
+
+          {/* Bottom Buttons */}
+          <div className="flex justify-between items-center pt-2 text-sm">
+            <button className="text-black underline cursor-pointer">
+              Cancel order
+            </button>
+            <button className="flex items-center cursor-pointer border px-3 py-1.5 rounded-md font-medium shadow-sm hover:bg-black hover:text-white transition-colors">
+              Create Shipping Label
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </button>
+          </div>
         </div>
-
-        {/* Step 2: Inactive */}
-        <div className="flex flex-col items-center">
-          <ChefHat className="w-4 h-4 text-gray-400" />
-          <span className="text-[10px] md:text-xs mt-1 text-gray-500">Preparing order</span>
-          <div className="mt-2 w-full h-1 bg-gray-200 rounded-full" />
-        </div>
-
-        {/* Step 3: Inactive */}
-        <div className="flex flex-col items-center">
-          <Truck className="w-4 h-4 text-gray-400" />
-          <span className="text-[10px] md:text-xs mt-1 text-gray-500">Shipping</span>
-          <div className="mt-2 w-full h-1 bg-gray-200 rounded-full" />
-        </div>
-
-        {/* Step 4: Inactive */}
-        <div className="flex flex-col items-center">
-          <CheckCircle className="w-4 h-4 text-gray-400" />
-          <span className="text-[10px] md:text-xs mt-1 text-gray-500">Delivered</span>
-          <div className="mt-2 w-full h-1 bg-gray-200 rounded-full" />
-        </div>
-      </div>
-
-      {/* Bottom Buttons */}
-      <div className="flex justify-between items-center pt-2 text-sm">
-        <button className="text-black underline cursor-pointer">Cancel order</button>
-        <button className="flex items-center cursor-pointer border px-3 py-1.5 rounded-md font-medium shadow-sm hover:bg-black hover:text-white transition-colors">
-          Create Shipping Label
-          <ChevronRight className="w-4 h-4 ml-1" />
-        </button>
-      </div>
-    </div>
 
         {/* Product */}
         <div className="border-b border-gray-200 p-4 flex gap-4 items-start">
@@ -207,30 +242,23 @@ export default function OrderDetailsView() {
         <div className="p-4 space-y-5">
           <div className="flex justify-start items-center gap-2">
             <h3 className="text-sm font-semibold">Payment Details</h3>
-          <span className="bg-green-200 text-green-700 rounded-full flex items-center text-sm font-medium ps-1 pe-3">
-           <Dot/> {order.status}
-          </span>
+            <span className="bg-green-200 text-green-700 rounded-full flex items-center text-sm font-medium ps-1 pe-3">
+              <Dot /> {order.status}
+            </span>
           </div>
           <div className="flex justify-between text-sm text-gray-500">
-            <span className='text-gray-800'>Payment Method</span>
-            <span>{order.payment.method}</span>
-            
+            <span className="text-gray-800">Payment Method</span>
+            <span className="font-medium text-gray-800">{order.payment.method}</span>
           </div>
           <div className="flex justify-between text-sm text-gray-500">
-            <span className='text-gray-800'>Subtotal</span>
+            <span className="text-gray-800">Subtotal</span>
             <span>₹{order.payment.subtotal.toLocaleString()}</span>
-          </div>
-          <div className="flex justify-between text-sm text-gray-500">
-            <span className='text-gray-800'>Shipping Fee</span>
-            <span>₹{order.payment.shippingFee.toLocaleString()}</span>
-          </div>
-          <div className="flex justify-between text-sm text-gray-500">
-            <span className='text-gray-800'>Tax</span>
-            <span>₹{order.payment.tax.toLocaleString()}</span>
           </div>
           <div className="flex justify-between text-sm font-semibold py-2 border-y text-gray-500 mt-2">
             <span className="text-gray-700">Total</span>
-            <span className="font-bold">₹{order.payment.total.toLocaleString()}/-</span>
+            <span className="font-bold">
+              ₹{order.payment.subtotal.toLocaleString()}/-
+            </span>
           </div>
         </div>
       </div>
@@ -298,11 +326,21 @@ export default function OrderDetailsView() {
           </h3>
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 border border-gray-200 rounded-md text-sm font-medium">
-             <Mail className="w-4 h-4" /> {order.customer.email}
+              <Mail className="w-4 h-4" /> {order.customer.email}
             </div>
             <div className="inline-flex items-center gap-2 px-3 py-1 border border-gray-200 rounded-md text-sm font-medium">
-               <Phone className="w-4 h-4" /> {order.customer.phone}
+              <Phone className="w-4 h-4" /> {order.customer.phone}
             </div>
+            {order.company?.companyName && order.company?.GST && (
+              <>
+                <div className="inline-flex items-center gap-2 px-3 py-1 border border-gray-200 rounded-md text-sm font-medium">
+                  <Building2 className="w-4 h-4" /> {order.company?.companyName}
+                </div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 border border-gray-200 rounded-md text-sm font-medium">
+                  <TbTax className="w-4 h-4" /> {order.company?.GST}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

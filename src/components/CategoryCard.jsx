@@ -1,6 +1,7 @@
 import React, { useRef } from "react";
 import { Plus, Trash2, MoreVertical, Edit } from "lucide-react";
 import { Link } from "react-router-dom";
+import { RetryableImage } from "./RetryableImage";
 
 /* ---------- reusable hook ------------------------------------- */
 function useClickOutside(ref, handler) {
@@ -26,6 +27,7 @@ export default function CategoryCard({
   isOpen,
   onToggle,
   onClose,
+  onAdd,
   onDelete,
   onEdit,
   children,
@@ -39,9 +41,9 @@ export default function CategoryCard({
       key={cat?._id}
     >
       <div className="w-1/2 h-52">
-        <img
+        <RetryableImage
           src={cat.categoryImageUrl}
-          alt={cat.title}
+          alt={cat.category_name}
           className="w-full h-full object-cover"
         />
       </div>
@@ -75,7 +77,7 @@ export default function CategoryCard({
             {/* dropdown */}
             {isOpen && (
               <div
-                className="absolute right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-md w-28 z-50"
+                className="absolute right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-md w-42 z-50"
                 onClick={(e) => e.stopPropagation()}
               >
                 <button
@@ -85,9 +87,20 @@ export default function CategoryCard({
                     onEdit?.(cat);
                     onClose();
                   }}
-                  className="w-full px-3 py-2 flex items-center cursor-pointer text-sm text-gray-700 hover:bg-gray-100 rounded-t-lg"
+                  className="w-full px-3 py-2 mt-1 flex items-center cursor-pointer text-sm text-gray-700 hover:bg-gray-100 rounded-t-lg"
                 >
                   <Edit className="w-4 h-4 mr-2" /> Edit
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    console.log("Edit clicked for:", cat._id);
+                    onAdd?.(cat);
+                    onClose();
+                  }}
+                  className="w-full px-3 py-2 my-1 flex items-center cursor-pointer text-sm text-gray-700 hover:bg-gray-100 rounded-t-lg"
+                >
+                  <Plus className="w-4 h-4 mr-2" /> Add To Subpage
                 </button>
 
                 <button
@@ -99,7 +112,7 @@ export default function CategoryCard({
                       onClose();
                     }, 200);
                   }}
-                  className="w-full px-3 py-2 flex items-center cursor-pointer text-sm text-red-600 hover:bg-gray-100 rounded-b-lg"
+                  className="w-full px-3 py-2 mb-1 flex items-center cursor-pointer text-sm text-red-600 hover:bg-gray-100 rounded-b-lg"
                 >
                   <Trash2 className="w-4 h-4 mr-2" /> Delete
                 </button>
@@ -111,7 +124,7 @@ export default function CategoryCard({
         {/* ─── CTA button ─────────────────────────────── */}
         <Link
           onClick={() => {
-            localStorage.setItem("selectedCategoryId", cat._id); // ✅ Store in localStorage
+            localStorage.setItem("selectedCategoryId", cat._id);
             console.log(cat.category_name);
 
             localStorage.setItem("selectedCategoryName", cat.category_name);

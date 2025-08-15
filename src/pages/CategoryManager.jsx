@@ -4,6 +4,7 @@ import {
   createCategory,
   deleteCategory,
   updateCategory,
+  updateCategorySubpageType,
 } from "../api/categoryAPI";
 import CategoryCard from "../components/CategoryCard";
 import ImageUploader from "../components/ImageUploader";
@@ -17,6 +18,7 @@ export default function CategoryManager() {
   const formRef = useRef(null);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [categories, setCategories] = useState([]);
+  const [subpageType, setSubpageType] = useState("");
   const [categoryName, setCategoryName] = useState("");
   const [bannerImageData, setBannerImageData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -25,6 +27,8 @@ export default function CategoryManager() {
   const [openIdx, setOpenIdx] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [editCategoryId, setEditCategoryId] = useState(null);
+  const [isSubpageModalOpen, setIsSubpageModalOpen] = useState(false);
+  const [subpageCategoryId, setSubpageCategoryId] = useState(null);
 
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -172,6 +176,10 @@ export default function CategoryManager() {
     setBannerImageData(cat.bannerImageUrl);
     formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
+  const handleAddtoSubpage = (category) => {
+    setSubpageCategoryId(category._id);
+    setIsSubpageModalOpen(true);
+  };
 
   return (
     <div className="max-w-screen-xl mx-auto space-y-6">
@@ -267,6 +275,7 @@ export default function CategoryManager() {
                   isOpen={openIdx === idx}
                   onToggle={() => setOpenIdx(openIdx === idx ? null : idx)}
                   onClose={() => setOpenIdx(null)}
+                  onAdd={(cat) => handleAddtoSubpage(cat)}
                   onDelete={handleDeleteCategory}
                   onEdit={() => handleEditClick(cat)}
                 >
@@ -301,6 +310,76 @@ export default function CategoryManager() {
             {selectedCategoryId && (
               <CategoryFiltersEditor categoryId={selectedCategoryId} />
             )}
+          </div>
+        </div>
+      )}
+      {isSubpageModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => setIsSubpageModalOpen(false)}
+        >
+          <div
+            className="bg-white rounded-lg shadow-lg max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
+              onClick={() => setIsSubpageModalOpen(false)}
+            >
+              ✕
+            </button>
+
+            <h3 className="text-lg font-semibold mb-4">
+              Select / Edit Subpage
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Category ID: {subpageCategoryId}
+            </p>
+
+            {/* Subpage selection form here */}
+            <div className="space-y-4">
+              <select
+                value={subpageType}
+                onChange={(e) => setSubpageType(e.target.value)}
+                className="w-full border rounded p-2"
+              >
+                <option value="">-- Select Subpage --</option>
+                <option value="none">none</option>
+                <option value="modular-kitchens">modular-kitchens</option>
+                 <option value="glass-partitions">glass-partitions</option> 
+                <option value="wardrobes">wardrobes</option>
+                <option value="Decorpoint">Decorpoint</option>
+                <option value="Faber">Faber</option>
+                <option value="PankajPlywood">PankajPlywood</option>
+              </select>
+
+              <div className="flex justify-end gap-3">
+                <button
+                  className="px-4 py-2 border rounded"
+                  onClick={() => setIsSubpageModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="px-4 py-2 bg-gray-800 text-white rounded"
+                  onClick={() => {
+                    if (!subpageCategoryId || !subpageType) {
+                      toast.error("Please select a subpage type");
+                      return;
+                    }
+                    updateCategorySubpageType(subpageCategoryId, subpageType)
+                      .then(() => {
+                        toast.success("Subpage saved");
+                        setIsSubpageModalOpen(false);
+                      })
+                      .catch(() => toast.error("Failed to save subpage"));
+                  }}
+                >
+                  Save
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
