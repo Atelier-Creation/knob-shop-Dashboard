@@ -21,129 +21,6 @@ import ResponsiveTableCard from "../components/ResponsiveTableCard";
 import { useNavigate } from "react-router-dom";
 import { getAllOrders } from '../api/orderListApi';
 
-
-// const rawOrders = [
-//   {
-//     id: "#12701",
-//     customer: "Anika Sharma",
-//     total: 900000,
-//     status: "Paid",
-//     date: "Tue, 15 Apr 2025",
-//   },
-//   {
-//     id: "#12700",
-//     customer: "Daniel White",
-//     total: 768.2,
-//     status: "Paid",
-//     date: "Mon, 15 Apr 2025",
-//   },
-//   {
-//     id: "#12699",
-//     customer: "Riya Kapoor",
-//     total: 1520,
-//     status: "Paid",
-//     date: "Mon, 15 Apr 2025",
-//   },
-//   {
-//     id: "#12698",
-//     customer: "Bryan Tan",
-//     total: 0,
-//     status: "Cancelled",
-//     date: "Sun, 14 Apr 2025",
-//   },
-//   {
-//     id: "#12697",
-//     customer: "Rahul Mehta",
-//     total: 4200,
-//     status: "Paid",
-//     date: "Sat, 13 Apr 2025",
-//   },
-//   {
-//     id: "#12696",
-//     customer: "Catherine Diaz",
-//     total: 1050.4,
-//     status: "Pending",
-//     date: "Sat, 13 Apr 2025",
-//   },
-//   {
-//     id: "#12695",
-//     customer: "Amit Bhatia",
-//     total: 920,
-//     status: "Paid",
-//     date: "Fri, 12 Apr 2025",
-//   },
-//   {
-//     id: "#12694",
-//     customer: "Sophie Lee",
-//     total: 0,
-//     status: "Cancelled",
-//     date: "Fri, 12 Apr 2025",
-//   },
-//   {
-//     id: "#12693",
-//     customer: "John Smith",
-//     total: 112.3,
-//     status: "Paid",
-//     date: "Thu, 11 Apr 2025",
-//   },
-//   {
-//     id: "#12696",
-//     customer: "Catherine Diaz",
-//     total: 1050.4,
-//     status: "Pending",
-//     date: "Sat, 13 Apr 2025",
-//   },
-//   {
-//     id: "#12695",
-//     customer: "Amit Bhatia",
-//     total: 920,
-//     status: "Paid",
-//     date: "Fri, 12 Apr 2025",
-//   },
-//   {
-//     id: "#12694",
-//     customer: "Sophie Lee",
-//     total: 0,
-//     status: "Cancelled",
-//     date: "Fri, 12 Apr 2025",
-//   },
-//   {
-//     id: "#12693",
-//     customer: "John Smith",
-//     total: 112.3,
-//     status: "Paid",
-//     date: "Thu, 11 Apr 2025",
-//   },
-//   {
-//     id: "#12696",
-//     customer: "Catherine Diaz",
-//     total: 1050.4,
-//     status: "Pending",
-//     date: "Sat, 13 Apr 2025",
-//   },
-//   {
-//     id: "#12695",
-//     customer: "Amit Bhatia",
-//     total: 920,
-//     status: "Paid",
-//     date: "Fri, 12 Apr 2025",
-//   },
-//   {
-//     id: "#12694",
-//     customer: "Sophie Lee",
-//     total: 0,
-//     status: "Cancelled",
-//     date: "Fri, 12 Apr 2025",
-//   },
-//   {
-//     id: "#12693",
-//     customer: "John Smith",
-//     total: 112.3,
-//     status: "Paid",
-//     date: "Thu, 11 Apr 2025",
-//   },
-// ];
-
 const columns = [
   { label: "Order ID" },
   { label: "Customer" },
@@ -153,45 +30,6 @@ const columns = [
   { label: "View More" },
   { label: "Actions" },
 ];
-
-// const orderStatuses = [
-//   {
-//     label: "Total Order",
-//     value: "2,996",
-//     icon: CircleDollarSign,
-//     iconColor: "text-indigo-500",
-//   },
-//   { label: "Pending", value: "40", icon: Clock, iconColor: "text-emerald-500" },
-//   {
-//     label: "Completed",
-//     value: "120",
-//     icon: CheckCircle,
-//     iconColor: "text-blue-500",
-//   },
-//   { label: "Progress", value: "20", icon: Loader2, iconColor: "text-rose-500" },
-// ];
-
-// const failedOrders = [
-//   {
-//     label: "Abandoned",
-//     value: "43",
-//     icon: ShoppingCart,
-//     iconColor: "text-indigo-500",
-//   },
-//   {
-//     label: "Returned",
-//     value: "21",
-//     icon: RotateCcw,
-//     iconColor: "text-emerald-500",
-//   },
-//   { label: "Canceled", value: "02", icon: XCircle, iconColor: "text-rose-500" },
-//   {
-//     label: "Damaged",
-//     value: "–",
-//     icon: ShieldOff,
-//     iconColor: "text-indigo-400",
-//   },
-// ];
 
 const tabs = [{ label: "All" }, { label: "Paid", icon: CircleCheck }];
 
@@ -205,6 +43,9 @@ export default function OrderListDashboard() {
   const [paymentStatus, setPaymentStatus] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
+
+    const [sortField, setSortField] = useState(null);
+  const [sortOrder, setSortOrder] = useState("asc");
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -222,6 +63,15 @@ export default function OrderListDashboard() {
 
     fetchOrders();
   }, []);
+
+   const handleSort = (key) => {
+    if (sortField === key) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(key);
+      setSortOrder("asc");
+    }
+  };
 
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {
@@ -247,6 +97,7 @@ export default function OrderListDashboard() {
       return statusMatch && paymentMatch && searchMatch;
     });
   }, [orders, activeTab, paymentStatus, searchTerm]);
+  
   const computedFailedOrders = useMemo(() => {
     const abandoned = orders.filter((o) => o.status === "Abandoned").length;
     const returned = orders.filter((o) => o.status === "Returned").length;
