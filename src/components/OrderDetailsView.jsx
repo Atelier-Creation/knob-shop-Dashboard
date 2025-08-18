@@ -2,6 +2,7 @@ import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getOrderById } from "../api/orderListApi";
 import {getProductById} from '../api/productApi'
+import { downloadShippingLabel } from "../api/shippingLabelApi";
 import { MapPin, Mail, Phone, MessageCircleMore,Loader,
   ChefHat,
   Truck,
@@ -46,7 +47,7 @@ export default function OrderDetailsView() {
   const { id } = useParams();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
-
+  const [enrichItems, setEnrichedItems] = useState([]);
   useEffect(() => {
     const fetchOrder = async () => {
       try {
@@ -55,22 +56,24 @@ export default function OrderDetailsView() {
         console.log("order details page data",data)
         // Transform backend order into frontend-friendly shape
         const productIds = data.items.map(item => item.productId);
+        console.log("order details page data",productIds)
         const productDetails = await Promise.all(
           productIds.map(pid => getProductById(pid))
         );
         const enrichedItems = data.items.map((item, index) => ({
           ...item,
-          productData: productDetails || {}, // adjust key based on your API
+          productData: productDetails[index]?.[0] || productDetails[index],
         }));
         console.log("enrichedItems :",enrichedItems)
+        setEnrichedItems(enrichedItems);
         const transformedOrder = {
           id: data._id,
           date: new Date(data.createdAt).toDateString(),
           status: data.status || "Paid",
           product: {
-            image: data.items?.[0]?.productId?.images?.[0] ||enrichedItems[0].productData[0].images?.[0] || "/placeholder.png",
-            name: data.items?.[0]?.productId?.name || data.items?.[0]?.productName||"Product Name",
-            sku: data.items?.[0]?.productId?.sku || "SKU",
+            image: enrichedItems[0]?.productData?.images?.[0] || "/placeholder.png",
+            name: enrichedItems[0]?.productData?.name || data.items?.[0]?.productName || "Product Name",
+            sku: enrichedItems[0]?.productData?.productId || "SKU",
             price: data.items?.[0]?.price || 0,
           },
           payment: {
@@ -116,6 +119,17 @@ export default function OrderDetailsView() {
   if (loading) return <div className="p-6 text-gray-600">Loading...</div>;
   if (!order) return <div className="p-6 text-red-600">Order not found</div>;
 
+  const handleDownloadLabel = async () => {
+    if (!order?.dtdcReferenceNumber) {
+      alert("No reference number found!");
+      return;
+    }
+    try {
+      await downloadShippingLabel(order.dtdcReferenceNumber);
+    } catch {
+      alert("Failed to download shipping label");
+    }
+  };
   return (
     <div className="p-0 grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-6">
       {/* LEFT COLUMN */}
@@ -180,28 +194,30 @@ export default function OrderDetailsView() {
       {/* Bottom Buttons */}
       <div className="flex justify-between items-center pt-2 text-sm">
         <button className="text-black underline cursor-pointer">Cancel order</button>
-        <button className="flex items-center cursor-pointer border px-3 py-1.5 rounded-md font-medium shadow-sm hover:bg-black hover:text-white transition-colors">
+        <button   onClick={handleDownloadLabel} className="flex items-center cursor-pointer border px-3 py-1.5 rounded-md font-medium shadow-sm hover:bg-black hover:text-white transition-colors">
           Create Shipping Label
           <ChevronRight className="w-4 h-4 ml-1" />
         </button>
       </div>
     </div>
 
-        {/* Product */}
-        <div className="border-b border-gray-200 p-4 flex gap-4 items-start">
-          <img
-            src={order.product.image}
-            alt={order.product.name}
-            className="w-20 h-20 rounded object-cover"
-          />
-          <div>
-            <h3 className="text-sm font-semibold">{order.product.name}</h3>
-            <p className="text-xs text-gray-600 mt-1">{order.product.sku}</p>
-            <p className="text-sm font-medium mt-2">
-              ₹ {order.product.price.toLocaleString()}
-            </p>
-          </div>
-        </div>
+    {enrichItems.map((item) => (
+  <div key={item._id} className="border-b border-gray-200 p-4 flex gap-4 items-start">
+    <img
+      src={item.productData?.images?.[0] || "/placeholder.png"}
+      alt={item.productData?.name}
+      className="w-20 h-20 rounded object-cover"
+    />
+    <div>
+      <h3 className="text-sm font-semibold">{item.productData?.name}</h3>
+      <p className="text-xs text-gray-600 mt-1">{item.productData?.productId || "SKU"}</p>
+      <p className="text-sm font-medium mt-2">
+        ₹ {item.price.toLocaleString()} × {item.quantity}
+      </p>
+      <p className="text-sm font-bold">Total: ₹ {item.total.toLocaleString()}</p>
+    </div>
+  </div>
+))}
 
         {/* Payment Summary */}
         <div className="p-4 space-y-5">
