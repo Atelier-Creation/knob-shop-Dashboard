@@ -19,8 +19,8 @@ import { ReportsAnalytics } from "./pages/ReportsAnalytics";
 import OrderDetailsView from "./components/OrderDetailsView";
 import PolicyEditorPage from "./pages/PolicyEditorPage";
 import { Toaster } from "react-hot-toast";
-import ProtectedRoute from "./components/Auth/ProtectedRoute"; // 👈 Add this
-import AuthPage from "./pages/AuthPage"; // 👈 Your login page
+import ProtectedRoute from "./components/Auth/ProtectedRoute";
+import AuthPage from "./pages/AuthPage";
 import Brochuer from "./components/Brochure/Brochure";
 import BroucherList from "./components/Brochure/BroucherList";
 import "bootstrap-icons/font/bootstrap-icons.css";
@@ -28,7 +28,6 @@ import ViewEditProduct from "./pages/ViewEditProduct";
 import LockScreen from "./pages/LockScreen";
 
 function App() {
-
   return (
     <>
       <Toaster position="bottom-center" />

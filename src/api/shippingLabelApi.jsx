@@ -32,7 +32,7 @@ export const downloadShippingLabel = async (referenceNumber) => {
     link.click();
     document.body.removeChild(link);
 
-    window.URL.revokeObjectURL(url);
+    window.URL.revokeObjectURL(url);return link;
   } catch (err) {
     console.error("Error downloading shipping label:", err);
     throw err;

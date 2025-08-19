@@ -12,75 +12,10 @@ import {
 } from "lucide-react";
 import { getAllProducts } from "../api/productApi";
 
-// Updated dummy data for the table
-// const productData = [
-//   {
-//     name: "YDME100Nx:T",
-//     status: "Active",
-//     statusColor: "bg-green-500",
-//     stock: 200,
-//     sold: 100,
-//     offerPrice: "₹ 89,299",
-//     lastSold: "1 day ago",
-//     ctr: "5.2%",
-//     image: "/lock2.png" // Relative path
-//   },
-//   {
-//     name: "YDM4109A RL",
-//     status: "Out of Stock",
-//     statusColor: "bg-yellow-500", // Changed from yellow to red for "Out of Stock" for better visual cue
-//     stock: 150,
-//     sold: 130,
-//     offerPrice: "₹ 55,699",
-//     lastSold: "2 days ago",
-//     ctr: "1%",
-//     image: "/lock3.png" // Relative path
-//   },
-//   {
-//     name: "Luna Pro",
-//     status: "Inactive",
-//     statusColor: "bg-red-500", // Changed from red to gray for "Inactive" for better visual cue
-//     stock: 19,
-//     sold: 110,
-//     offerPrice: "₹ 97,199",
-//     lastSold: "2 days ago",
-//     ctr: "8.2%",
-//     image: "/lock2.png" // Relative path
-//   },
-//   {
-//     name: "YDM7116A-YH",
-//     status: "Pending Review",
-//     statusColor: "bg-orange-400",
-//     stock: 233,
-//     sold: 211,
-//     offerPrice: "₹ 75,199",
-//     lastSold: "3 days ago",
-//     ctr: "1.2%",
-//     image: "/lock3.png" // Relative path
-//   },
-//   {
-//     name: "YDM 4115A",
-//     status: "Active",
-//     statusColor: "bg-green-500",
-//     stock: 150,
-//     sold: 130,
-//     offerPrice: "₹ 44,999",
-//     lastSold: "4 days ago",
-//     ctr: "3.2%",
-//     image: "/lock1.png" // Relative path
-//   }
-// ];
-
-// Helper function to format number with commas
 const formatPrice = (price) => {
-  return `₹ ${new Intl.NumberFormat('en-IN').format(price)}`;
+  return `₹ ${new Intl.NumberFormat("en-IN").format(price)}`;
 };
 
-// Helper function to safely parse a price string into a number
-const parsePrice = (priceStr) => {
-  if (typeof priceStr !== "string") return 0;
-  return parseFloat(priceStr.replace(/[^0-9.]/g, ""));
-};
 
 export default function ProductStatusTable() {
   const [openIndex, setOpenIndex] = useState(null);
@@ -94,7 +29,7 @@ export default function ProductStatusTable() {
   const [currentPage, setCurrentPage] = useState(1);
 
   // Constants for pagination
-  const productsPerPage = 5;
+  const productsPerPage = 10;
 
   // State to hold the products after filtering, but before pagination
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -105,12 +40,13 @@ export default function ProductStatusTable() {
     getAllProducts()
       .then((data) => {
         // Map data to the desired format with numeric price
+        console.log(data[10]);
         const mappedProducts = data.map((p) => {
           const firstVariant = p.variant?.[0] || {};
           const firstSize = firstVariant.sizes?.[0] || {};
 
           return {
-            ...p, // Keep original product ID etc.
+            ...p,
             name: p.name,
             image:
               p.images?.[0] ||
@@ -125,10 +61,12 @@ export default function ProductStatusTable() {
                 ? "bg-orange-400"
                 : "bg-gray-500",
             stock: firstSize.stock ?? 0,
-            sold: Math.floor(Math.random() * 200), // Dummy, unless your API provides sold count
-            offerPrice: firstSize.sellingPrice ?? 0, // Store as number
-            lastSold: "N/A", // Replace with actual field if your API has it
-            ctr: `${Math.floor(Math.random() * 10)}%`, // Dummy CTR for now
+            sold: Math.floor(Math.random() * 200),
+            offerPrice: firstSize.sellingPrice ?? 0,
+            MRP: firstSize.mrp ?? 0,
+            discount: firstSize.discountPercentage,
+            tax: firstSize.taxPercentage,
+            ctr: `${Math.floor(Math.random() * 10)}%`,
           };
         });
         setProducts(mappedProducts);
@@ -159,7 +97,7 @@ export default function ProductStatusTable() {
     }
 
     setFilteredProducts(result);
-    setCurrentPage(1); // Reset to first page on new filter/search
+    setCurrentPage(1); 
   }, [products, searchTerm, minPrice, maxPrice]);
 
   // Pagination calculations
@@ -189,8 +127,55 @@ export default function ProductStatusTable() {
 
   if (loadingProducts) {
     return (
-      <div className="flex justify-center items-center h-48 text-gray-500">
-        Loading products...
+      <div className="p-4">
+        {/* Skeleton Table */}
+        <div className="w-full overflow-x-auto rounded-lg shadow-md">
+          <table className="min-w-[960px] w-full text-sm border-separate border-spacing-y-2">
+            <thead>
+              <tr className="text-left text-gray-600 bg-gray-100 rounded-lg font-medium">
+                <th className="py-3 ps-4">Product Name</th>
+                <th className="py-3">Status</th>
+                <th className="py-3">Stock</th>
+                <th className="py-3">Sold</th>
+                <th className="py-3">Offer Price</th>
+                <th className="py-3">Last Sold</th>
+                <th className="py-3">CTR</th>
+                <th className="py-3">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from({ length: 6 }).map((_, i) => (
+                <tr key={i} className="bg-white shadow-sm rounded-lg">
+                  <td className="flex items-center gap-3 py-3 px-2">
+                    <div className="w-10 h-10 bg-gray-200 rounded-md animate-pulse" />
+                    <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
+                  </td>
+                  <td>
+                    <div className="h-5 w-16 bg-gray-200 rounded-full animate-pulse" />
+                  </td>
+                  <td>
+                    <div className="h-4 w-10 bg-gray-200 rounded animate-pulse" />
+                  </td>
+                  <td>
+                    <div className="h-4 w-10 bg-gray-200 rounded animate-pulse" />
+                  </td>
+                  <td>
+                    <div className="h-4 w-16 bg-gray-200 rounded animate-pulse" />
+                  </td>
+                  <td>
+                    <div className="h-4 w-20 bg-gray-200 rounded animate-pulse" />
+                  </td>
+                  <td>
+                    <div className="h-4 w-8 bg-gray-200 rounded animate-pulse" />
+                  </td>
+                  <td>
+                    <div className="h-6 w-6 bg-gray-200 rounded-full animate-pulse" />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     );
   }
@@ -254,6 +239,7 @@ export default function ProductStatusTable() {
               <th className="py-3 whitespace-nowrap">Status</th>
               <th className="py-3">Stock</th>
               <th className="py-3">Sold</th>
+              <th className="py-3 whitespace-nowrap">MRP Price</th>
               <th className="py-3 whitespace-nowrap">Offer Price</th>
               <th className="py-3 whitespace-nowrap">Last Sold</th>
               <th className="py-3">CTR</th>
@@ -304,14 +290,16 @@ export default function ProductStatusTable() {
                     )}
                   </td>
 
-                  {/* Offer Price */}
-                  <td className="whitespace-nowrap">
+                  {/* MRP */}
+                  <td className="whitespace-nowrap">{formatPrice(p.MRP)}</td>
+                  {/* Offer price */}
+                  <td className="whitespace-nowrap font-semibold">
                     {formatPrice(p.offerPrice)}
                   </td>
                   {/* Last Sold */}
-                  <td className="whitespace-nowrap">{p.lastSold}</td>
+                  <td className="whitespace-nowrap">{p.discount} %</td>
                   {/* CTR */}
-                  <td className="whitespace-nowrap">{p.ctr}</td>
+                  <td className="whitespace-nowrap">{p.tax} %</td>
 
                   {/* Action Dropdown */}
                   <td className="relative rounded-tr-lg rounded-br-lg">

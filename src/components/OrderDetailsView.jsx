@@ -1,9 +1,9 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getOrderById } from "../api/orderListApi";
-import {getProductById} from '../api/productApi'
-import { downloadShippingLabel } from "../api/shippingLabelApi";
 import { getProductById } from "../api/productApi";
+import { downloadShippingLabel } from "../api/shippingLabelApi";
+
 import {
   MapPin,
   Mail,
@@ -56,15 +56,22 @@ export default function OrderDetailsView() {
   const { id } = useParams();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState(false);
   const [enrichItems, setEnrichedItems] = useState([]);
   useEffect(() => {
     const fetchOrder = async () => {
       try {
         const res = await getOrderById(id);
         const data = res.order;
-        console.log("order details page data", data);
-        // Transform backend order into frontend-friendly shape
-        const productIds = data.items.map(item => item.productId);
+
+        // Build full address
+        const fullAddress = `${data.shippingAddress.street}, ${data.shippingAddress.city}, ${data.shippingAddress.district}, ${data.shippingAddress.state} - ${data.shippingAddress.pincode}`;
+        const mapurl = `https://www.google.com/maps?q=${encodeURIComponent(
+          fullAddress
+        )}`;
+
+        // Fetch product details
+        const productIds = data.items.map((item) => item.productId);
         const productDetails = await Promise.all(
           productIds.map((pid) => getProductById(pid))
         );
@@ -72,28 +79,32 @@ export default function OrderDetailsView() {
           ...item,
           productData: productDetails[index]?.[0] || productDetails[index],
         }));
-        console.log("enrichedItems :",enrichedItems)
+
+        setEnrichedItems(enrichedItems);
+
         const transformedOrder = {
           id: data._id,
           date: new Date(data.createdAt).toDateString(),
           status: data.status || "Paid",
           product: {
-            image: data.items?.[0]?.productId?.images?.[0] ||enrichedItems[0].productData[0].images?.[0] || "/placeholder.png",
-            name: data.items?.[0]?.productId?.name || data.items?.[0]?.productName||"Product Name",
-            sku: data.items?.[0]?.productId?.sku || "SKU",
-            price: data.items?.[0]?.price || 0,
+            image:
+              enrichedItems[0]?.productData?.images?.[0] || "/placeholder.png",
+            name:
+              enrichedItems[0]?.productData?.name || data.items[0]?.productName,
+            sku: enrichedItems[0]?.productData?.sku || "SKU",
+            price: enrichedItems[0]?.price || 0,
           },
           payment: {
             method: data.paymentMethod,
             subtotal: data.items.reduce((sum, item) => sum + item.total, 0),
             shippingFee: 1000,
             tax: 1000,
-            total: data.totalAmount + 1000 + 1000,
+            total: data.totalAmount + 2000,
           },
           customer: {
             name: data.userId?.name || "Customer",
             email: data.userId?.email || "email@example.com",
-            phone: data.shippingAddress?.phone || "+91 XXXXX XXXXX",
+            phone: data.shippingAddress?.phone || "N/A",
             avatar: data.userId?.imageUrl || "",
             totalOrders: 1,
           },
@@ -105,6 +116,7 @@ export default function OrderDetailsView() {
             companyName: data.companyName,
             GST: data.gstNumber,
           },
+          dtdcReferenceNumber: data.dtdcReferenceNumber,
         };
 
         setOrder(transformedOrder);
@@ -122,14 +134,17 @@ export default function OrderDetailsView() {
   if (!order) return <div className="p-6 text-red-600">Order not found</div>;
 
   const handleDownloadLabel = async () => {
+    setDownloading(true);
     if (!order?.dtdcReferenceNumber) {
       alert("No reference number found!");
       return;
     }
     try {
-      await downloadShippingLabel(order.dtdcReferenceNumber);
+      const res = await downloadShippingLabel(order.dtdcReferenceNumber);
     } catch {
       alert("Failed to download shipping label");
+    } finally {
+      setDownloading(false);
     }
   };
   return (
@@ -142,9 +157,9 @@ export default function OrderDetailsView() {
             <h2 className="text-xl font-semibold">Order Details</h2>
             <p className="text-sm text-gray-600 mt-1">{order.date}</p>
           </div>
-          <span className="bg-green-200 text-green-700 rounded-full flex items-center text-sm font-medium ps-1 pe-3 py-1">
-            <Dot /> {order.status}
-          </span>
+            <span className="bg-green-200 text-green-700 rounded-full flex items-center text-sm font-medium ps-1 pe-3 py-1 capitalize">
+              <Dot /> {order.status}
+            </span>
         </div>
 
         <div className="border-b border-gray-200 p-4 space-y-4 text-sm text-gray-800">
@@ -203,45 +218,61 @@ export default function OrderDetailsView() {
             </div>
           </div>
 
-      {/* Bottom Buttons */}
-      <div className="flex justify-between items-center pt-2 text-sm">
-        <button className="text-black underline cursor-pointer">Cancel order</button>
-        <button className="flex items-center cursor-pointer border px-3 py-1.5 rounded-md font-medium shadow-sm hover:bg-black hover:text-white transition-colors">
-          Create Shipping Label
-          <ChevronRight className="w-4 h-4 ml-1" />
-        </button>
-      </div>
-    </div>
+          {/* Bottom Buttons */}
+          <div className="flex justify-between items-center pt-2 text-sm">
+            <button className="text-black underline cursor-pointer">
+              Cancel order
+            </button>
+            <button
+              className="flex items-center cursor-pointer border px-3 py-1.5 rounded-md font-medium shadow-sm hover:bg-black hover:text-white transition-colors"
+              onClick={handleDownloadLabel}
+            >
+              {downloading ? "Downloading..." : "Create Shipping Label"}
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </button>
+          </div>
+        </div>
 
-    {enrichItems.map((item) => (
-  <div key={item._id} className="border-b border-gray-200 p-4 flex gap-4 items-start">
-    <img
-      src={item.productData?.images?.[0] || "/placeholder.png"}
-      alt={item.productData?.name}
-      className="w-20 h-20 rounded object-cover"
-    />
-    <div>
-      <h3 className="text-sm font-semibold">{item.productData?.name}</h3>
-      <p className="text-xs text-gray-600 mt-1">{item.productData?.productId || "SKU"}</p>
-      <p className="text-sm font-medium mt-2">
-        ₹ {item.price.toLocaleString()} × {item.quantity}
-      </p>
-      <p className="text-sm font-bold">Total: ₹ {item.total.toLocaleString()}</p>
-    </div>
-  </div>
-))}
+        {enrichItems.map((item) => (
+          <div
+            key={item._id}
+            className="border-b border-gray-200 p-4 flex gap-4 items-start"
+          >
+            <img
+              src={item.productData?.images?.[0] || "/placeholder.png"}
+              alt={item.productData?.name}
+              className="w-20 h-20 rounded object-cover"
+            />
+            <div>
+              <h3 className="text-sm font-semibold">
+                {item.productData?.name}
+              </h3>
+              <p className="text-xs text-gray-600 mt-1">
+                {item.productData?.productId || "SKU"}
+              </p>
+              <p className="text-sm font-medium mt-2">
+                ₹ {item.price.toLocaleString()} × {item.quantity}
+              </p>
+              <p className="text-sm font-bold">
+                Total: ₹ {item.total.toLocaleString()}
+              </p>
+            </div>
+          </div>
+        ))}
 
         {/* Payment Summary */}
         <div className="p-4 space-y-5">
           <div className="flex justify-start items-center gap-2">
             <h3 className="text-sm font-semibold">Payment Details</h3>
-            <span className="bg-green-200 text-green-700 rounded-full flex items-center text-sm font-medium ps-1 pe-3">
+            <span className="bg-green-200 text-green-700 rounded-full flex items-center text-sm font-medium ps-1 pe-3 capitalize">
               <Dot /> {order.status}
             </span>
           </div>
           <div className="flex justify-between text-sm text-gray-500">
             <span className="text-gray-800">Payment Method</span>
-            <span className="font-medium text-gray-800">{order.payment.method}</span>
+            <span className="font-medium text-gray-800">
+              {order.payment.method}
+            </span>
           </div>
           <div className="flex justify-between text-sm text-gray-500">
             <span className="text-gray-800">Subtotal</span>

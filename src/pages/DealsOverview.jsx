@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus, MoreVertical } from "lucide-react";
 import { Flame, Clock, XCircle, ThumbsUp } from "lucide-react";
 import StatusCardDeal from "../components/StatusCardDeal";
 import { Link } from "react-router-dom";
+import { deleteDeal, getDeals } from "../api/dealsApi";
+import toast from "react-hot-toast";
 
 const tabs = ["All", "Active", "Scheduled", "Expired"];
 
-const deals = [
+const dealss = [
   {
     title: "Monsoon Flat 20%",
     discount: "20%",
@@ -41,10 +43,37 @@ const statusCounts = {
 };
 
 const DealsOverview = () => {
+  const [deals, setDeals] = useState([]);
   const [activeTab, setActiveTab] = useState("All");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDeals();
+  }, []);
+
+  const fetchDeals = async () => {
+    try {
+      setLoading(true);
+      const data = await getDeals();
+      setDeals(data);
+    } catch (err) {
+      toast.error("Failed to load deals");
+      setDeals(dealss)
+      console.log(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Delete this deal?")) return;
+    await deleteDeal(id);
+    toast.success("Deal deleted");
+    fetchDeals();
+  };
 
   const filteredDeals =
-    activeTab === "All" ? deals : deals.filter((d) => d.status === activeTab);
+    activeTab === "All" ? dealss : dealss.filter((d) => d.status === activeTab);
 
   const statusColors = {
     Active: "text-green-600",
@@ -120,64 +149,88 @@ const DealsOverview = () => {
       </div>
 
       {/* Deals Table */}
-<div className="rounded border  border-gray-300 overflow-hidden">
-  <div className="w-full overflow-x-auto">
-    <table className="min-w-[700px] w-full text-sm hidden md:table">
-      <thead className="bg-gray-50 text-left text-gray-600">
-        <tr>
-          <th className="p-3">Deal Title</th>
-          <th className="p-3">Discount</th>
-          <th className="p-3">Type</th>
-          <th className="p-3">Status</th>
-          <th className="p-3">Validity</th>
-          <th className="p-3">Applies To</th>
-          <th className="p-3">Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        {filteredDeals.map((deal, i) => (
-          <tr key={i} className="border-t hover:bg-gray-100 transition-colors">
-            <td className="p-3 font-medium text-black">{deal.title}</td>
-            <td className="p-3">{deal.discount}</td>
-            <td className="p-3">{deal.type}</td>
-            <td className={`p-3 font-medium ${statusColors[deal.status]}`}>
-              {deal.status}
-            </td>
-            <td className="p-3">{deal.validity}</td>
-            <td className="p-3">{deal.appliesTo}</td>
-            <td className="p-3">
-              <MoreVertical className="w-4 h-4 text-gray-500 cursor-pointer" />
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+      <div className="rounded border  border-gray-300 overflow-hidden">
+        <div className="w-full overflow-x-auto">
+          <table className="min-w-[700px] w-full text-sm hidden md:table">
+            <thead className="bg-gray-50 text-left text-gray-600">
+              <tr>
+                <th className="p-3">Deal Title</th>
+                <th className="p-3">Discount</th>
+                <th className="p-3">Type</th>
+                <th className="p-3">Status</th>
+                <th className="p-3">Validity</th>
+                <th className="p-3">Applies To</th>
+                <th className="p-3">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredDeals?.map((deal, i) => (
+                <tr
+                  key={i}
+                  className="border-t hover:bg-gray-100 transition-colors"
+                >
+                  <td className="p-3 font-medium text-black">{deal.title}</td>
+                  <td className="p-3">{deal.discount}</td>
+                  <td className="p-3">{deal.type}</td>
+                  <td
+                    className={`p-3 font-medium ${statusColors[deal.status]}`}
+                  >
+                    {deal.status}
+                  </td>
+                  <td className="p-3">{deal.validity}</td>
+                  <td className="p-3">{deal.appliesTo}</td>
+                  <td className="p-3">
+                    <MoreVertical className="w-4 h-4 text-gray-500 cursor-pointer" />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
 
-    {/* Mobile Card Layout */}
-    <div className="space-y-4 md:hidden p-2">
-      {filteredDeals.map((deal, i) => (
-        <div key={i} className="border border-gray-300 rounded-md p-4 shadow-sm bg-white">
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="text-base font-semibold">{deal.title}</h3>
-            <MoreVertical className="w-4 h-4 text-gray-500 cursor-pointer" />
-          </div>
-          <div className="text-sm text-gray-600 space-y-1">
-            <div><span className="font-medium text-gray-900">Discount:</span> {deal.discount}</div>
-            <div><span className="font-medium text-gray-900">Type:</span> {deal.type}</div>
-            <div>
-              <span className="font-medium text-gray-900">Status:</span>{" "}
-              <span className={`${statusColors[deal.status]} font-medium`}>{deal.status}</span>
-            </div>
-            <div><span className="font-medium text-gray-900">Validity:</span> {deal.validity}</div>
-            <div><span className="font-medium text-gray-900">Applies To:</span> {deal.appliesTo}</div>
+          {/* Mobile Card Layout */}
+          <div className="space-y-4 md:hidden p-2">
+            {filteredDeals.map((deal, i) => (
+              <div
+                key={i}
+                className="border border-gray-300 rounded-md p-4 shadow-sm bg-white"
+              >
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-base font-semibold">{deal.title}</h3>
+                  <MoreVertical className="w-4 h-4 text-gray-500 cursor-pointer" />
+                </div>
+                <div className="text-sm text-gray-600 space-y-1">
+                  <div>
+                    <span className="font-medium text-gray-900">Discount:</span>{" "}
+                    {deal.discount}
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-900">Type:</span>{" "}
+                    {deal.type}
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-900">Status:</span>{" "}
+                    <span
+                      className={`${statusColors[deal.status]} font-medium`}
+                    >
+                      {deal.status}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-900">Validity:</span>{" "}
+                    {deal.validity}
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-900">
+                      Applies To:
+                    </span>{" "}
+                    {deal.appliesTo}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
-      ))}
-    </div>
-  </div>
-</div>
-
-
+      </div>
     </div>
   );
 };
