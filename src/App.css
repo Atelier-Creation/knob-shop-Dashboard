@@ -89,3 +89,9 @@ button{
   margin-top: 4px;
   z-index: 50;
 }
+
+     @keyframes truckMove {
+        0% { transform: translateX(-30px); opacity: 0; }
+        50% { transform: translateX(0px); opacity: 1; }  /* distance of run */
+        100% { transform: translateX(30px); opacity: 0;}
+      }

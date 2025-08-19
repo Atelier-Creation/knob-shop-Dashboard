@@ -57,6 +57,7 @@ export default function OrderDetailsView() {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
+  const [downloaded, setDownloaded] = useState(false);
   const [enrichItems, setEnrichedItems] = useState([]);
   useEffect(() => {
     const fetchOrder = async () => {
@@ -141,6 +142,8 @@ export default function OrderDetailsView() {
     }
     try {
       const res = await downloadShippingLabel(order.dtdcReferenceNumber);
+      console.log("Download response", res);
+      setDownloaded(true);
     } catch {
       alert("Failed to download shipping label");
     } finally {
@@ -157,9 +160,9 @@ export default function OrderDetailsView() {
             <h2 className="text-xl font-semibold">Order Details</h2>
             <p className="text-sm text-gray-600 mt-1">{order.date}</p>
           </div>
-            <span className="bg-green-200 text-green-700 rounded-full flex items-center text-sm font-medium ps-1 pe-3 py-1 capitalize">
-              <Dot /> {order.status}
-            </span>
+          <span className="bg-green-200 text-green-700 rounded-full flex items-center text-sm font-medium ps-1 pe-4 py-1 capitalize">
+            <Dot /> {order.status}
+          </span>
         </div>
 
         <div className="border-b border-gray-200 p-4 space-y-4 text-sm text-gray-800">
@@ -192,16 +195,28 @@ export default function OrderDetailsView() {
 
             {/* Step 2: Inactive */}
             <div className="flex flex-col items-center">
-              <ChefHat className="w-4 h-4 text-gray-400" />
-              <span className="text-[10px] md:text-xs mt-1 text-gray-500">
+              {downloaded ? (
+                <ChefHat className="w-4 h-4 text-black animate-bounce" /> // highlighted
+              ) : (
+                <ChefHat className="w-4 h-4 text-gray-400" />
+              )}
+              <span
+                className={`text-[10px] md:text-xs mt-1 ${
+                  downloaded ? "font-medium text-black" : "text-gray-500"
+                }`}
+              >
                 Preparing order
               </span>
-              <div className="mt-2 w-full h-1 bg-gray-200 rounded-full" />
+              <div
+                className={`mt-2 w-full h-1 rounded-full ${
+                  downloaded ? "bg-black" : "bg-gray-200"
+                }`}
+              />
             </div>
 
             {/* Step 3: Inactive */}
             <div className="flex flex-col items-center">
-              <Truck className="w-4 h-4 text-gray-400" />
+               <Truck className="w-4 h-4 text-gray-400 "/> {/* style={{ animation: "truckMove 4s ease-in-out infinite" }} */}
               <span className="text-[10px] md:text-xs mt-1 text-gray-500">
                 Shipping
               </span>
@@ -224,11 +239,15 @@ export default function OrderDetailsView() {
               Cancel order
             </button>
             <button
-              className="flex items-center cursor-pointer border px-3 py-1.5 rounded-md font-medium shadow-sm hover:bg-black hover:text-white transition-colors"
+              className={`flex items-center cursor-pointer border px-3 py-1.5 rounded-md font-medium shadow-sm  transition-colors ${downloaded ? "bg-black/80 text-white/80" : 'hover:bg-black hover:text-white'}`}
               onClick={handleDownloadLabel}
             >
-              {downloading ? "Downloading..." : "Create Shipping Label"}
-              <ChevronRight className="w-4 h-4 ml-1" />
+              {downloading
+                ? "Downloading..."
+                : downloaded
+                ? "Shipping Label Downloaded"
+                : "Create Shipping Label"}
+              {!downloaded && <ChevronRight className="w-4 h-4 ml-1" />}
             </button>
           </div>
         </div>
@@ -264,7 +283,7 @@ export default function OrderDetailsView() {
         <div className="p-4 space-y-5">
           <div className="flex justify-start items-center gap-2">
             <h3 className="text-sm font-semibold">Payment Details</h3>
-            <span className="bg-green-200 text-green-700 rounded-full flex items-center text-sm font-medium ps-1 pe-3 capitalize">
+            <span className="bg-green-200 text-green-700 rounded-full flex items-center text-sm font-medium ps-1 pe-3.5 py-1 capitalize">
               <Dot /> {order.status}
             </span>
           </div>
