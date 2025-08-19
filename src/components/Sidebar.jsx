@@ -27,7 +27,7 @@ const navItems = [
       { label: "Product List", path: "/categories-products/product-list" },
       // { label: "Bulk Upload", path: "/categories-products/bulk-add-product" },
       { label: "Product Status", path: "/categories-products/product-status" },
-      { label: "Filters", path: "/categories-products/filters" },
+      // { label: "Filters", path: "/categories-products/filters" },
     ],
   },
   {

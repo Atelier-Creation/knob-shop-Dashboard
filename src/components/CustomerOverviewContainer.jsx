@@ -54,8 +54,8 @@ const CustomerOverviewContainer = () => {
     {
       id: 1,
       icon: <Users size={20} className="text-white" />,
-      title: "Suppliers",
-      value: loading ? "..." : analyticsData?.totalSuppliers?.toLocaleString() || "0",
+      title: "Users",
+      value: loading ? "..." : analyticsData?.totalUsers?.toLocaleString() || "0",
       selected: true, // highlighted (dark) card
     },
     {

@@ -1,6 +1,7 @@
 import React, { useRef } from "react";
 import { Plus, Trash2, MoreVertical, Edit } from "lucide-react";
 import { Link } from "react-router-dom";
+import { RetryableImage } from "./RetryableImage";
 
 /* ---------- reusable hook ------------------------------------- */
 function useClickOutside(ref, handler) {
@@ -26,8 +27,10 @@ export default function CategoryCard({
   isOpen,
   onToggle,
   onClose,
+  onAdd,
   onDelete,
   onEdit,
+  children,
 }) {
   const menuRef = useRef(null);
   useClickOutside(menuRef, onClose); // closes on outside click
@@ -37,13 +40,15 @@ export default function CategoryCard({
       className="relative rounded-lg border flex border-gray-200 bg-white shadow-sm overflow-hidden transition hover:shadow-md"
       key={cat?._id}
     >
-      <img
-        src={cat.categoryImageUrl}
-        alt={cat.title}
-        className="w-1/2 h-40 object-cover"
-      />
+      <div className="w-1/2 h-52">
+        <RetryableImage
+          src={cat.categoryImageUrl}
+          alt={cat.category_name}
+          className="w-full h-full object-cover"
+        />
+      </div>
 
-      <div className="p-4 w-1/2 flex flex-col justify-between">
+      <div className="p-4 w-1/2 flex flex-col justify-between space-y-2">
         {/* ─── Title + 3‑dot menu ─────────────────────── */}
         <div className="flex justify-between items-start mb-4">
           <div>
@@ -72,19 +77,30 @@ export default function CategoryCard({
             {/* dropdown */}
             {isOpen && (
               <div
-                className="absolute right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-md w-28 z-50"
+                className="absolute right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-md w-42 z-50"
                 onClick={(e) => e.stopPropagation()}
               >
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     console.log("Edit clicked for:", cat._id);
-                    onEdit?.(cat); 
+                    onEdit?.(cat);
                     onClose();
                   }}
-                  className="w-full px-3 py-2 flex items-center cursor-pointer text-sm text-gray-700 hover:bg-gray-100 rounded-t-lg"
+                  className="w-full px-3 py-2 mt-1 flex items-center cursor-pointer text-sm text-gray-700 hover:bg-gray-100 rounded-t-lg"
                 >
                   <Edit className="w-4 h-4 mr-2" /> Edit
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    console.log("Edit clicked for:", cat._id);
+                    onAdd?.(cat);
+                    onClose();
+                  }}
+                  className="w-full px-3 py-2 my-1 flex items-center cursor-pointer text-sm text-gray-700 hover:bg-gray-100 rounded-t-lg"
+                >
+                  <Plus className="w-4 h-4 mr-2" /> Add To Subpage
                 </button>
 
                 <button
@@ -96,7 +112,7 @@ export default function CategoryCard({
                       onClose();
                     }, 200);
                   }}
-                  className="w-full px-3 py-2 flex items-center cursor-pointer text-sm text-red-600 hover:bg-gray-100 rounded-b-lg"
+                  className="w-full px-3 py-2 mb-1 flex items-center cursor-pointer text-sm text-red-600 hover:bg-gray-100 rounded-b-lg"
                 >
                   <Trash2 className="w-4 h-4 mr-2" /> Delete
                 </button>
@@ -108,7 +124,7 @@ export default function CategoryCard({
         {/* ─── CTA button ─────────────────────────────── */}
         <Link
           onClick={() => {
-            localStorage.setItem("selectedCategoryId", cat._id); // ✅ Store in localStorage
+            localStorage.setItem("selectedCategoryId", cat._id);
             console.log(cat.category_name);
 
             localStorage.setItem("selectedCategoryName", cat.category_name);
@@ -119,6 +135,7 @@ export default function CategoryCard({
         >
           <Plus className="w-4 h-4" /> Add Products
         </Link>
+        <div>{children}</div>
       </div>
     </div>
   );
