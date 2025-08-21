@@ -4,7 +4,6 @@ import { deleteProduct } from "../api/productApi";
 import toast from "react-hot-toast";
 
 export function ProductCard({ product, onClick }) {
-  console.log("card", product);
   const deleteClicked = useRef(false);
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef(null);

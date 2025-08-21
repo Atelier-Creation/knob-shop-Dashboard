@@ -75,72 +75,85 @@ export default function ProductEditor({ product, onUpdate, onClose }) {
   };
 
 const handleSubmit = async () => {
-    if (!product) return;
+  if (!product) return;
 
-    const changedPayload = {};
-    const updatedColors = [];
+  const changedPayload = {};
+  const updatedColors = [];
 
-    form.colors.forEach((color, cIndex) => {
-      const originalColor = product.variant?.[cIndex];
-      const updatedColor = {
-        ...originalColor,
-        title: color.title,
-        value: color.value,
-        sizes: [],
-        images: color.images,
+  // ───────── Compare general fields ─────────
+  if (form.name !== product.name) changedPayload.name = form.name;
+  if (form.brand !== product.brand) changedPayload.brand = form.brand;
+  if (form.category !== (product.category?._id || product.category))
+    changedPayload.category = form.category;
+  if (form.features !== product.features)
+    changedPayload.features = form.features;
+
+  // ───────── Handle variants ─────────
+  form.colors.forEach((color, cIndex) => {
+    const originalColor = product.variant?.[cIndex];
+    const updatedColor = {
+      ...originalColor,
+      title: color.name, // or color.title
+      value: color.hex,  // match your schema
+      images: color.images,
+      sizes: [],
+    };
+
+    let colorChanged = false;
+
+    color.sizes.forEach((size, sIndex) => {
+      const originalSize = originalColor?.sizes?.[sIndex] || {};
+      const updatedSize = {
+        ...originalSize,
+        label: size.label,
+        mrp: Number(size.mrp),
+        discountPercentage: Number(size.discountPercentage),
+        taxPercentage: Number(size.taxPercentage),
       };
 
-      let colorChanged = false;
+      // recalc selling price
+      const discounted =
+        updatedSize.mrp - (updatedSize.mrp * updatedSize.discountPercentage) / 100;
+      updatedSize.sellingPrice =
+        Math.round(discounted + (discounted * updatedSize.taxPercentage) / 100);
 
-      color.sizes.forEach((size, sIndex) => {
-        const originalSize = originalColor?.sizes?.[sIndex] || {};
+      updatedColor.sizes.push(updatedSize);
 
-        const updatedSize = {
-          ...originalSize,
-          label: size.label,
-          mrp: Number(size.mrp),
-          discountPercentage: Number(size.discountPercentage),
-          taxPercentage: Number(size.taxPercentage),
-        };
-
-        // Recalculate selling price
-        const discounted =
-          updatedSize.mrp -
-          (updatedSize.mrp * updatedSize.discountPercentage) / 100;
-
-        const withTax =
-          discounted + (discounted * updatedSize.taxPercentage) / 100;
-
-        updatedSize.sellingPrice = Math.round(withTax);
-
-        updatedColor.sizes.push(updatedSize);
+      // mark as changed if not same as original
+      if (
+        updatedSize.mrp !== originalSize.mrp ||
+        updatedSize.discountPercentage !== originalSize.discountPercentage ||
+        updatedSize.taxPercentage !== originalSize.taxPercentage
+      ) {
         colorChanged = true;
-      });
-
-      if (colorChanged) {
-        updatedColors.push(updatedColor);
       }
     });
 
-    if (updatedColors.length > 0) {
-      changedPayload.variant = updatedColors;
+    if (colorChanged) {
+      updatedColors.push(updatedColor);
     }
+  });
 
-    if (Object.keys(changedPayload).length === 0) {
-      toast("No changes made.");
-      return;
-    }
+  if (updatedColors.length > 0) {
+    changedPayload.variant = updatedColors;
+  }
 
-    try {
-      await updateProduct(product._id, changedPayload);
-      toast.success("Product updated!");
-      onUpdate(product); // refresh list
-      onClose?.(); // close modal
-    } catch (error) {
-      console.error(error);
-      toast.error("Update failed.");
-    }
-  };
+  if (Object.keys(changedPayload).length === 0) {
+    toast("No changes made.");
+    return;
+  }
+
+  try {
+    await updateProduct(product._id, changedPayload);
+    toast.success("Product updated!");
+    onUpdate(product);
+    onClose?.();
+  } catch (error) {
+    console.error(error);
+    toast.error("Update failed.");
+  }
+};
+
 
   return (
     <div className="w-full max-w-md mx-auto p-6 bg-[#FAFDFD] rounded-xl">
