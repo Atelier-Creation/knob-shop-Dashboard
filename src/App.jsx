@@ -26,6 +26,7 @@ import BroucherList from "./components/Brochure/BroucherList";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import ViewEditProduct from "./pages/ViewEditProduct";
 import LockScreen from "./pages/LockScreen";
+import CustomerList from "./pages/CustomerList";
 
 function App() {
   return (
@@ -79,6 +80,10 @@ function App() {
             <Route
               path="orders-customers/order-list"
               element={<OrderListDashboard />}
+            />
+            <Route
+              path="orders-customers/customer-list"
+              element={<CustomerList/>}
             />
             <Route
               path="orders-customers/order-list/:id"
