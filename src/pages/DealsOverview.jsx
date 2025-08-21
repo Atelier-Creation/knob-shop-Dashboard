@@ -1,51 +1,30 @@
 import { useEffect, useState } from "react";
-import { Plus, MoreVertical } from "lucide-react";
+import { Plus, MoreVertical, Trash2 } from "lucide-react";
 import { Flame, Clock, XCircle, ThumbsUp } from "lucide-react";
 import StatusCardDeal from "../components/StatusCardDeal";
 import { Link } from "react-router-dom";
 import { deleteDeal, getDeals } from "../api/dealsApi";
 import toast from "react-hot-toast";
+import moment from "moment"; // Make sure to install moment.js or a similar library for date formatting
 
 const tabs = ["All", "Active", "Scheduled", "Expired"];
 
-const dealss = [
-  {
-    title: "Monsoon Flat 20%",
-    discount: "20%",
-    type: "Percentage",
-    status: "Active",
-    validity: "Jul 01 - Jul 06",
-    appliesTo: "All Kitchen Items",
-  },
-  {
-    title: "July Combo Bonanza",
-    discount: "₹500",
-    type: "Flat ₹ Off",
-    status: "Scheduled",
-    validity: "Jul 15–Jul 30",
-    appliesTo: "Living Room",
-  },
-  {
-    title: "Lock & Save Offer",
-    discount: "BUY 1 GET 1 Free",
-    type: "Bundle",
-    status: "Expired",
-    validity: "Jun 1–Jun 15",
-    appliesTo: "Digital Lock",
-  },
-];
-
-const statusCounts = {
-  Active: 4,
-  Scheduled: 2,
-  Expired: 6,
-  Top: 6,
+const statusColors = {
+  Active: "text-green-600",
+  Scheduled: "text-yellow-600",
+  Expired: "text-red-600",
 };
 
 const DealsOverview = () => {
   const [deals, setDeals] = useState([]);
   const [activeTab, setActiveTab] = useState("All");
   const [loading, setLoading] = useState(true);
+  const [statusCounts, setStatusCounts] = useState({
+    Active: 0,
+    Scheduled: 0,
+    Expired: 0,
+    Top: 0, // Assuming this is calculated separately
+  });
 
   useEffect(() => {
     fetchDeals();
@@ -55,31 +34,176 @@ const DealsOverview = () => {
     try {
       setLoading(true);
       const data = await getDeals();
-      setDeals(data);
+      const mappedDeals = mapApiDataToDeals(data);
+      setDeals(mappedDeals);
+      calculateStatusCounts(mappedDeals);
     } catch (err) {
       toast.error("Failed to load deals");
-      setDeals(dealss)
       console.log(err);
     } finally {
       setLoading(false);
     }
   };
 
+  const mapApiDataToDeals = (coupons) => {
+    const today = new Date();
+
+    return coupons.map((coupon) => {
+      let status;
+      if (!coupon.isActive) {
+        status = "Expired";
+      } else if (new Date(coupon.expiryDate) < today) {
+        status = "Expired";
+      } else if (new Date(coupon.startDate) > today) {
+        status = "Scheduled";
+      } else {
+        status = "Active";
+      }
+
+      // Format discount based on type
+      let discountText;
+      if (coupon.type === "percentage") {
+        discountText = `${coupon.value}%`;
+      } else if (coupon.type === "flat") {
+        discountText = `₹${coupon.value}`;
+      } else if (coupon.type === "bundle") {
+        discountText = "BUY 1 GET 1 Free"; // Assuming this logic
+      } else {
+        discountText = coupon.value;
+      }
+
+      return {
+        id: coupon._id, // Add id for deletion
+        title: `Coupon: ${coupon.code}`,
+        discount: discountText,
+        type: coupon.type,
+        status: status,
+        validity: `${moment(coupon.startDate).format("MMM DD")} - ${moment(
+          coupon.expiryDate
+        ).format("MMM DD")}`,
+        appliesTo: "All products", // This field needs to be added to the backend schema
+      };
+    });
+  };
+
+  const calculateStatusCounts = (mappedDeals) => {
+    const counts = mappedDeals.reduce(
+      (acc, deal) => {
+        if (deal.status in acc) {
+          acc[deal.status]++;
+        }
+        return acc;
+      },
+      { Active: 0, Scheduled: 0, Expired: 0 }
+    );
+
+    // Set status counts dynamically
+    setStatusCounts({ ...counts, Top: 0 }); // Assuming 'Top' is a separate metric
+  };
+
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this deal?")) return;
-    await deleteDeal(id);
-    toast.success("Deal deleted");
-    fetchDeals();
+    try {
+      await deleteDeal(id);
+      toast.success("Deal deleted");
+      fetchDeals(); // Refresh the list
+    } catch (err) {
+      toast.error("Failed to delete deal");
+    }
   };
 
   const filteredDeals =
-    activeTab === "All" ? dealss : dealss.filter((d) => d.status === activeTab);
+    activeTab === "All" ? deals : deals.filter((d) => d.status === activeTab);
 
-  const statusColors = {
-    Active: "text-green-600",
-    Scheduled: "text-yellow-600",
-    Expired: "text-red-600",
-  };
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        {/* Skeleton for Heading */}
+        <div className="flex justify-between items-center">
+          <div className="h-6 w-40 bg-gray-200 animate-pulse rounded"></div>
+          <div className="h-9 w-32 bg-gray-200 animate-pulse rounded"></div>
+        </div>
+
+        {/* Skeleton for Status Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <div
+              key={i}
+              className="h-24 bg-gray-200 animate-pulse rounded-md"
+            ></div>
+          ))}
+        </div>
+
+        {/* Skeleton for Tabs */}
+        <div className="flex gap-2">
+          {[...Array(4)].map((_, i) => (
+            <div
+              key={i}
+              className="h-8 w-16 bg-gray-200 animate-pulse rounded"
+            ></div>
+          ))}
+        </div>
+
+        {/* Skeleton for Table */}
+        <div className="rounded border border-gray-300 overflow-hidden">
+          <div className="w-full overflow-x-auto">
+            <table className="min-w-[700px] w-full text-sm hidden md:table">
+              <thead className="bg-gray-50">
+                <tr>
+                  {[
+                    "Deal Title",
+                    "Discount",
+                    "Type",
+                    "Status",
+                    "Validity",
+                    "Applies To",
+                    "Action",
+                  ].map((heading, i) => (
+                    <th key={i} className="p-3 text-left">
+                      {heading}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {[...Array(5)].map((_, i) => (
+                  <tr key={i} className="border-t">
+                    {Array(7)
+                      .fill("")
+                      .map((_, j) => (
+                        <td key={j} className="p-3">
+                          <div className="h-4 w-24 bg-gray-200 animate-pulse rounded"></div>
+                        </td>
+                      ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* Mobile Skeleton */}
+            <div className="space-y-4 md:hidden p-2">
+              {[...Array(3)].map((_, i) => (
+                <div
+                  key={i}
+                  className="border border-gray-300 rounded-md p-4 bg-white"
+                >
+                  <div className="h-5 w-32 bg-gray-200 animate-pulse rounded mb-3"></div>
+                  <div className="space-y-2">
+                    {[...Array(4)].map((_, j) => (
+                      <div
+                        key={j}
+                        className="h-4 w-24 bg-gray-200 animate-pulse rounded"
+                      ></div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -89,7 +213,6 @@ const DealsOverview = () => {
           <h2 className="text-lg font-semibold me-1">Deals & Discounts</h2>
           <p className="text-sm text-gray-500">/ Overview</p>
         </div>
-
         <Link
           to={"/deals-discounts/create"}
           className="px-4 py-2 text-sm bg-black text-white rounded flex items-center gap-2 w-fit"
@@ -149,7 +272,7 @@ const DealsOverview = () => {
       </div>
 
       {/* Deals Table */}
-      <div className="rounded border  border-gray-300 overflow-hidden">
+      <div className="rounded border border-gray-300 overflow-hidden">
         <div className="w-full overflow-x-auto">
           <table className="min-w-[700px] w-full text-sm hidden md:table">
             <thead className="bg-gray-50 text-left text-gray-600">
@@ -164,70 +287,90 @@ const DealsOverview = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredDeals?.map((deal, i) => (
-                <tr
-                  key={i}
-                  className="border-t hover:bg-gray-100 transition-colors"
-                >
-                  <td className="p-3 font-medium text-black">{deal.title}</td>
-                  <td className="p-3">{deal.discount}</td>
-                  <td className="p-3">{deal.type}</td>
-                  <td
-                    className={`p-3 font-medium ${statusColors[deal.status]}`}
+              {filteredDeals?.length > 0 ? (
+                filteredDeals.map((deal) => (
+                  <tr
+                    key={deal.id}
+                    className="border-t hover:bg-gray-100 transition-colors"
                   >
-                    {deal.status}
-                  </td>
-                  <td className="p-3">{deal.validity}</td>
-                  <td className="p-3">{deal.appliesTo}</td>
-                  <td className="p-3">
-                    <MoreVertical className="w-4 h-4 text-gray-500 cursor-pointer" />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {/* Mobile Card Layout */}
-          <div className="space-y-4 md:hidden p-2">
-            {filteredDeals.map((deal, i) => (
-              <div
-                key={i}
-                className="border border-gray-300 rounded-md p-4 shadow-sm bg-white"
-              >
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="text-base font-semibold">{deal.title}</h3>
-                  <MoreVertical className="w-4 h-4 text-gray-500 cursor-pointer" />
-                </div>
-                <div className="text-sm text-gray-600 space-y-1">
-                  <div>
-                    <span className="font-medium text-gray-900">Discount:</span>{" "}
-                    {deal.discount}
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-900">Type:</span>{" "}
-                    {deal.type}
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-900">Status:</span>{" "}
-                    <span
-                      className={`${statusColors[deal.status]} font-medium`}
+                    <td className="p-3 font-medium text-black">{deal.title}</td>
+                    <td className="p-3">{deal.discount}</td>
+                    <td className="p-3">{deal.type}</td>
+                    <td
+                      className={`p-3 font-medium ${statusColors[deal.status]}`}
                     >
                       {deal.status}
-                    </span>
+                    </td>
+                    <td className="p-3">{deal.validity}</td>
+                    <td className="p-3">{deal.appliesTo}</td>
+                    <td className="p-3">
+                      <Trash2
+                        className="w-4 h-4 text-red-500 cursor-pointer"
+                        onClick={() => handleDelete(deal.id)}
+                      />
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="7" className="p-4 text-center text-gray-500">
+                    No deals found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+          {/* Mobile Card Layout */}
+          <div className="space-y-4 md:hidden p-2">
+            {filteredDeals?.length > 0 ? (
+              filteredDeals.map((deal) => (
+                <div
+                  key={deal.id}
+                  className="border border-gray-300 rounded-md p-4 shadow-sm bg-white"
+                >
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-base font-semibold">{deal.title}</h3>
+                    <Trash2 className="w-4 h-4 text-red-500 cursor-pointer" onClick={() => handleDelete(deal.id)} />
                   </div>
-                  <div>
-                    <span className="font-medium text-gray-900">Validity:</span>{" "}
-                    {deal.validity}
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-900">
-                      Applies To:
-                    </span>{" "}
-                    {deal.appliesTo}
+                  <div className="text-sm text-gray-600 space-y-1">
+                    <div>
+                      <span className="font-medium text-gray-900">
+                        Discount:
+                      </span>{" "}
+                      {deal.discount}
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-900">Type:</span>{" "}
+                      {deal.type}
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-900">Status:</span>{" "}
+                      <span
+                        className={`${statusColors[deal.status]} font-medium`}
+                      >
+                        {deal.status}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-900">
+                        Validity:
+                      </span>{" "}
+                      {deal.validity}
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-900">
+                        Applies To:
+                      </span>{" "}
+                      {deal.appliesTo}
+                    </div>
                   </div>
                 </div>
+              ))
+            ) : (
+              <div className="p-4 text-center text-gray-500">
+                No deals found.
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>
