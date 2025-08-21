@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { toast } from "react-hot-toast";
 import { Trash2, CloudUpload } from "lucide-react"; // Import CloudUpload for the empty state icon
-
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { Upload } from "@aws-sdk/lib-storage";
 // Add a 'multiple' prop to control single/multiple file uploads
 export default function ImageUploader({
   image,
@@ -20,6 +21,64 @@ export default function ImageUploader({
   const cloudName = import.meta.env.cloudinery_name || "dpea4iv0b";
   const uploadPreset =
     import.meta.env.cloudinery_presetName || "product_upload";
+
+  const s3 = useMemo(() => {
+    return new S3Client({
+      endpoint: "https://blr1.digitaloceanspaces.com",
+      region: "us-east-1", // Required by AWS SDK, irrelevant for DO
+      credentials: {
+        accessKeyId: import.meta.env.VITE_DO_SPACES_KEY,
+        secretAccessKey: import.meta.env.VITE_DO_SPACES_SECRET,
+      },
+    });
+  }, []);
+
+  const uploadToSpaces = useCallback(
+    async (file, onProgress) => {
+      if (!file) return null;
+
+      const bucketName = "knobsshopcdn";
+      const fileKey = `uploads/${Date.now()}-${file.name}`;
+
+      try {
+        const parallelUploads3 = new Upload({
+          client: s3,
+          params: {
+            Bucket: bucketName,
+            Key: fileKey,
+            Body: file,
+            ACL: "public-read",
+            ContentType: file.type,
+          },
+          queueSize: 1, // optional: helps show accurate progress for single files
+          partSize: 5 * 1024 * 1024, // optional: default is 5MB
+          leavePartsOnError: false,
+        });
+
+        parallelUploads3.on("httpUploadProgress", (progress) => {
+          if (
+            progress.loaded &&
+            progress.total &&
+            typeof onProgress === "function"
+          ) {
+            const percent = Math.round(
+              (progress.loaded / progress.total) * 100
+            );
+            onProgress(percent);
+          }
+        });
+
+        await parallelUploads3.done();
+
+        const publicUrl = `https://${bucketName}.blr1.digitaloceanspaces.com/${fileKey}`;
+        return { url: publicUrl, deleteToken: null };
+      } catch (err) {
+        console.error("Error uploading to Spaces:", err);
+        throw err;
+      }
+    },
+    [s3]
+  );
 
   useEffect(() => {
     // Only update internal preview if it's a single image uploader
@@ -100,52 +159,53 @@ export default function ImageUploader({
     [cloudName, uploadPreset]
   );
 
-  const onDrop = useCallback(
-    async (acceptedFiles) => {
-      if (!acceptedFiles.length) return;
+const onDrop = useCallback(
+  async (acceptedFiles) => {
+    if (!acceptedFiles.length) return;
 
-      setIsUploading(true); // Start overall uploading indicator
-      setUploadProgress(0); // Reset progress
+    setIsUploading(true);
+    setUploadProgress(0);
 
-      if (multiple) {
-        const uploadedImagesData = [];
-        try {
-          for (const file of acceptedFiles) {
-            const { url, deleteToken } = await uploadFileToCloudinary(file);
-            uploadedImagesData.push({ url, deleteToken });
-          }
-          if (onImageUpload) onImageUpload(uploadedImagesData);
-          toast.success(
-            `${acceptedFiles.length} image(s) uploaded successfully`
-          );
-        } catch (err) {
-          console.error("Multi-image upload failed", err);
-          toast.error("Failed to upload all images.");
-        } finally {
-          setIsUploading(false);
-          setUploadProgress(0); 
+    if (multiple) {
+      const uploadedImagesData = [];
+      try {
+        for (const file of acceptedFiles) {
+          const { url, deleteToken } = await uploadToSpaces(file, setUploadProgress);
+          console.log(url);
+          uploadedImagesData.push({ url, deleteToken });
         }
-      } else {
-        const file = acceptedFiles[0];
-        const localUrl = URL.createObjectURL(file);
-        setSinglePreview(localUrl);
-        try {
-          const { url, deleteToken } = await uploadFileToCloudinary(file);
-          setSingleDeleteToken(deleteToken);
-          if (onImageUpload) onImageUpload(url);
-          toast.success("Image uploaded successfully");
-        } catch (err) {
-          console.error("Single image upload failed", err);
-          toast.error("Upload failed");
-          setSinglePreview(null);
-        } finally {
-          setIsUploading(false);
-          setUploadProgress(0);
-        }
+        if (onImageUpload) onImageUpload(uploadedImagesData);
+        toast.success(`${acceptedFiles.length} image(s) uploaded successfully`);
+      } catch (err) {
+        console.error("Multi-image upload failed", err);
+        toast.error("Failed to upload all images.");
+      } finally {
+        setIsUploading(false);
+        setUploadProgress(0);
       }
-    },
-    [multiple, onImageUpload, uploadFileToCloudinary]
-  );
+    } else {
+      const file = acceptedFiles[0];
+      const localUrl = URL.createObjectURL(file);
+      setSinglePreview(localUrl);
+      try {
+        const { url, deleteToken } = await uploadToSpaces(file, setUploadProgress);
+        console.log(url);
+        setSingleDeleteToken(deleteToken);
+        if (onImageUpload) onImageUpload(url);
+        toast.success("Image uploaded successfully");
+      } catch (err) {
+        console.error("Single image upload failed", err);
+        toast.error("Upload failed");
+        setSinglePreview(null);
+      } finally {
+        setIsUploading(false);
+        setUploadProgress(0);
+      }
+    }
+  },
+  [multiple, onImageUpload, uploadToSpaces]
+);
+
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,

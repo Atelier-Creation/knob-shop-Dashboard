@@ -198,7 +198,7 @@ const ColorVariants = ({ colors = [], setColors }) => {
 
   const handleInlineColorChange = (oldHex, newHex) => {
     const existing = colors.find(
-      (c) => c.hex.toLowerCase() === newHex.toLowerCase()
+      (c) => c.hex?.toLowerCase() === newHex?.toLowerCase()
     );
     if (existing && existing.hex !== oldHex) {
       toast.error("This color already exists", { id: `duplicate-color-hex` });
@@ -282,7 +282,7 @@ const ColorVariants = ({ colors = [], setColors }) => {
       <div className="space-y-6">
         {colors.map((c, colorIndex) => (
           <div
-            key={c.hex}
+           key={`${c.hex}-${colorIndex}`}
             className="p-4 border border-gray-300 bg-white rounded-md shadow-sm relative max-w-[950px]"
           >
             <button

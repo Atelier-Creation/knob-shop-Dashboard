@@ -19,6 +19,8 @@ import key from "/keyfeaturesIcon/manual_key.svg";
 import card from "/keyfeaturesIcon/card.png";
 import biometric from "/keyfeaturesIcon/biometric.svg";
 import remote from "/keyfeaturesIcon/remote.svg";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { Upload } from "@aws-sdk/lib-storage";
 
 export default function AddProduct({
   mode = "create",
@@ -194,16 +196,59 @@ export default function AddProduct({
     }
     toast.success("Form reset successfully");
   };
-
-  const cloudName = import.meta.env.cloudinery_name || "dpea4iv0b"; // Corrected env variable name
-  const uploadPreset =
-    import.meta.env.cloudinery_presetName || "product_upload"; // Corrected env variable name
-
 function getSuggestedName(hex) {
   if (typeof hex !== "string" || !hex.startsWith("#")) return "Custom Color";
   const name = ColorNamer(hex)?.ntc?.[0]?.name || "Custom Color";
   return name === "Grey" ? "Custom Color" : name;
 }
+  const cloudName = import.meta.env.cloudinery_name || "dpea4iv0b"; // Corrected env variable name
+  const uploadPreset =
+    import.meta.env.cloudinery_presetName || "product_upload"; // Corrected env variable name
+// Configure DigitalOcean Spaces
+const s3 = new S3Client({
+  endpoint: "https://blr1.digitaloceanspaces.com",
+  region: "us-east-1", // This value doesn't matter for DO, but is required
+  credentials: {
+    accessKeyId: import.meta.env.VITE_DO_SPACES_KEY,
+    secretAccessKey: import.meta.env.VITE_DO_SPACES_SECRET,
+  },
+});
+
+
+
+async function uploadToSpaces(file) {
+  if (!file) return null;
+
+  const bucketName = "knobsshopcdn";
+  const fileKey = `uploads/${Date.now()}-${file.name}`;
+
+  try {
+    const parallelUploads3 = new Upload({
+      client: s3,
+      params: {
+        Bucket: bucketName,
+        Key: fileKey,
+        Body: file,
+        ACL: "public-read",
+        ContentType: file.type,
+      },
+    });
+
+    parallelUploads3.on("httpUploadProgress", (progress) => {
+      console.log(progress);
+    });
+
+    await parallelUploads3.done();
+
+    // Construct the public URL
+    const publicUrl = `https://${bucketName}.blr1.digitaloceanspaces.com/${fileKey}`;
+    return publicUrl;
+  } catch (err) {
+    console.error("Error uploading to Spaces:", err);
+    throw err;
+  }
+}
+
 
   async function uploadToCloudinary(file) {
     if (!file) return null;
@@ -323,7 +368,7 @@ function getSuggestedName(hex) {
         colors.map(async (color) => {
           const variantImageTasks = color.images.map((imgObj) => {
             if (imgObj instanceof File) {
-              return uploadToCloudinary(imgObj).then((res) => ({
+              return uploadToSpaces(imgObj).then((res) => ({
                 url: res.url,
                 deleteToken: res.deleteToken,
               }));
@@ -360,7 +405,7 @@ function getSuggestedName(hex) {
 
       // No actual upload happening here, just reshaping features
       const uploadedDetailedFeatures = validProductFeatures?.map((f) => ({
-        title: f.heading,
+        heading: f.heading,
         description: f.description,
         image: f.image,
       }));
@@ -810,7 +855,7 @@ function getSuggestedName(hex) {
             if (file && file.type === "application/pdf") {
               toast.loading("Uploading brochure...");
               try {
-                const url = await uploadToCloudinary(file);
+                const url = await uploadToSpaces(file);
                 updateField("brochure", url);
                 toast.success("Brochure uploaded!");
               } catch {
