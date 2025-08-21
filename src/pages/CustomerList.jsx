@@ -1,5 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { CalendarDays, Search, MoreVertical } from "lucide-react";
+import { Users, UserCheck, User } from "lucide-react";
+
 import { useNavigate } from "react-router-dom";
 import { getAllUser } from "../api/frontUserApi";
 import ResponsiveTableCard from "../components/ResponsiveTableCard";
@@ -116,19 +118,19 @@ function CustomerList() {
           {
             label: "Total Users",
             value: users.length,
-            icon: CalendarDays,
+            icon: Users, 
             iconColor: "text-indigo-500",
           },
           {
             label: "Customers",
             value: stats.customers,
-            icon: CalendarDays,
+            icon: UserCheck,
             iconColor: "text-green-500",
           },
           {
             label: "Only Users",
             value: stats.onlyUsers,
-            icon: CalendarDays,
+            icon: User,
             iconColor: "text-red-500",
           },
         ]}
@@ -139,19 +141,19 @@ function CustomerList() {
           {
             label: "Total Users",
             value: users.length,
-            icon: CalendarDays,
+            icon: Users, 
             iconColor: "text-indigo-500",
           },
           {
             label: "Customers",
             value: stats.customers,
-            icon: CalendarDays,
+            icon: UserCheck,
             iconColor: "text-green-500",
           },
           {
             label: "Only Users",
             value: stats.onlyUsers,
-            icon: CalendarDays,
+            icon: User,
             iconColor: "text-red-500",
           },
         ]}
