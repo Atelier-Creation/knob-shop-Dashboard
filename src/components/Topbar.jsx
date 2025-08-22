@@ -45,22 +45,48 @@ const Topbar = ({ toggleSidebar }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-    // 🔥 Listen for new orders from backend
-    useEffect(() => {
-      socket.on("newOrder", (data) => {
-        // show toast
-        toast.success(`New Order #${data.orderId} – ₹${data.totalAmount}`, {
-          duration: 4000,
-        });
-  
-        // save notification
-        setNotifications((prev) => [data, ...prev]);
-      });
-  
-      return () => {
-        socket.off("newOrder");
-      };
-    }, []);
+// Inside your Topbar component
+useEffect(() => {
+  // Load notifications from localStorage on mount
+  const savedNotifications = JSON.parse(localStorage.getItem("notifications")) || [];
+  setNotifications(savedNotifications);
+}, []);
+
+useEffect(() => {
+  socket.on("newOrder", (data) => {
+    const notif = {
+      id: Date.now(),
+      orderId: data.orderId,
+      totalAmount: data.totalAmount,
+      message: `New Order #${data.orderId} – ₹${data.totalAmount}`,
+    };
+
+    // Save to state
+    setNotifications((prev) => {
+      const updated = [notif, ...prev];
+      localStorage.setItem("notifications", JSON.stringify(updated)); // persist
+      return updated;
+    });
+
+    // Show toast with X button and 10s duration
+    toast((t) => (
+      <div className="flex justify-between items-center gap-2">
+        <span>{notif.message}</span>
+        <button
+          onClick={() => toast.dismiss(t.id)}
+          className="text-gray-500 hover:text-gray-900 font-bold"
+        >
+          X
+        </button>
+      </div>
+    ), { duration: 10000 });
+  });
+
+  return () => {
+    socket.off("newOrder");
+  };
+}, []);
+
   return (
     <header className="flex justify-between items-center gap-2 px-4 py-3 bg-white">
       {/* Left: Menu + Search (mobile-first) */}
@@ -116,15 +142,23 @@ const Topbar = ({ toggleSidebar }) => {
                   <p className="p-2 text-sm text-gray-500">No notifications</p>
                 ) : (
                   notifications.map((n, i) => (
-                    <div
-                      key={i}
-                      className="p-2 text-sm border-b hover:bg-gray-50 cursor-pointer"
-                    >
-                      <p>{n.message}</p>
-                      <p className="text-xs text-gray-400">
-                        Order #{n.orderId} – ₹{n.totalAmount}
-                      </p>
-                    </div>
+                    <div key={n.id} className="p-2 text-sm border-b hover:bg-gray-50 flex justify-between items-center">
+  <div>
+    <p>{n.message}</p>
+    <p className="text-xs text-gray-400">Order #{n.orderId} – ₹{n.totalAmount}</p>
+  </div>
+  <button
+    onClick={() => {
+      const updated = notifications.filter(x => x.id !== n.id);
+      setNotifications(updated);
+      localStorage.setItem("notifications", JSON.stringify(updated));
+    }}
+    className="text-gray-400 hover:text-gray-600 font-bold"
+  >
+    X
+  </button>
+</div>
+
                   ))
                 )}
               </div>
