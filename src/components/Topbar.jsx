@@ -12,6 +12,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { logout } from "./logout";
+import { getUnseenOrders, markOrderAsSeen } from "../api/orderListApi";
 import { io } from "socket.io-client";
 import toast from "react-hot-toast";
 const socket = io("https://knob-shop-backend.onrender.com", {
@@ -51,41 +52,69 @@ useEffect(() => {
   const savedNotifications = JSON.parse(localStorage.getItem("notifications")) || [];
   setNotifications(savedNotifications);
 }, []);
-
-useEffect(() => {
-  socket.on("newOrder", (data) => {
-    const notif = {
-      id: Date.now(),
-      orderId: data.orderId,
-      totalAmount: data.totalAmount,
-      message: `New Order #${data.orderId} – ₹${data.totalAmount}`,
+  // ✅ Fetch unseen orders when admin logs in / page mounts
+  useEffect(() => {
+    const fetchUnseen = async () => {
+      try {
+        const res = await getUnseenOrders();
+        if (res.success && res.orders.length > 0) {
+          res.orders.forEach((order) => {
+            const notif = {
+              id: order._id,
+              orderId: order._id,
+              totalAmount: order.totalAmount,
+              message: `Missed Order #${order._id} – ₹${order.totalAmount}`,
+            };
+            setNotifications((prev) => {
+              const updated = [notif, ...prev];
+              localStorage.setItem("notifications", JSON.stringify(updated));
+              return updated;
+            });
+            toast.success(`Missed Order #${order._id} – ₹${order.totalAmount}`, {
+              duration: 8000,
+            });
+          });
+        }
+      } catch (err) {
+        console.error("Failed to fetch unseen orders", err);
+      }
     };
+    fetchUnseen();
+  }, []);
 
-    // Save to state
-    setNotifications((prev) => {
-      const updated = [notif, ...prev];
-      localStorage.setItem("notifications", JSON.stringify(updated)); // persist
-      return updated;
+  // ✅ Real-time new order socket
+  useEffect(() => {
+    socket.on("newOrder", (data) => {
+      const notif = {
+        id: data.orderId,
+        orderId: data.orderId,
+        totalAmount: data.totalAmount,
+        message: `New Order #${data.orderId} – ₹${data.totalAmount}`,
+      };
+
+      setNotifications((prev) => {
+        const updated = [notif, ...prev];
+        localStorage.setItem("notifications", JSON.stringify(updated));
+        return updated;
+      });
+
+      toast((t) => (
+        <div className="flex justify-between items-center gap-2">
+          <span>{notif.message}</span>
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="text-gray-500 hover:text-gray-900 font-bold"
+          >
+            X
+          </button>
+        </div>
+      ), { duration: 10000 });
     });
 
-    // Show toast with X button and 10s duration
-    toast((t) => (
-      <div className="flex justify-between items-center gap-2">
-        <span>{notif.message}</span>
-        <button
-          onClick={() => toast.dismiss(t.id)}
-          className="text-gray-500 hover:text-gray-900 font-bold"
-        >
-          X
-        </button>
-      </div>
-    ), { duration: 10000 });
-  });
-
-  return () => {
-    socket.off("newOrder");
-  };
-}, []);
+    return () => {
+      socket.off("newOrder");
+    };
+  }, []);
 
   return (
     <header className="flex justify-between items-center gap-2 px-4 py-3 bg-white">
@@ -141,24 +170,38 @@ useEffect(() => {
                 {notifications.length === 0 ? (
                   <p className="p-2 text-sm text-gray-500">No notifications</p>
                 ) : (
-                  notifications.map((n, i) => (
-                    <div key={n.id} className="p-2 text-sm border-b hover:bg-gray-50 flex justify-between items-center">
-  <div>
-    <p>{n.message}</p>
-    <p className="text-xs text-gray-400">Order #{n.orderId} – ₹{n.totalAmount}</p>
-  </div>
-  <button
-    onClick={() => {
-      const updated = notifications.filter(x => x.id !== n.id);
-      setNotifications(updated);
-      localStorage.setItem("notifications", JSON.stringify(updated));
-    }}
-    className="text-gray-400 hover:text-gray-600 font-bold"
-  >
-    X
-  </button>
-</div>
-
+                  notifications.map((n) => (
+                    <div
+                      key={n.id}
+                      className="p-2 text-sm border-b hover:bg-gray-50 flex justify-between items-center"
+                    >
+                      <div>
+                        <p>{n.message}</p>
+                        <p className="text-xs text-gray-400">
+                          Order #{n.orderId} – ₹{n.totalAmount}
+                        </p>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          try {
+                            await markOrderAsSeen(n.orderId);
+                          } catch (err) {
+                            console.error("Failed to mark order as seen", err);
+                          }
+                          const updated = notifications.filter(
+                            (x) => x.id !== n.id
+                          );
+                          setNotifications(updated);
+                          localStorage.setItem(
+                            "notifications",
+                            JSON.stringify(updated)
+                          );
+                        }}
+                        className="text-gray-400 hover:text-gray-600 font-bold"
+                      >
+                        X
+                      </button>
+                    </div>
                   ))
                 )}
               </div>
