@@ -27,6 +27,7 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import ViewEditProduct from "./pages/ViewEditProduct";
 import LockScreen from "./pages/LockScreen";
 import CustomerList from "./pages/CustomerList";
+import CreateCouponPage from "./components/CreateCouponPage";
 
 function App() {
   return (
@@ -73,7 +74,8 @@ function App() {
             <Route path="homepage-ads" element={<AdsDashboard />} />
             <Route path="homepage-ads/create" element={<CreateNewAd />} />
             <Route path="deals-discounts" element={<DealsOverview />} />
-            <Route path="deals-discounts/create" element={<CreateDealForm />} />
+            {/* <Route path="deals-discounts/create" element={<CreateDealForm />} /> */}
+            <Route path="deals-discounts/create" element={<CreateCouponPage />} />
             <Route path="product-stock" element={<ProductDashboard />} />
             <Route path="product-stock/:id" element={<ProductDetailsView />} />
             <Route path="reports-analytics" element={<ReportsAnalytics />} />
