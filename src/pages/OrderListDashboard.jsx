@@ -189,7 +189,7 @@ export default function OrderListDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <StatCardGroup title="Order Statuses" stats={computedOrderStatuses} />
 
-      <StatCardGroup title="Order Statuses" stats={computedOrderStatuses} />
+      {/* <StatCardGroup title="Order Statuses" stats={computedOrderStatuses} /> */}
 
       </div>
 

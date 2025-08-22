@@ -135,29 +135,7 @@ function CustomerList() {
           },
         ]}
       />
-      <StatCardGroup
-        title="Users Overview"
-        stats={[
-          {
-            label: "Total Users",
-            value: users.length,
-            icon: Users, 
-            iconColor: "text-indigo-500",
-          },
-          {
-            label: "Customers",
-            value: stats.customers,
-            icon: UserCheck,
-            iconColor: "text-green-500",
-          },
-          {
-            label: "Only Users",
-            value: stats.onlyUsers,
-            icon: User,
-            iconColor: "text-red-500",
-          },
-        ]}
-      />
+
 </div>
 <div className="flex gap-4  mb-4">
         {tabs.map(({ label }) => (
