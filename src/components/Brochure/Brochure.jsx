@@ -1,7 +1,47 @@
+// src/pages/Brochure.jsx
+
 import React, { useState, useRef } from "react";
 import { createBrochure } from "../../api/brochureApi";
 import "./Brochure.css";
 import toast from "react-hot-toast";
+import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+
+const s3 = new S3Client({
+  endpoint: "https://blr1.digitaloceanspaces.com",
+  region: "us-east-1",
+  credentials: {
+    accessKeyId: import.meta.env.VITE_DO_SPACES_KEY,
+    secretAccessKey: import.meta.env.VITE_DO_SPACES_SECRET,
+  },
+});
+
+async function uploadToSpaces(file, setUploading) {
+  if (!file) return null;
+
+  setUploading(true);
+  const bucketName = "knobsshopcdn";
+  const fileKey = `uploads/${Date.now()}-${file.name}`;
+
+  try {
+    const command = new PutObjectCommand({
+      Bucket: bucketName,
+      Key: fileKey,
+      Body: file,
+      ACL: "public-read",
+      ContentType: file.type,
+    });
+
+    await s3.send(command);
+
+    const publicUrl = `https://${bucketName}.blr1.digitaloceanspaces.com/${fileKey}`;
+    return publicUrl;
+  } catch (err) {
+    console.error("❌ Upload error:", err);
+    return null;
+  } finally {
+    setUploading(false);
+  }
+}
 
 function Brochure() {
   const [name, setName] = useState("");
@@ -11,39 +51,6 @@ function Brochure() {
 
   const fileInputRef = useRef(null);
 
-  const cloudName = import.meta.env.VITE_CLOUDINARY_NAME || "dpea4iv0b";
-  const uploadPreset = import.meta.env.VITE_CLOUDINARY_PRESET || "product_upload";
-
-  async function uploadToCloudinary(file) {
-    if (!file) return null;
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", uploadPreset);
-
-    try {
-      setUploading(true);
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/upload`, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error.message || "Cloudinary upload failed");
-      }
-
-      const data = await res.json();
-      toast.success("Broucher Uploaded")
-      return data.secure_url; // The PDF URL
-    } catch (error) {
-      console.error("Error uploading to Cloudinary:", error);
-      toast.error("❌ Failed to upload to Cloudinary.");
-      return null;
-    } finally {
-      setUploading(false);
-    }
-  }
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -52,7 +59,7 @@ function Brochure() {
       return;
     }
 
-    const pdfUrl = await uploadToCloudinary(file);
+    const pdfUrl = await uploadToSpaces(file, setUploading);
     if (!pdfUrl) return;
 
     const payload = {
@@ -64,8 +71,7 @@ function Brochure() {
     try {
       const response = await createBrochure(payload);
       toast.success("Brochure created successfully!");
-      console.log("Brochure",response);
-      
+      console.log("Brochure", response);
 
       // Reset form
       setName("");

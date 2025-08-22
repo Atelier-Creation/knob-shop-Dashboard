@@ -11,3 +11,22 @@ export const createBrochure = async (data) => {
   const res = await axios.post(`${BASE_URL}`, data);
   return res.data;
 };
+
+export const editBrochure = async (brochureId, updatedData) => {
+  try {
+    const response = await axios.put(`${BASE_URL}/${brochureId}`, updatedData);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// This is a placeholder for your actual API call
+export const deleteBrochure = async (brochureId) => {
+  try {
+    const response = await axios.delete(`${BASE_URL}/${brochureId}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
