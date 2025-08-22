@@ -15,8 +15,10 @@ import { logout } from "./logout";
 import { io } from "socket.io-client";
 import toast from "react-hot-toast";
 const socket = io("https://knob-shop-backend.onrender.com", {
-  transports: ["websocket"],
+  transports: ["websocket", "polling"],
+  withCredentials: true,
 });
+
 socket.on("connect", () => {
   console.log("🔌 Connected to backend with ID:", socket.id);
 });
