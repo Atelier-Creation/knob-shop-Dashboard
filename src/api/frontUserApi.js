@@ -4,3 +4,12 @@ export const getAllUser = async()=>{
     const res = await axios.get(`${BASE_URL}/all-users`);
     return res;
   }
+
+  export const getUserById = async (userId) => {
+    try {
+      const res = await axios.get(`${BASE_URL}/${userId}`);
+      return res.data; // contains { user: { ... } }
+    } catch (err) {
+      throw err.response?.data || { error: "Failed to fetch user" };
+    }
+  };
