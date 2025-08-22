@@ -21,3 +21,19 @@ export const getOrderById = async (orderId) => {
     const res = await axios.get(`${BASE_URL}/user/${userId}`);
     return res.data
   }
+
+  // Fetch unseen notifications (orders)
+export const getUnseenOrders = async () => {
+  const res = await axios.get(`${BASE_URL}/notifications/unseen`, {
+    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+  });
+  return res.data;
+};
+
+// Mark order as seen
+export const markOrderAsSeen = async (orderId) => {
+  const res = await axios.put(`${BASE_URL}/notifications/${orderId}/seen`, {}, {
+    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+  });
+  return res.data;
+};

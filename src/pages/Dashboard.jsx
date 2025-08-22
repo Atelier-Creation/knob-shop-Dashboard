@@ -18,6 +18,7 @@ const Dashboard = () => {
     try {
       setLoading(true);
       const data = await getLatestAnalyticsSnapshot(selectedRange);
+      console.log("analytics data : ",data)
       setAnalytics(data);
     } catch (error) {
       console.error("Failed to fetch analytics", error);

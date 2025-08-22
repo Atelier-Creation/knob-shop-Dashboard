@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.864.0",
+    "@aws-sdk/client-s3": "^3.872.0",
     "@aws-sdk/lib-storage": "^3.864.0",
     "@hello-pangea/dnd": "^18.0.1",
     "@lexical/react": "^0.33.1",
@@ -38,6 +38,7 @@
     "react-icons": "^5.5.0",
     "react-router-dom": "^7.6.3",
     "recharts": "^3.0.2",
+    "socket.io-client": "^4.8.1",
     "tailwind-scrollbar-hide": "^4.0.0",
     "tailwindcss": "^4.1.11"
   },

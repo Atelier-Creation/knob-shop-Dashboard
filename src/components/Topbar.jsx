@@ -12,10 +12,23 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { logout } from "./logout";
+import { getUnseenOrders, markOrderAsSeen } from "../api/orderListApi";
+import { io } from "socket.io-client";
+import toast from "react-hot-toast";
+const socket = io("https://knob-shop-backend.onrender.com", {
+  transports: ["websocket", "polling"],
+  withCredentials: true,
+});
 
+socket.on("connect", () => {
+  console.log("🔌 Connected to backend with ID:", socket.id);
+});
 const Topbar = ({ toggleSidebar }) => {
   const [open, setOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
   const menuRef = useRef();
+  const notifRef = useRef();
   const navigate = useNavigate();
   const handleLogout = () => {
     logout(navigate); // or inline logout logic
@@ -25,10 +38,84 @@ const Topbar = ({ toggleSidebar }) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setOpen(false);
       }
+      if (notifRef.current && !notifRef.current.contains(e.target)) {
+        setNotifOpen(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+// Inside your Topbar component
+useEffect(() => {
+  // Load notifications from localStorage on mount
+  const savedNotifications = JSON.parse(localStorage.getItem("notifications")) || [];
+  setNotifications(savedNotifications);
+}, []);
+  // ✅ Fetch unseen orders when admin logs in / page mounts
+  useEffect(() => {
+    const fetchUnseen = async () => {
+      try {
+        const res = await getUnseenOrders();
+        if (res.success && res.orders.length > 0) {
+          res.orders.forEach((order) => {
+            const notif = {
+              id: order._id,
+              orderId: order._id,
+              totalAmount: order.totalAmount,
+              message: `Missed Order #${order._id} – ₹${order.totalAmount}`,
+            };
+            setNotifications((prev) => {
+              const updated = [notif, ...prev];
+              localStorage.setItem("notifications", JSON.stringify(updated));
+              return updated;
+            });
+            toast.success(`Missed Order #${order._id} – ₹${order.totalAmount}`, {
+              duration: 8000,
+            });
+          });
+        }
+      } catch (err) {
+        console.error("Failed to fetch unseen orders", err);
+      }
+    };
+    fetchUnseen();
+  }, []);
+
+  // ✅ Real-time new order socket
+  useEffect(() => {
+    socket.on("newOrder", (data) => {
+      const notif = {
+        id: data.orderId,
+        orderId: data.orderId,
+        totalAmount: data.totalAmount,
+        message: `New Order #${data.orderId} – ₹${data.totalAmount}`,
+      };
+
+      setNotifications((prev) => {
+        const updated = [notif, ...prev];
+        localStorage.setItem("notifications", JSON.stringify(updated));
+        return updated;
+      });
+
+      toast((t) => (
+        <div className="flex justify-between items-center gap-2">
+          <span>{notif.message}</span>
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="text-gray-500 hover:text-gray-900 font-bold"
+          >
+            X
+          </button>
+        </div>
+      ), { duration: 10000 });
+    });
+
+    return () => {
+      socket.off("newOrder");
+    };
+  }, []);
+
   return (
     <header className="flex justify-between items-center gap-2 px-4 py-3 bg-white">
       {/* Left: Menu + Search (mobile-first) */}
@@ -68,9 +155,57 @@ const Topbar = ({ toggleSidebar }) => {
 
         <div className="flex items-center gap-4 text-gray-700">
           <MessageCircleMore size={20} className="hidden md:block" />
-          <div className="relative">
-            <Bell size={20} />
-            <span className="absolute -top-0.5 -right-0 h-2 w-2 bg-red-500 rounded-full" />
+          {/* Notifications */}
+          <div className="relative" ref={notifRef}>
+            <button onClick={() => setNotifOpen(!notifOpen)}>
+              <Bell size={20} />
+              {notifications.length > 0 && (
+                <span className="absolute -top-0.5 -right-0 h-2 w-2 bg-red-500 rounded-full" />
+              )}
+            </button>
+
+            {notifOpen && (
+              <div className="absolute right-0 mt-2 w-72 bg-white border border-gray-300 rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto">
+                <div className="p-2 font-semibold border-b">Notifications</div>
+                {notifications.length === 0 ? (
+                  <p className="p-2 text-sm text-gray-500">No notifications</p>
+                ) : (
+                  notifications.map((n) => (
+                    <div
+                      key={n.id}
+                      className="p-2 text-sm border-b hover:bg-gray-50 flex justify-between items-center"
+                    >
+                      <div>
+                        <p>{n.message}</p>
+                        <p className="text-xs text-gray-400">
+                          Order #{n.orderId} – ₹{n.totalAmount}
+                        </p>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          try {
+                            await markOrderAsSeen(n.orderId);
+                          } catch (err) {
+                            console.error("Failed to mark order as seen", err);
+                          }
+                          const updated = notifications.filter(
+                            (x) => x.id !== n.id
+                          );
+                          setNotifications(updated);
+                          localStorage.setItem(
+                            "notifications",
+                            JSON.stringify(updated)
+                          );
+                        }}
+                        className="text-gray-400 hover:text-gray-600 font-bold"
+                      >
+                        X
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
           </div>
           <Settings size={20} className="hidden md:block" />
         </div>
