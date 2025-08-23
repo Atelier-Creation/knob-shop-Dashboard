@@ -29,6 +29,7 @@ import LockScreen from "./pages/LockScreen";
 import CustomerList from "./pages/CustomerList";
 import CreateCouponPage from "./components/CreateCouponPage";
 import ReviewPage from "./components/ReviewPage";
+import ReviewDetailsPage from "./components/reviewDetailsPage";
 
 function App() {
   return (
@@ -91,6 +92,10 @@ function App() {
             <Route
               path="reviews-ratings"
               element={<ReviewPage/>}
+            />
+            <Route
+              path="reviews/:productId"
+              element={<ReviewDetailsPage/>}
             />
             <Route
               path="orders-customers/order-list/:id"

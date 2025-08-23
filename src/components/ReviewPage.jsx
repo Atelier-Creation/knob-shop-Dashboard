@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Search, Star } from "lucide-react";
+import { Search, Star, Trash } from "lucide-react";
 import moment from "moment";
-import { getAllReviews } from "../api/reviewApi";
+import { getAllReviews,deleteReview } from "../api/reviewApi";
 import { getProductById } from "../api/productApi";
 import { getUserById } from "../api/frontUserApi";
 import { useNavigate } from "react-router-dom";
 
-function ReviewCard({ review }) {
+function ReviewCard({ review,onDelete }) {
   const [expanded, setExpanded] = useState(false);
   const navigate = useNavigate();
 
@@ -25,7 +25,7 @@ function ReviewCard({ review }) {
   return (
     <div 
     onClick={handleCardClick}
-    className="p-4 border border-gray-200 rounded-2xl bg-white flex flex-col gap-4 cursor-pointer hover:shadow-md transition">
+    className="relative p-4 border border-gray-200 rounded-2xl bg-white flex flex-col gap-4 cursor-pointer hover:shadow-md transition">
       {/* Product Info */}
       <div className="flex items-center gap-4 border-b border-gray-200 pb-3">
         <img
@@ -42,6 +42,15 @@ function ReviewCard({ review }) {
 
           <p className="text-xs text-gray-500">Product ID: {review.product.id}</p>
         </div>
+
+        <Trash
+        size={18}
+        className="absolute top-3 right-3 text-gray-500 cursor-pointer hover:text-red-500"
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete(review._id);
+        }}
+      />
       </div>
 
       {/* User Review */}
@@ -174,6 +183,15 @@ function ReviewPage() {
       
         fetchReviews();
       }, []);
+
+      const handleDelete = async (reviewId) => {
+        try {
+          await deleteReview(reviewId);
+          setReviews((prev) => prev.filter((r) => r._id !== reviewId));
+        } catch (err) {
+          console.error("Failed to delete review:", err.response?.data || err.message);
+        }
+      };
       
       
     
@@ -207,7 +225,7 @@ function ReviewPage() {
       {/* Reviews Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {filteredReviews.map((review) => (
-          <ReviewCard key={review._id} review={review} />
+          <ReviewCard key={review._id} review={review} onDelete={handleDelete}/>
         ))}
       </div>
     </div>
