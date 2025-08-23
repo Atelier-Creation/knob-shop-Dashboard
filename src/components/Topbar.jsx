@@ -1,6 +1,5 @@
 import {
   CalendarDays,
-  Download,
   MessageCircleMore,
   Bell,
   Settings,
@@ -8,6 +7,19 @@ import {
   Menu,
   LogOut,
   User,
+} from "lucide-react";
+import {
+  LayoutDashboard,
+  Package,
+  MonitorSmartphone,
+  Percent,
+  Boxes,
+  BarChart2,
+  Users,
+  Star,
+  Truck,
+  HeartHandshake,
+  Download,  // ✅ keep only one
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -23,12 +35,49 @@ const socket = io("https://knob-shop-backend.onrender.com", {
 socket.on("connect", () => {
   console.log("🔌 Connected to backend with ID:", socket.id);
 });
-const Topbar = ({ toggleSidebar }) => {
+const Topbar = ({ toggleSidebar,onSearch}) => {
   const [open, setOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const menuRef = useRef();
   const notifRef = useRef();
+  const [inputValue, setInputValue] = useState("");
+
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const pages = [
+    { name: "Dashboard", path: "/", icon: <LayoutDashboard size={16} /> },
+    { name: "Homepage Ads", path: "/homepage-ads", icon: <MonitorSmartphone size={16} /> },
+    { name: "Policy Page's", path: "/policy-edit", icon: <HeartHandshake size={16} /> },
+    { name: "Reviews & Ratings", path: "/reviews-ratings", icon: <Star size={16} /> },
+    { name: "Shipping & Tax", path: "/shipping-tax", icon: <Truck size={16} /> },
+    { name: "Add Brochure", path: "/brochure/add", icon: <Download size={16} /> },
+    { name: "Brochure List", path: "/brochure/list", icon: <Download size={16} /> },
+    { name: "Order-List", path: "/orders-customers/order-list", icon: <Users size={16} /> },
+    { name: "Customer List", path: "/orders-customers/customer-list", icon: <Users size={16} /> },
+    { name: "Add category", path: "/categories-products/category", icon: <Package size={16} /> },
+    { name: "Product List", path: "/categories-products/product-list", icon: <Package size={16} /> },
+    { name: "Deals & Discounts", path: "/deals-discounts", icon: <Percent size={16} /> },
+    { name: "Product & Stock", path: "/product-stock", icon: <Boxes size={16} /> },
+    { name: "Reports & Analytics", path: "/reports-analytics", icon: <BarChart2 size={16} /> },
+  ];
+
+const filteredPages = pages.filter((page) =>
+  page.name.toLowerCase().includes(inputValue.toLowerCase())
+);
+
+  
+
+  const handleInputChange = (e) => {
+    setInputValue(e.target.value);
+  };
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (onSearch) {
+      onSearch(inputValue);  // ✅ send query up to Layout
+    }
+  };
+
   const navigate = useNavigate();
   const handleLogout = () => {
     logout(navigate); // or inline logout logic
@@ -123,15 +172,45 @@ useEffect(() => {
         <button className="md:hidden" onClick={toggleSidebar}>
           <Menu size={24} />
         </button>
-        <div className="flex bg-[#F7FAF9] border border-[#DFDFDF] rounded-full overflow-hidden w-full max-w-xs">
+        <div className="relative flex bg-[#F7FAF9] border border-[#DFDFDF] rounded-full w-full max-w-xs">
           <input
             type="text"
             placeholder="Search here"
+            value={inputValue}
+            onChange={(e) => {
+              setInputValue(e.target.value);
+              setShowDropdown(true);
+            }}
+            onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
             className="flex-1 px-4 py-2 text-sm bg-transparent outline-none placeholder:text-gray-500"
           />
-          <button className="bg-black text-white px-3 py-2 flex items-center justify-center">
+          <button  onClick={handleSearchSubmit} className="bg-black text-white px-3 py-2 flex items-center justify-center">
             <Search size={18} />
           </button>
+
+            {/* 🔽 Dropdown */}
+  {showDropdown && inputValue && (
+    <ul className="absolute top-12 left-0 w-full bg-white border border-gray-200 rounded-lg shadow-md max-h-48 overflow-y-auto z-50">
+      {filteredPages.length > 0 ? (
+        filteredPages.map((page, i) => (
+          <li
+            key={i}
+            onClick={() => {
+              navigate(page.path);
+              setInputValue("");
+              setShowDropdown(false);
+            }}
+            className="px-4 py-2 cursor-pointer hover:bg-gray-100 flex items-center gap-2"
+          >
+      <span className="text-gray-600">{page.icon}</span>
+      <span>{page.name}</span>
+          </li>
+        ))
+      ) : (
+        <li className="px-4 py-2 text-gray-500">No results</li>
+      )}
+    </ul>
+  )}
         </div>
       </div>
 

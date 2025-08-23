@@ -23,7 +23,7 @@ const navItems = [
     icon: <Package size={20} />,
     children: [
       // { label: "Add Products", path: "/categories-products/add" },
-      { label: "Add category", path: "/categories-products/category" },
+      { label: "Dashboard", path: "/categories-products/category" },
       { label: "Product List", path: "/categories-products/product-list" },
       // { label: "Bulk Upload", path: "/categories-products/bulk-add-product" },
       { label: "Product Status", path: "/categories-products/product-status" },
@@ -76,13 +76,32 @@ const navItems = [
   { label: "Policy Page's", icon: <HeartHandshake size={20}/>, path: "/policy-edit"}
 ];
 
-const Sidebar = ({ isOpen, toggleSidebar }) => {
+const Sidebar = ({ isOpen, toggleSidebar,searchQuery  }) => {
   const [expanded, setExpanded] = useState(null);
 
   const handleExpand = (label) => {
     setExpanded((prev) => (prev === label ? null : label));
   };
+  // Filter function
+  const filterNavItems = (items) => {
+    if (!searchQuery) return items;
+    return items
+      .map((item) => {
+        // if parent label matches OR any child matches
+        const matchesParent = item.label.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchingChildren = item.children?.filter((c) =>
+          c.label.toLowerCase().includes(searchQuery.toLowerCase())
+        );
 
+        if (matchesParent || (matchingChildren && matchingChildren.length > 0)) {
+          return { ...item, children: matchingChildren || item.children };
+        }
+        return null;
+      })
+      .filter(Boolean);
+  };
+
+  const filteredNavItems = filterNavItems(navItems);
   return (
     <>
       <div
@@ -133,7 +152,10 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         <div className="flex-1 overflow-hidden">
           <div className="h-full bg-[#FAFDFD] rounded-2xl">  
             <nav className="flex flex-col gap-2 p-3.5">
-              {navItems.map(({ label, icon, path, children }) => {
+            {filteredNavItems.length === 0 ? (
+          <p className="text-gray-500 text-sm px-4">No results found</p>
+        ) : (
+              filteredNavItems.map(({ label, icon, path, children }) => {
                 const isExpanded = expanded === label;
 
                 return (
@@ -197,7 +219,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                     )}
                   </div>
                 );
-              })}
+              })
+        )}
             </nav>
           </div>
         </div>
