@@ -12,3 +12,16 @@ export const getReviewsByProduct = async (productId) => {
     const res = await axios.get(`${BASE_URL}/${productId}`);
     return res.data;
 };
+// reviewApi.js
+export const deleteReview = async (reviewId) => {
+    const token = localStorage.getItem("authToken");
+  
+    const res = await axios.delete(`${BASE_URL}/${reviewId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  
+    return res.data;
+  };
+  
