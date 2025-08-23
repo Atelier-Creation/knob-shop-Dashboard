@@ -1,4 +1,5 @@
 import "./App.css";
+import { useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import DevelopmentOnProcess from "./pages/DevelopentOnprocess";
@@ -32,6 +33,7 @@ import ReviewPage from "./components/ReviewPage";
 import ReviewDetailsPage from "./components/reviewDetailsPage";
 
 function App() {
+  const [searchQuery, setSearchQuery] = useState("");
   return (
     <>
       <Toaster position="bottom-center" />
@@ -45,7 +47,7 @@ function App() {
             path="/"
             element={
               <ProtectedRoute>
-                <Layout />
+                <Layout searchQuery={searchQuery} setSearchQuery={setSearchQuery}/>
               </ProtectedRoute>
             }
           >
