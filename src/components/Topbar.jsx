@@ -165,9 +165,9 @@ const Topbar = ({ toggleSidebar, onSearch }) => {
           res.orders.forEach((order) => {
             const notif = {
               id: order._id,
-              orderId: order._id,
+              orderId: order.orderId,
               totalAmount: order.totalAmount,
-              message: `Missed Order #${order._id} – ₹${order.totalAmount}`,
+              message: `Missed Order #${order.orderId} – ₹${order.totalAmount}`,
             };
             setNotifications((prev) => {
               const updated = [notif, ...prev];
@@ -175,7 +175,7 @@ const Topbar = ({ toggleSidebar, onSearch }) => {
               return updated;
             });
             toast.success(
-              `Missed Order #${order._id} – ₹${order.totalAmount}`,
+              `Missed Order #${order.orderId} – ₹${order.totalAmount}`,
               {
                 duration: 8000,
               }
@@ -324,7 +324,8 @@ const Topbar = ({ toggleSidebar, onSearch }) => {
                       key={n.id}
                       className="p-2 text-sm border-b hover:bg-gray-50 flex justify-between items-center"
                     >
-                      <div>
+                      <div   onClick={() => navigate(`/orders-customers/order-list/${n.id}`)}
+  className="cursor-pointer flex-1">
                         <p>{n.message}</p>
                         <p className="text-xs text-gray-400">
                           Order #{n.orderId} – ₹{n.totalAmount}
