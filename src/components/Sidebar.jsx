@@ -12,6 +12,7 @@ import {
   Download,
   X,
   HeartHandshake,
+  DownloadCloud,
 } from "lucide-react";
 import { Link, NavLink } from "react-router-dom";
 import clsx from "clsx";
@@ -82,7 +83,12 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   const handleExpand = (label) => {
     setExpanded((prev) => (prev === label ? null : label));
   };
-
+const today = new Date();
+const formattedDate = today.toLocaleDateString("en-US", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+});
   return (
     <>
       <div
@@ -120,12 +126,12 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         <div className="mb-4 text-left px-8">
           <h2 className="text-4xl font-bold text-gray-800">Welcome</h2>
           <h1 className="text-4xl font-bold text-gray-800 leading-tight">
-            Back, Luna
+            Back,Admin
           </h1>
           <p className="text-[12px] text-gray-400 mt-1 flex items-center">
-            Last Update, 21 Jun 2025
+            Last Update, {formattedDate}
             <span className="w-5 h-5 ms-1 inline-block">
-              <Download size={20} />
+              <DownloadCloud size={20} />
             </span>
           </p>
         </div>
