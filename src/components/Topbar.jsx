@@ -21,6 +21,8 @@ import {
   HeartHandshake,
   Download, // ✅ keep only one
 } from "lucide-react";
+import ProfileModal from "./ProfileModal";
+
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { logout } from "./logout";
@@ -36,6 +38,8 @@ socket.on("connect", () => {
   console.log("🔌 Connected to backend with ID:", socket.id);
 });
 const Topbar = ({ toggleSidebar, onSearch }) => {
+  const [showProfileModal, setShowProfileModal] = useState(false);
+
   const [open, setOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -223,6 +227,7 @@ const Topbar = ({ toggleSidebar, onSearch }) => {
   }, []);
 
   return (
+    
     <header className="flex justify-between items-center gap-2 px-4 py-3 bg-white">
       {/* Left: Menu + Search (mobile-first) */}
       <div className="flex items-center gap-3 flex-1 md:flex-none">
@@ -293,7 +298,7 @@ const Topbar = ({ toggleSidebar, onSearch }) => {
         </button>
 
         <div className="flex items-center gap-4 text-gray-700">
-          <MessageCircleMore size={20} className="hidden md:block" />
+          {/* <MessageCircleMore size={20} className="hidden md:block" /> */}
           {/* Notifications */}
           <div className="relative" ref={notifRef}>
             <button
@@ -362,7 +367,7 @@ const Topbar = ({ toggleSidebar, onSearch }) => {
             className="flex items-center gap-2 cursor-pointer"
           >
             <div className="hidden md:block text-right text-sm">
-              <p className="text-black font-medium">Luna</p>
+              <p className="text-black font-medium">Admin</p>
               <p className="text-gray-400 text-xs">Admin</p>
             </div>
             <img
@@ -377,6 +382,10 @@ const Topbar = ({ toggleSidebar, onSearch }) => {
             <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-300 rounded shadow-md z-50">
               <button
                 title="Profile"
+                onClick={() => {
+                  setShowProfileModal(true);
+                  setOpen(false); // close dropdown
+                }}
                 className="w-full inline-flex items-center gap-2 text-left px-4 py-2 text-sm text-gray-500 hover:bg-gray-100 cursor-pointer"
               >
                 <User /> Profile
@@ -392,6 +401,10 @@ const Topbar = ({ toggleSidebar, onSearch }) => {
           )}
         </div>
       </div>
+      {showProfileModal && (
+  <ProfileModal onClose={() => setShowProfileModal(false)} />
+)}
+
     </header>
   );
 };

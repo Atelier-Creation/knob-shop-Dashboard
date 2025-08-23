@@ -31,6 +31,7 @@ import CustomerList from "./pages/CustomerList";
 import CreateCouponPage from "./components/CreateCouponPage";
 import ReviewPage from "./components/ReviewPage";
 import ReviewDetailsPage from "./components/reviewDetailsPage";
+import ProfilePage from "./components/ProfileModal";
 
 function App() {
   const [searchQuery, setSearchQuery] = useState("");
