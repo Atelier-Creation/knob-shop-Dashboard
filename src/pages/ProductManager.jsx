@@ -50,7 +50,6 @@ export default function ProductManager() {
     }
   };
 
-
   // Filter products based on selected category
   const filteredProducts =
     selectedCategory === "all"
@@ -68,8 +67,7 @@ export default function ProductManager() {
     products.map((p) => p.category)
   );
   const SkeletonBox = ({ className }) => (
-    <div className={`bg-gray-200 animate-pulse ${className}`} >
-    </div>
+    <div className={`bg-gray-200 animate-pulse ${className}`}></div>
   );
 
   const ProductGridSkeleton = () => (
@@ -81,7 +79,7 @@ export default function ProductManager() {
   );
 
   const CategoryTabsSkeleton = () => (
-    <div className="flex gap-2 overflow-x-auto p-2">  
+    <div className="flex gap-2 overflow-x-auto p-2">
       {Array.from({ length: 5 }).map((_, i) => (
         <SkeletonBox key={i} className="h-8 w-24 rounded-full" />
       ))}
@@ -128,11 +126,18 @@ export default function ProductManager() {
         {activeProduct && (
           <ProductEditor
             product={activeProduct}
-            onUpdate={(updated) =>
-              setProducts((prev) =>
-                prev.map((p) => (p._id === updated._id ? updated : p))
-              )
-            }
+            onUpdate={async () => {
+              try {
+                setLoadingProducts(true);
+                const data = await getAllProducts(); // re-fetch from API
+                setProducts(data);
+              } catch (err) {
+                console.error("Error refreshing products:", err);
+              } finally {
+                setLoadingProducts(false);
+                setActiveProduct(null); // close editor after update
+              }
+            }}
             onClose={() => setActiveProduct(null)}
           />
         )}

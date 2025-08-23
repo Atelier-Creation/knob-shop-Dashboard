@@ -20,6 +20,7 @@ export default function ProductEditor({ product, onUpdate, onClose }) {
     category: "",
     price: 0,
     discount: 0,
+    hsncode: "",
     colors: [],
     features: [],
     ...product,
@@ -56,6 +57,7 @@ export default function ProductEditor({ product, onUpdate, onClose }) {
         category: product.category?._id || "",
         price: product.variant?.[0].sizes?.[0]?.mrp || 0,
         discount: product.variant?.[0].sizes?.[0]?.discountPercentage,
+        hsncode: product.hsncode || "",
         tax: product.variant?.[0].sizes?.[0]?.taxPercentage,
         sellingPrice: product.variant?.[0].sizes?.[0]?.sellingPrice,
         colors: Array.isArray(product.variant)
@@ -74,93 +76,98 @@ export default function ProductEditor({ product, onUpdate, onClose }) {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-const handleSubmit = async () => {
-  if (!product) return;
+  const handleSubmit = async () => {
+    if (!product) return;
 
-  const changedPayload = {};
-  const updatedColors = [];
+    const changedPayload = {};
+    const updatedColors = [];
 
-  // ───────── Compare general fields ─────────
-  if (form.name !== product.name) changedPayload.name = form.name;
-  if (form.brand !== product.brand) changedPayload.brand = form.brand;
-  if (form.category !== (product.category?._id || product.category))
-    changedPayload.category = form.category;
-  if (form.features !== product.features)
-    changedPayload.features = form.features;
+    // ───────── Compare general fields ─────────
+    if (form.name !== product.name) changedPayload.name = form.name;
+    if (form.brand !== product.brand) changedPayload.brand = form.brand;
+    if (form.category !== (product.category?._id || product.category))
+      changedPayload.category = form.category;
+    if (form.features !== product.features)
+      changedPayload.features = form.features;
+    if (form.hsncode !== product.hsncode) changedPayload.hsncode = form.hsncode;
 
-  // ───────── Handle variants ─────────
-  form.colors.forEach((color, cIndex) => {
-    const originalColor = product.variant?.[cIndex];
-    const updatedColor = {
-      ...originalColor,
-      title: color.name, // or color.title
-      value: color.hex,  // match your schema
-      images: color.images,
-      sizes: [],
-    };
-
-    let colorChanged = false;
-
-    color.sizes.forEach((size, sIndex) => {
-      const originalSize = originalColor?.sizes?.[sIndex] || {};
-      const updatedSize = {
-        ...originalSize,
-        label: size.label,
-        mrp: Number(size.mrp),
-        discountPercentage: Number(size.discountPercentage),
-        taxPercentage: Number(size.taxPercentage),
+    // ───────── Handle variants ─────────
+    form.colors.forEach((color, cIndex) => {
+      const originalColor = product.variant?.[cIndex];
+      const updatedColor = {
+        ...originalColor,
+        title: color.name, // or color.title
+        value: color.hex, // match your schema
+        images: color.images,
+        sizes: [],
       };
 
-      // recalc selling price
-      const discounted =
-        updatedSize.mrp - (updatedSize.mrp * updatedSize.discountPercentage) / 100;
-      updatedSize.sellingPrice =
-        Math.round(discounted + (discounted * updatedSize.taxPercentage) / 100);
+      let colorChanged = false;
 
-      updatedColor.sizes.push(updatedSize);
+      color.sizes.forEach((size, sIndex) => {
+        const originalSize = originalColor?.sizes?.[sIndex] || {};
+        const updatedSize = {
+          ...originalSize,
+          label: size.label,
+          mrp: Number(size.mrp),
+          discountPercentage: Number(size.discountPercentage),
+          taxPercentage: Number(size.taxPercentage),
+        };
 
-      // mark as changed if not same as original
-      if (
-        updatedSize.mrp !== originalSize.mrp ||
-        updatedSize.discountPercentage !== originalSize.discountPercentage ||
-        updatedSize.taxPercentage !== originalSize.taxPercentage
-      ) {
-        colorChanged = true;
+        // recalc selling price
+        const discounted =
+          updatedSize.mrp -
+          (updatedSize.mrp * updatedSize.discountPercentage) / 100;
+        updatedSize.sellingPrice = Math.round(
+          discounted + (discounted * updatedSize.taxPercentage) / 100
+        );
+
+        updatedColor.sizes.push(updatedSize);
+
+        // mark as changed if not same as original
+        if (
+          updatedSize.mrp !== originalSize.mrp ||
+          updatedSize.discountPercentage !== originalSize.discountPercentage ||
+          updatedSize.taxPercentage !== originalSize.taxPercentage
+        ) {
+          colorChanged = true;
+        }
+      });
+
+      if (colorChanged) {
+        updatedColors.push(updatedColor);
       }
     });
 
-    if (colorChanged) {
-      updatedColors.push(updatedColor);
+    if (updatedColors.length > 0) {
+      changedPayload.variant = updatedColors;
     }
-  });
 
-  if (updatedColors.length > 0) {
-    changedPayload.variant = updatedColors;
-  }
+    if (Object.keys(changedPayload).length === 0) {
+      toast("No changes made.");
+      return;
+    }
 
-  if (Object.keys(changedPayload).length === 0) {
-    toast("No changes made.");
-    return;
-  }
-
-  try {
-    await updateProduct(product._id, changedPayload);
-    toast.success("Product updated!");
-    onUpdate(product);
-    onClose?.();
-  } catch (error) {
-    console.error(error);
-    toast.error("Update failed.");
-  }
-};
-
+    try {
+      await updateProduct(product._id, changedPayload);
+      toast.success("Product updated!");
+      onUpdate(product);
+      onClose?.();
+    } catch (error) {
+      console.error(error);
+      toast.error("Update failed.");
+    }
+  };
 
   return (
     <div className="w-full max-w-md mx-auto p-6 bg-[#FAFDFD] rounded-xl">
       {/* ───────────────── Header ───────────────── */}
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Edit Products</h1>
-        <button className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900 cursor-pointer" onClick={() => navigate(`/products/${product._id}/edit`)}>
+        <button
+          className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900 cursor-pointer"
+          onClick={() => navigate(`/products/${product._id}/edit`)}
+        >
           Full View Edit <ArrowRight size={14} strokeWidth={2} />
         </button>
       </div>
@@ -206,6 +213,15 @@ const handleSubmit = async () => {
             value={form.brand || ""}
             onChange={(e) => handleChange("brand", e.target.value)}
             placeholder="Brand"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium mb-1">HSN Code</label>
+          <input
+            className="w-full rounded-md bg-white border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-[#e0a371] outline-none"
+            value={form.hsncode || ""}
+            onChange={(e) => handleChange("hsncode", e.target.value)}
+            placeholder="Enter HSN Code"
           />
         </div>
 
@@ -385,7 +401,15 @@ const handleSubmit = async () => {
           </div>
         )}
       </div>
-      <p className="text-xs text-gray-500 mt-4">To change product image,color,size and More, use <span className="underlined text-blue-600 font-semibold cursor-pointer" onClick={() => navigate(`/products/${product._id}/edit`)}>full view</span></p>
+      <p className="text-xs text-gray-500 mt-4">
+        To change product image,color,size and More, use{" "}
+        <span
+          className="underlined text-blue-600 font-semibold cursor-pointer"
+          onClick={() => navigate(`/products/${product._id}/edit`)}
+        >
+          full view
+        </span>
+      </p>
 
       {/* ───────────────── Action Buttons ───────────────── */}
       <div className="mt-4 flex items-center gap-4">

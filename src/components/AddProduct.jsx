@@ -32,53 +32,53 @@ export default function AddProduct({
   const brochureInputRef = React.useRef(null);
 
   useEffect(() => {
-  if (initialData) {
-    setProductData({
-      dimensions: {
-        weight: initialData?.dimensions?.weight || "",
-        height: initialData?.dimensions?.height || "",
-        width: initialData?.dimensions?.width || "",
-        length: initialData?.dimensions?.length || "",
-      },
-      ...initialData,
-      productFeatures: initialData.features?.length
-        ? initialData.features.map((f) => ({
-            heading: f.title || "",
-            description: f.description || "",
-            image: f.image || "",
-          }))
-        : [{ heading: "", description: "", image: "" }],
-      techSpecs: initialData.tech_spec?.length
-        ? initialData.tech_spec.map((s) => ({
-            title: s.title || "",
-            value: s.value || "",
-          }))
-        : [{ title: "", value: "" }],
-      
-      installation: {
-        videoUrl: initialData?.installation?.videoUrl || "",
-        content: initialData?.installation?.content || "",
-      },
-    });
+    if (initialData) {
+      setProductData({
+        dimensions: {
+          weight: initialData?.dimensions?.weight || "",
+          height: initialData?.dimensions?.height || "",
+          width: initialData?.dimensions?.width || "",
+          length: initialData?.dimensions?.length || "",
+        },
+        ...initialData,
+        productFeatures: initialData.features?.length
+          ? initialData.features.map((f) => ({
+              heading: f.title || "",
+              description: f.description || "",
+              image: f.image || "",
+            }))
+          : [{ heading: "", description: "", image: "" }],
+        techSpecs: initialData.tech_spec?.length
+          ? initialData.tech_spec.map((s) => ({
+              title: s.title || "",
+              value: s.value || "",
+            }))
+          : [{ title: "", value: "" }],
 
-    const normalizedColors = (initialData.variant || []).map((v) => ({
-      hex: v.value,
-      name: v.title || getSuggestedName(v?.value),
-      price: v.price || 0,
-      images: v.images || [],
-      sizes: v.sizes || [],
-    }));
-    setColors(normalizedColors);
+        installation: {
+          videoUrl: initialData?.installation?.videoUrl || "",
+          content: initialData?.installation?.content || "",
+        },
+      });
 
-    setFeatures(initialData.key_features || []);
-  }
-}, [initialData]);
+      const normalizedColors = (initialData.variant || []).map((v) => ({
+        hex: v.value,
+        name: v.title || getSuggestedName(v?.value),
+        price: v.price || 0,
+        images: v.images || [],
+        sizes: v.sizes || [],
+      }));
+      setColors(normalizedColors);
 
+      setFeatures(initialData.key_features || []);
+    }
+  }, [initialData]);
 
   const [productData, setProductData] = useState({
     name: "",
     description: "",
     productId: "",
+    hsncode: "",
     status: "active",
     category: "",
     brand: "",
@@ -149,6 +149,7 @@ export default function AddProduct({
       name: "",
       description: "",
       productId: "",
+      hsncode: "",
       status: "active",
       category: "",
       brand: "",
@@ -196,59 +197,56 @@ export default function AddProduct({
     }
     toast.success("Form reset successfully");
   };
-function getSuggestedName(hex) {
-  if (typeof hex !== "string" || !hex.startsWith("#")) return "Custom Color";
-  const name = ColorNamer(hex)?.ntc?.[0]?.name || "Custom Color";
-  return name === "Grey" ? "Custom Color" : name;
-}
+  function getSuggestedName(hex) {
+    if (typeof hex !== "string" || !hex.startsWith("#")) return "Custom Color";
+    const name = ColorNamer(hex)?.ntc?.[0]?.name || "Custom Color";
+    return name === "Grey" ? "Custom Color" : name;
+  }
   const cloudName = import.meta.env.cloudinery_name || "dpea4iv0b"; // Corrected env variable name
   const uploadPreset =
     import.meta.env.cloudinery_presetName || "product_upload"; // Corrected env variable name
-// Configure DigitalOcean Spaces
-const s3 = new S3Client({
-  endpoint: "https://blr1.digitaloceanspaces.com",
-  region: "us-east-1", // This value doesn't matter for DO, but is required
-  credentials: {
-    accessKeyId: import.meta.env.VITE_DO_SPACES_KEY,
-    secretAccessKey: import.meta.env.VITE_DO_SPACES_SECRET,
-  },
-});
+  // Configure DigitalOcean Spaces
+  const s3 = new S3Client({
+    endpoint: "https://blr1.digitaloceanspaces.com",
+    region: "us-east-1", // This value doesn't matter for DO, but is required
+    credentials: {
+      accessKeyId: import.meta.env.VITE_DO_SPACES_KEY,
+      secretAccessKey: import.meta.env.VITE_DO_SPACES_SECRET,
+    },
+  });
 
+  async function uploadToSpaces(file) {
+    if (!file) return null;
 
+    const bucketName = "knobsshopcdn";
+    const fileKey = `uploads/${Date.now()}-${file.name}`;
 
-async function uploadToSpaces(file) {
-  if (!file) return null;
+    try {
+      const parallelUploads3 = new Upload({
+        client: s3,
+        params: {
+          Bucket: bucketName,
+          Key: fileKey,
+          Body: file,
+          ACL: "public-read",
+          ContentType: file.type,
+        },
+      });
 
-  const bucketName = "knobsshopcdn";
-  const fileKey = `uploads/${Date.now()}-${file.name}`;
+      parallelUploads3.on("httpUploadProgress", (progress) => {
+        console.log(progress);
+      });
 
-  try {
-    const parallelUploads3 = new Upload({
-      client: s3,
-      params: {
-        Bucket: bucketName,
-        Key: fileKey,
-        Body: file,
-        ACL: "public-read",
-        ContentType: file.type,
-      },
-    });
+      await parallelUploads3.done();
 
-    parallelUploads3.on("httpUploadProgress", (progress) => {
-      console.log(progress);
-    });
-
-    await parallelUploads3.done();
-
-    // Construct the public URL
-    const publicUrl = `https://${bucketName}.blr1.digitaloceanspaces.com/${fileKey}`;
-    return publicUrl;
-  } catch (err) {
-    console.error("Error uploading to Spaces:", err);
-    throw err;
+      // Construct the public URL
+      const publicUrl = `https://${bucketName}.blr1.digitaloceanspaces.com/${fileKey}`;
+      return publicUrl;
+    } catch (err) {
+      console.error("Error uploading to Spaces:", err);
+      throw err;
+    }
   }
-}
-
 
   async function uploadToCloudinary(file) {
     if (!file) return null;
@@ -301,6 +299,8 @@ async function uploadToSpaces(file) {
     if (!productData.brand.trim()) errors.push("Brand Name is required.");
     if (!productData.productId.trim())
       errors.push("Product ID (SKU) is required.");
+    if (!productData.hsncode.trim()) errors.push("HSN Code is required.");
+
     if (
       !productData.dimensions ||
       !productData.dimensions.height ||
@@ -427,6 +427,7 @@ async function uploadToSpaces(file) {
       const finalPayload = {
         name: productData.name,
         productId: productData.productId,
+        hsncode: productData.hsncode,
         stock: Number(productData.stock),
         description: productData.description,
         brand: productData.brand,
@@ -529,13 +530,12 @@ async function uploadToSpaces(file) {
   };
 
   const addTechSpec = () => {
-  const existingSpecs = productData.techSpecs || [];
-  setProductData((prev) => ({
-    ...prev,
-    techSpecs: [...existingSpecs, { title: "", value: "" }],
-  }));
-};
-
+    const existingSpecs = productData.techSpecs || [];
+    setProductData((prev) => ({
+      ...prev,
+      techSpecs: [...existingSpecs, { title: "", value: "" }],
+    }));
+  };
 
   const removeTechSpec = (i) => {
     const updated = productData.techSpecs.filter((_, index) => index !== i);
@@ -553,15 +553,15 @@ async function uploadToSpaces(file) {
   };
 
   const addProductFeature = () => {
-  const existingFeatures = productData.productFeatures || [];
-  setProductData((prev) => ({
-    ...prev,
-    productFeatures: [
-      ...existingFeatures,
-      { heading: "", description: "", image: "" },
-    ],
-  }));
-};
+    const existingFeatures = productData.productFeatures || [];
+    setProductData((prev) => ({
+      ...prev,
+      productFeatures: [
+        ...existingFeatures,
+        { heading: "", description: "", image: "" },
+      ],
+    }));
+  };
 
   const removeFeature = (index) => {
     const updated = [...productData.productFeatures];
@@ -629,15 +629,24 @@ async function uploadToSpaces(file) {
           extra="bg-white"
         />
       </div>
-
-      <Section title="SKU / Product Id" />
-      <Field
-        label="SKU / Product Id*"
-        value={productData.productId}
-        isLabel={false}
-        set={(val) => updateField("productId", val)}
-        extra="bg-white"
-      />
+      <Section/>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 mt-4">
+        <Field
+          label="SKU / Product Id*"
+          value={productData.productId}
+          isLabel={true}
+          set={(val) => updateField("productId", val)}
+          extra="bg-white"
+        />
+        <Field
+          label="HSN Code*"
+          value={productData.hsncode}
+          isLabel={true}
+          set={(val) => updateField("hsncode", val)}
+          extra="bg-white"
+          placeholder="Enter HSN Code"
+        />
+      </div>
       <Section title="Product Dimensions" subtitle="(for shipping purpose)" />
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
         <Field
