@@ -19,7 +19,7 @@ import {
   Star,
   Truck,
   HeartHandshake,
-  Download,  // ✅ keep only one
+  Download, // ✅ keep only one
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -35,7 +35,7 @@ const socket = io("https://knob-shop-backend.onrender.com", {
 socket.on("connect", () => {
   console.log("🔌 Connected to backend with ID:", socket.id);
 });
-const Topbar = ({ toggleSidebar,onSearch}) => {
+const Topbar = ({ toggleSidebar, onSearch }) => {
   const [open, setOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -47,26 +47,76 @@ const Topbar = ({ toggleSidebar,onSearch}) => {
 
   const pages = [
     { name: "Dashboard", path: "/", icon: <LayoutDashboard size={16} /> },
-    { name: "Homepage Ads", path: "/homepage-ads", icon: <MonitorSmartphone size={16} /> },
-    { name: "Policy Page's", path: "/policy-edit", icon: <HeartHandshake size={16} /> },
-    { name: "Reviews & Ratings", path: "/reviews-ratings", icon: <Star size={16} /> },
-    { name: "Shipping & Tax", path: "/shipping-tax", icon: <Truck size={16} /> },
-    { name: "Add Brochure", path: "/brochure/add", icon: <Download size={16} /> },
-    { name: "Brochure List", path: "/brochure/list", icon: <Download size={16} /> },
-    { name: "Order-List", path: "/orders-customers/order-list", icon: <Users size={16} /> },
-    { name: "Customer List", path: "/orders-customers/customer-list", icon: <Users size={16} /> },
-    { name: "Add category", path: "/categories-products/category", icon: <Package size={16} /> },
-    { name: "Product List", path: "/categories-products/product-list", icon: <Package size={16} /> },
-    { name: "Deals & Discounts", path: "/deals-discounts", icon: <Percent size={16} /> },
-    { name: "Product & Stock", path: "/product-stock", icon: <Boxes size={16} /> },
-    { name: "Reports & Analytics", path: "/reports-analytics", icon: <BarChart2 size={16} /> },
+    {
+      name: "Homepage Ads",
+      path: "/homepage-ads",
+      icon: <MonitorSmartphone size={16} />,
+    },
+    {
+      name: "Policy Page's",
+      path: "/policy-edit",
+      icon: <HeartHandshake size={16} />,
+    },
+    {
+      name: "Reviews & Ratings",
+      path: "/reviews-ratings",
+      icon: <Star size={16} />,
+    },
+    {
+      name: "Shipping & Tax",
+      path: "/shipping-tax",
+      icon: <Truck size={16} />,
+    },
+    {
+      name: "Add Brochure",
+      path: "/brochure/add",
+      icon: <Download size={16} />,
+    },
+    {
+      name: "Brochure List",
+      path: "/brochure/list",
+      icon: <Download size={16} />,
+    },
+    {
+      name: "Order-List",
+      path: "/orders-customers/order-list",
+      icon: <Users size={16} />,
+    },
+    {
+      name: "Customer List",
+      path: "/orders-customers/customer-list",
+      icon: <Users size={16} />,
+    },
+    {
+      name: "Add category",
+      path: "/categories-products/category",
+      icon: <Package size={16} />,
+    },
+    {
+      name: "Product List",
+      path: "/categories-products/product-list",
+      icon: <Package size={16} />,
+    },
+    {
+      name: "Deals & Discounts",
+      path: "/deals-discounts",
+      icon: <Percent size={16} />,
+    },
+    {
+      name: "Product & Stock",
+      path: "/product-stock",
+      icon: <Boxes size={16} />,
+    },
+    {
+      name: "Reports & Analytics",
+      path: "/reports-analytics",
+      icon: <BarChart2 size={16} />,
+    },
   ];
 
-const filteredPages = pages.filter((page) =>
-  page.name.toLowerCase().includes(inputValue.toLowerCase())
-);
-
-  
+  const filteredPages = pages.filter((page) =>
+    page.name.toLowerCase().includes(inputValue.toLowerCase())
+  );
 
   const handleInputChange = (e) => {
     setInputValue(e.target.value);
@@ -74,7 +124,7 @@ const filteredPages = pages.filter((page) =>
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (onSearch) {
-      onSearch(inputValue);  // ✅ send query up to Layout
+      onSearch(inputValue); // ✅ send query up to Layout
     }
   };
 
@@ -95,12 +145,13 @@ const filteredPages = pages.filter((page) =>
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-// Inside your Topbar component
-useEffect(() => {
-  // Load notifications from localStorage on mount
-  const savedNotifications = JSON.parse(localStorage.getItem("notifications")) || [];
-  setNotifications(savedNotifications);
-}, []);
+  // Inside your Topbar component
+  useEffect(() => {
+    // Load notifications from localStorage on mount
+    const savedNotifications =
+      JSON.parse(localStorage.getItem("notifications")) || [];
+    setNotifications(savedNotifications);
+  }, []);
   // ✅ Fetch unseen orders when admin logs in / page mounts
   useEffect(() => {
     const fetchUnseen = async () => {
@@ -119,9 +170,12 @@ useEffect(() => {
               localStorage.setItem("notifications", JSON.stringify(updated));
               return updated;
             });
-            toast.success(`Missed Order #${order._id} – ₹${order.totalAmount}`, {
-              duration: 8000,
-            });
+            toast.success(
+              `Missed Order #${order._id} – ₹${order.totalAmount}`,
+              {
+                duration: 8000,
+              }
+            );
           });
         }
       } catch (err) {
@@ -147,17 +201,20 @@ useEffect(() => {
         return updated;
       });
 
-      toast((t) => (
-        <div className="flex justify-between items-center gap-2">
-          <span>{notif.message}</span>
-          <button
-            onClick={() => toast.dismiss(t.id)}
-            className="text-gray-500 hover:text-gray-900 font-bold"
-          >
-            X
-          </button>
-        </div>
-      ), { duration: 10000 });
+      toast(
+        (t) => (
+          <div className="flex justify-between items-center gap-2">
+            <span>{notif.message}</span>
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="text-gray-500 hover:text-gray-900 font-bold"
+            >
+              X
+            </button>
+          </div>
+        ),
+        { duration: 10000 }
+      );
     });
 
     return () => {
@@ -184,33 +241,36 @@ useEffect(() => {
             onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
             className="flex-1 px-4 py-2 text-sm bg-transparent outline-none placeholder:text-gray-500"
           />
-          <button  onClick={handleSearchSubmit} className="bg-black text-white px-3 py-2 flex items-center justify-center">
+          <button
+            onClick={handleSearchSubmit}
+            className="bg-black text-white px-3 py-2 flex items-center justify-center rounded-r-full"
+          >
             <Search size={18} />
           </button>
 
-            {/* 🔽 Dropdown */}
-  {showDropdown && inputValue && (
-    <ul className="absolute top-12 left-0 w-full bg-white border border-gray-200 rounded-lg shadow-md max-h-48 overflow-y-auto z-50">
-      {filteredPages.length > 0 ? (
-        filteredPages.map((page, i) => (
-          <li
-            key={i}
-            onClick={() => {
-              navigate(page.path);
-              setInputValue("");
-              setShowDropdown(false);
-            }}
-            className="px-4 py-2 cursor-pointer hover:bg-gray-100 flex items-center gap-2"
-          >
-      <span className="text-gray-600">{page.icon}</span>
-      <span>{page.name}</span>
-          </li>
-        ))
-      ) : (
-        <li className="px-4 py-2 text-gray-500">No results</li>
-      )}
-    </ul>
-  )}
+          {/* 🔽 Dropdown */}
+          {showDropdown && inputValue && (
+            <ul className="absolute top-12 left-0 w-full bg-white border border-gray-200 rounded-lg shadow-md max-h-48 overflow-y-auto z-50">
+              {filteredPages.length > 0 ? (
+                filteredPages.map((page, i) => (
+                  <li
+                    key={i}
+                    onClick={() => {
+                      navigate(page.path);
+                      setInputValue("");
+                      setShowDropdown(false);
+                    }}
+                    className="px-4 py-2 cursor-pointer hover:bg-gray-100 flex items-center gap-2"
+                  >
+                    <span className="text-gray-600">{page.icon}</span>
+                    <span>{page.name}</span>
+                  </li>
+                ))
+              ) : (
+                <li className="px-4 py-2 text-gray-500">No results</li>
+              )}
+            </ul>
+          )}
         </div>
       </div>
 
@@ -236,7 +296,10 @@ useEffect(() => {
           <MessageCircleMore size={20} className="hidden md:block" />
           {/* Notifications */}
           <div className="relative" ref={notifRef}>
-            <button onClick={() => setNotifOpen(!notifOpen)} className="relative top-1">
+            <button
+              onClick={() => setNotifOpen(!notifOpen)}
+              className="relative top-1"
+            >
               <Bell size={20} />
               {notifications.length > 0 && (
                 <span className="absolute -top-0.5 -right-0 h-2 w-2 bg-red-500 rounded-full" />
@@ -245,7 +308,9 @@ useEffect(() => {
 
             {notifOpen && (
               <div className="absolute right-0 mt-4 w-72 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto">
-                <div className="p-2 font-semibold border-b border-gray-200">Notifications</div>
+                <div className="p-2 font-semibold border-b border-gray-200">
+                  Notifications
+                </div>
                 {notifications.length === 0 ? (
                   <p className="p-2 text-sm text-gray-500">No notifications</p>
                 ) : (
@@ -314,14 +379,14 @@ useEffect(() => {
                 title="Profile"
                 className="w-full inline-flex items-center gap-2 text-left px-4 py-2 text-sm text-gray-500 hover:bg-gray-100 cursor-pointer"
               >
-               <User/> Profile
+                <User /> Profile
               </button>
               <button
-                onClick={handleLogout}  
+                onClick={handleLogout}
                 title="Logout"
                 className="w-full inline-flex items-center gap-2 text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-100 cursor-pointer"
               >
-               <LogOut/> Logout
+                <LogOut /> Logout
               </button>
             </div>
           )}
