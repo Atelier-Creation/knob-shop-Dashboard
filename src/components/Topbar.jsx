@@ -157,7 +157,7 @@ useEffect(() => {
           <MessageCircleMore size={20} className="hidden md:block" />
           {/* Notifications */}
           <div className="relative" ref={notifRef}>
-            <button onClick={() => setNotifOpen(!notifOpen)}>
+            <button onClick={() => setNotifOpen(!notifOpen)} className="relative top-1">
               <Bell size={20} />
               {notifications.length > 0 && (
                 <span className="absolute -top-0.5 -right-0 h-2 w-2 bg-red-500 rounded-full" />
@@ -165,8 +165,8 @@ useEffect(() => {
             </button>
 
             {notifOpen && (
-              <div className="absolute right-0 mt-2 w-72 bg-white border border-gray-300 rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto">
-                <div className="p-2 font-semibold border-b">Notifications</div>
+              <div className="absolute right-0 mt-4 w-72 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto">
+                <div className="p-2 font-semibold border-b border-gray-200">Notifications</div>
                 {notifications.length === 0 ? (
                   <p className="p-2 text-sm text-gray-500">No notifications</p>
                 ) : (
