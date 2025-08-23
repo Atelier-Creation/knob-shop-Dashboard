@@ -70,26 +70,25 @@ function ReviewDetailsPage() {
     <div className="container my-4 space-y-6">
     <h2 className="text-xl font-semibold">Reviews & Ratings</h2>
       {/* Product Details */}
-      {product && (
-        <div className="row mb-4 align-items-center">
-          <div className="col-md-4 mb-3 mb-md-0 flex items-center gap-4">
-            <img
-              src={
-                product.images?.[0] ||
-                "https://via.placeholder.com/150x150.png?text=No+Image"
-              }
-              alt={product.name}
-              className="w-40 h-40 rounded-md object-contain border border-gray-200"
-            />
-            <div className="col-md-8">
-            <h2><strong>Name :</strong>{product.name.slice(0,100)}</h2>
-            <p><strong>Product ID:</strong> {product.productId}</p>
-            <p><strong>Brand :</strong> {product.brand}</p>
-            <p><strong>Description :</strong> {product.description.slice(0,200)}</p>
-          </div>
-          </div>
-        </div>
-      )}
+{/* Product Details */}
+{product && (
+  <div className="flex flex-col md:flex-row mb-4 items-start md:items-center gap-4">
+    <img
+      src={
+        product.images?.[0] ||
+        "https://via.placeholder.com/150x150.png?text=No+Image"
+      }
+      alt={product.name}
+      className="w-full md:w-40 h-40 rounded-md object-contain border border-gray-200"
+    />
+    <div className="flex-1">
+      <h2><strong>Name :</strong> {product.name.slice(0,100)}</h2>
+      <p><strong>Product ID:</strong> {product.productId}</p>
+      <p><strong>Brand :</strong> {product.brand}</p>
+    </div>
+  </div>
+)}
+
 
 <h2 className="text-xl font-semibold">Customer Reviews</h2>
 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
