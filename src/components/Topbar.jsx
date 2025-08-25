@@ -7,6 +7,7 @@ import {
   Menu,
   LogOut,
   User,
+  X,
 } from "lucide-react";
 import {
   LayoutDashboard,
@@ -157,29 +158,28 @@ const Topbar = ({ toggleSidebar, onSearch }) => {
     setNotifications(savedNotifications);
   }, []);
   // ✅ Fetch unseen orders when admin logs in / page mounts
+  // ✅ Fetch unseen orders when admin logs in / page mounts
   useEffect(() => {
     const fetchUnseen = async () => {
       try {
         const res = await getUnseenOrders();
         if (res.success && res.orders.length > 0) {
-          res.orders.forEach((order) => {
-            const notif = {
-              id: order._id,
-              orderId: order.orderId,
-              totalAmount: order.totalAmount,
-              message: `Missed Order #${order.orderId} – ₹${order.totalAmount}`,
-            };
-            setNotifications((prev) => {
-              const updated = [notif, ...prev];
-              localStorage.setItem("notifications", JSON.stringify(updated));
-              return updated;
-            });
-            toast.success(
-              `Missed Order #${order.orderId} – ₹${order.totalAmount}`,
-              {
-                duration: 8000,
-              }
-            );
+          const newNotifications = res.orders.map((order) => ({
+            id: order._id,
+            orderId: order.orderId,
+            totalAmount: order.totalAmount,
+            message: `Missed Order #${order.orderId} – ₹${order.totalAmount}`,
+          }));
+
+          setNotifications((prev) => {
+            const updated = [...newNotifications, ...prev];
+            localStorage.setItem("notifications", JSON.stringify(updated));
+            return updated;
+          });
+
+          // ✅ Show a single, comprehensive toast
+          toast.success(`You have ${res.orders.length} unseen orders!`, {
+            duration: 8000,
           });
         }
       } catch (err) {
@@ -190,7 +190,11 @@ const Topbar = ({ toggleSidebar, onSearch }) => {
   }, []);
 
   // ✅ Real-time new order socket
+  // ✅ Real-time new order socket
   useEffect(() => {
+    // ✅ Define a unique ID for the toast
+    const TOAST_ID = "newOrderToast";
+
     socket.on("newOrder", (data) => {
       const notif = {
         id: data.orderId,
@@ -205,6 +209,9 @@ const Topbar = ({ toggleSidebar, onSearch }) => {
         return updated;
       });
 
+      // ✅ Dismiss the previous toast before showing a new one
+      toast.dismiss(TOAST_ID);
+
       toast(
         (t) => (
           <div className="flex justify-between items-center gap-2">
@@ -217,7 +224,10 @@ const Topbar = ({ toggleSidebar, onSearch }) => {
             </button>
           </div>
         ),
-        { duration: 10000 }
+        {
+          duration: 10000,
+          id: TOAST_ID,
+        }
       );
     });
 
@@ -227,7 +237,6 @@ const Topbar = ({ toggleSidebar, onSearch }) => {
   }, []);
 
   return (
-    
     <header className="flex justify-between items-center gap-2 px-4 py-3 bg-white">
       {/* Left: Menu + Search (mobile-first) */}
       <div className="flex items-center gap-3 flex-1 md:flex-none">
@@ -321,18 +330,24 @@ const Topbar = ({ toggleSidebar, onSearch }) => {
                 ) : (
                   notifications.map((n) => (
                     <div
-                      key={n.id}
-                      className="p-2 text-sm border-b hover:bg-gray-50 flex justify-between items-center"
+                      key={n.orderId}
+                      className="p-2 text-sm border-b border-gray-100 hover:bg-gray-50 flex justify-between items-center"
                     >
-                      <div   onClick={() => navigate(`/orders-customers/order-list/${n.id}`)}
-  className="cursor-pointer flex-1">
+                      <div
+                        onClick={async () => {
+                          setNotifOpen(false);
+                          navigate(`/orders-customers/order-list/${n.id}`);
+                        }}
+                        className="cursor-pointer flex-1"
+                      >
                         <p>{n.message}</p>
                         <p className="text-xs text-gray-400">
                           Order #{n.orderId} – ₹{n.totalAmount}
                         </p>
                       </div>
                       <button
-                        onClick={async () => {
+                        onClick={async (e) => {
+                          e.stopPropagation();
                           try {
                             await markOrderAsSeen(n.orderId);
                           } catch (err) {
@@ -349,7 +364,7 @@ const Topbar = ({ toggleSidebar, onSearch }) => {
                         }}
                         className="text-gray-400 hover:text-gray-600 font-bold"
                       >
-                        X
+                        <X size={16} />
                       </button>
                     </div>
                   ))
@@ -403,9 +418,8 @@ const Topbar = ({ toggleSidebar, onSearch }) => {
         </div>
       </div>
       {showProfileModal && (
-  <ProfileModal onClose={() => setShowProfileModal(false)} />
-)}
-
+        <ProfileModal onClose={() => setShowProfileModal(false)} />
+      )}
     </header>
   );
 };

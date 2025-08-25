@@ -13,6 +13,7 @@ import {
   X,
   HeartHandshake,
   DownloadCloud,
+  Sofa,
 } from "lucide-react";
 import { Link, NavLink } from "react-router-dom";
 import clsx from "clsx";
@@ -35,6 +36,11 @@ const navItems = [
     label: "Homepage Ads",
     icon: <MonitorSmartphone size={20} />,
     path: "/homepage-ads",
+  },
+  {
+    label: "Edit Essential",
+    icon: <Sofa size={20} />,
+    path: "/edit-essential",
   },
   {
     label: "Deals & Discounts",

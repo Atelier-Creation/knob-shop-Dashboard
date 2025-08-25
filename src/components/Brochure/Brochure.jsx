@@ -1,10 +1,9 @@
-// src/pages/Brochure.jsx
-
-import React, { useState, useRef } from "react";
+import { useState, useRef } from "react";
 import { createBrochure } from "../../api/brochureApi";
 import "./Brochure.css";
 import toast from "react-hot-toast";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { Upload } from "@aws-sdk/lib-storage";
 
 const s3 = new S3Client({
   endpoint: "https://blr1.digitaloceanspaces.com",
@@ -17,29 +16,36 @@ const s3 = new S3Client({
 
 async function uploadToSpaces(file, setUploading) {
   if (!file) return null;
-
   setUploading(true);
   const bucketName = "knobsshopcdn";
   const fileKey = `uploads/${Date.now()}-${file.name}`;
 
   try {
-    const command = new PutObjectCommand({
-      Bucket: bucketName,
-      Key: fileKey,
-      Body: file,
-      ACL: "public-read",
-      ContentType: file.type,
+    const parallelUploads3 = new Upload({
+      client: s3,
+      params: {
+        Bucket: bucketName,
+        Key: fileKey,
+        Body: file,
+        ACL: "public-read",
+        ContentType: file.type,
+      },
     });
 
-    await s3.send(command);
+    parallelUploads3.on("httpUploadProgress", (progress) => {
+      console.log(progress);
+    });
 
+    await parallelUploads3.done();
+
+    // Construct the public URL
     const publicUrl = `https://${bucketName}.blr1.digitaloceanspaces.com/${fileKey}`;
     return publicUrl;
   } catch (err) {
-    console.error("❌ Upload error:", err);
-    return null;
-  } finally {
-    setUploading(false);
+    console.error("Error uploading to Spaces:", err);
+    throw err;
+  } finally{
+    setUploading(false)
   }
 }
 

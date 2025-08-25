@@ -32,6 +32,7 @@ import CreateCouponPage from "./components/CreateCouponPage";
 import ReviewPage from "./components/ReviewPage";
 import ReviewDetailsPage from "./components/reviewDetailsPage";
 import ProfilePage from "./components/ProfileModal";
+import Essentials from "./pages/Essentials";
 
 function App() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -79,6 +80,7 @@ function App() {
             <Route path="homepage-ads" element={<AdsDashboard />} />
             <Route path="homepage-ads/create" element={<CreateNewAd />} />
             <Route path="deals-discounts" element={<DealsOverview />} />
+            <Route path="edit-essential" element={<Essentials />} />
             {/* <Route path="deals-discounts/create" element={<CreateDealForm />} /> */}
             <Route path="deals-discounts/create" element={<CreateCouponPage />} />
             <Route path="product-stock" element={<ProductDashboard />} />
