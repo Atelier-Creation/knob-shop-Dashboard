@@ -33,6 +33,7 @@ import ReviewPage from "./components/ReviewPage";
 import ReviewDetailsPage from "./components/reviewDetailsPage";
 import ProfilePage from "./components/ProfileModal";
 import Essentials from "./pages/Essentials";
+import ShelfManager from "./pages/ShelfManager";
 
 function App() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -77,7 +78,7 @@ function App() {
               path="categories-products/product-status"
               element={<ProductStatusTable />}
             />
-            <Route path="homepage-ads" element={<AdsDashboard />} />
+            <Route path="homepage-ads" element={<ShelfManager />} />
             <Route path="homepage-ads/create" element={<CreateNewAd />} />
             <Route path="deals-discounts" element={<DealsOverview />} />
             <Route path="edit-essential" element={<Essentials />} />

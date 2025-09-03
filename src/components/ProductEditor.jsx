@@ -159,6 +159,28 @@ export default function ProductEditor({ product, onUpdate, onClose }) {
     }
   };
 
+  useEffect(() => {
+    if (!form?.category) return;
+
+    const selected =
+      typeof form.category === "object"
+        ? form.category
+        : categories.find((cat) => cat._id === form.category);
+
+    if (selected) {
+      localStorage.setItem("selectedCategoryId", selected._id);
+      localStorage.setItem("selectedCategoryName", selected.category_name);
+      localStorage.setItem(
+        "selectedDescriptionName",
+        selected.description || ""
+      );
+    } else {
+      localStorage.removeItem("selectedCategoryId");
+      localStorage.removeItem("selectedCategoryName");
+      localStorage.removeItem("selectedDescriptionName");
+    }
+  }, [form.category, categories]);
+
   return (
     <div className="w-full max-w-md mx-auto p-6 bg-[#FAFDFD] rounded-xl">
       {/* ───────────────── Header ───────────────── */}
@@ -229,6 +251,7 @@ export default function ProductEditor({ product, onUpdate, onClose }) {
         <div>
           <label className="block text-xs font-medium mb-1">Category</label>
           <select
+            id="cat"
             className="w-full rounded-md bg-white border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-[#e0a371] outline-none"
             value={
               typeof form.category === "object"

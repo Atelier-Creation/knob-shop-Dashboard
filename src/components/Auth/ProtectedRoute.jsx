@@ -5,8 +5,11 @@ const isTokenValid = () => {
   if (!token) return false;
 
   try {
-    const { exp } = JSON.parse(atob(token.split(".")[1]));
-    return Date.now() < exp * 1000;
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    if (!payload.exp) return false;
+
+    // Add 2 sec buffer
+    return Date.now() < payload.exp * 1000 - 2000;
   } catch (err) {
     console.error("Invalid token:", err);
     return false;
@@ -15,7 +18,7 @@ const isTokenValid = () => {
 
 const ProtectedRoute = ({ children }) => {
   if (!isTokenValid()) {
-    localStorage.removeItem("authToken"); // clear invalid/expired token
+    localStorage.removeItem("authToken");
     return <Navigate to="/login" replace />;
   }
 

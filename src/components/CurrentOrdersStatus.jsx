@@ -1,58 +1,10 @@
 import { FileText } from "lucide-react";
-import axios from "axios";
 import { useEffect, useState } from "react";
 import { getLatestAnalyticsSnapshot } from "../api/analyticsApi";
-// const orders = [
-//   {
-//     id: "1209-9092",
-//     productName: "YDM4109 A",
-//     quantity: "1 Pcs",
-//     price: "₹ 89,299",
-//     status: "Success",
-//     statusColor: "bg-green-500",
-//     image: "/lock1.png",
-//   },
-//   {
-//     id: "1209-9092",
-//     productName: "YSME100NxT",
-//     quantity: "1 Pcs",
-//     price: "₹ 55,699",
-//     status: "Pending",
-//     statusColor: "bg-yellow-400",
-//     image: "/lock3.png",
-//   },
-//   {
-//     id: "1209-9092",
-//     productName: "Luna Pro",
-//     quantity: "1 Pcs",
-//     price: "₹ 97,199",
-//     status: "Received",
-//     statusColor: "bg-red-500",
-//     image: "/lock2.png",
-//   },
-//   {
-//     id: "1209-9092",
-//     productName: "YDM 4115A",
-//     quantity: "1 Pcs",
-//     price: "₹ 87,199",
-//     status: "Received",
-//     statusColor: "bg-red-500",
-//     image: "/lock1.png",
-//   },
-//   {
-//     id: "1209-9092",
-//     productName: "YDM4109A RL",
-//     quantity: "1 Pcs",
-//     price: "₹ 44,999",
-//     status: "Received",
-//     statusColor: "bg-red-500",
-//     image: "/lock3.png",
-//   },
-// ];
 
 export default function CurrentOrdersStatus() {
   const [topProducts, setTopProducts] = useState([]);
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(true);
   const [orderStatus, setOrderStatus] = useState({});
 
   useEffect(() => {
@@ -150,7 +102,7 @@ export default function CurrentOrdersStatus() {
       {/* Order Rows */}
       <div className="divide-y">
         {loading
-          ? Array.from({ length: 4 }).map((_, i) => <SkeletonRow key={i} />)
+          ? Array.from({ length: 6 }).map((_, i) => <SkeletonRow key={i} />)
           : topProducts.map((order, index) => (
               <div
                 key={index}
@@ -179,7 +131,7 @@ export default function CurrentOrdersStatus() {
                   </div>
                   <div>
                     <p className="font-semibold text-sm text-gray-800">
-                      {order.productName}
+                      {order.productName?.split(" ").slice(0, 2).join(" ")}
                     </p>
                     <p className="text-[11px] text-gray-500">
                       {order.quantity}

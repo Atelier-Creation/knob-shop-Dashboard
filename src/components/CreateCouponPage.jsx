@@ -1,5 +1,3 @@
-// src/pages/CreateCouponPage.jsx
-
 import React, { useState, useEffect } from "react";
 import { Plus, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -7,10 +5,9 @@ import toast from "react-hot-toast";
 import { createCoupon } from "../api/dealsApi";
 import { getAllProducts as getProducts } from "../api/productApi";
 import { RxBookmark } from "react-icons/rx";
-import { VscEye } from "react-icons/vsc";
 import SearchableProductDropdown from "../components/SearchableProductDropdown";
 
-const couponTypes = ["percentage", "flat", "bundle"];
+const couponTypes = ["percentage", "flat"]; // 'bundle' is removed
 
 const CreateCouponPage = () => {
   const navigate = useNavigate();
@@ -46,7 +43,7 @@ const CreateCouponPage = () => {
     const couponData = {
       code: code.toUpperCase(),
       type,
-      value: type === "bundle" ? 1 : Number(value),
+      value: Number(value), // 'bundle' logic is removed
       expiryDate,
       isActive: !scheduled,
       scheduled,
@@ -90,6 +87,7 @@ const CreateCouponPage = () => {
                 Create New Coupon's
               </label>
             </div>
+            
             <div>
               <label className="block mb-1 text-sm font-medium text-gray-700">
                 Coupon Code
@@ -120,20 +118,18 @@ const CreateCouponPage = () => {
               </select>
             </div>
 
-            {type !== "bundle" && (
-              <div>
-                <label className="block mb-1 text-sm font-medium text-gray-700">
-                  Value ({type === "percentage" ? "%" : "₹"})
-                </label>
-                <input
-                  type="number"
-                  value={value}
-                  onChange={(e) => setValue(e.target.value)}
-                  className="w-full bg-white border border-gray-300 rounded-md px-4 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#e0a371] cursor-pointer"
-                  required
-                />
-              </div>
-            )}
+            <div>
+              <label className="block mb-1 text-sm font-medium text-gray-700">
+                Value ({type === "percentage" ? "%" : "₹"})
+              </label>
+              <input
+                type="number"
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                className="w-full bg-white border border-gray-300 rounded-md px-4 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#e0a371] cursor-pointer"
+                required
+              />
+            </div>
           </div>
 
           {/* RIGHT SIDE */}

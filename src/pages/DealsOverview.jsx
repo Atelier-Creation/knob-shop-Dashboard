@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { Plus, MoreVertical, Trash2 } from "lucide-react";
+import { Plus, Trash2, LinkIcon } from "lucide-react";
 import { Flame, Clock, XCircle, ThumbsUp } from "lucide-react";
 import StatusCardDeal from "../components/StatusCardDeal";
 import { Link } from "react-router-dom";
-import { deleteDeal, getDeals } from "../api/dealsApi";
+import { deleteDeal, getDeals, updateDeal } from "../api/dealsApi";
 import toast from "react-hot-toast";
 import moment from "moment"; // Make sure to install moment.js or a similar library for date formatting
 
@@ -31,30 +31,51 @@ const DealsOverview = () => {
   }, []);
 
   const fetchDeals = async () => {
-    try {
-      setLoading(true);
-      const data = await getDeals();
-      const mappedDeals = mapApiDataToDeals(data);
-      setDeals(mappedDeals);
-      calculateStatusCounts(mappedDeals);
-    } catch (err) {
-      toast.error("Failed to load deals");
-      console.log(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    setLoading(true);
+    const data = await getDeals();
+    const today = moment();
+
+    // auto-update deals whose startDate <= now but isActive is false
+    const autoActivatePromises = data.map(async (coupon) => {
+      const startDate = moment(coupon.startDate);
+      const expiryDate = moment(coupon.expiryDate);
+
+      if (startDate.isSameOrBefore(today) && expiryDate.isAfter(today) && coupon.isActive === false) {
+        try {
+          await updateDeal(coupon._id, { isActive: true });
+          coupon.isActive = true; // sync locally
+        } catch (err) {
+          console.error(`Failed to auto-activate coupon ${coupon._id}`, err);
+        }
+      }
+      return coupon;
+    });
+
+    const updatedCoupons = await Promise.all(autoActivatePromises);
+    const mappedDeals = mapApiDataToDeals(updatedCoupons);
+    setDeals(mappedDeals);
+    calculateStatusCounts(mappedDeals);
+
+  } catch (err) {
+    toast.error("Failed to load deals");
+    console.log(err);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const mapApiDataToDeals = (coupons) => {
-    const today = new Date();
+    const today = moment();
 
     return coupons.map((coupon) => {
       let status;
-      if (!coupon.isActive) {
+      const startDate = moment(coupon.startDate);
+      const expiryDate = moment(coupon.expiryDate);
+
+      if (expiryDate.isBefore(today)) {
         status = "Expired";
-      } else if (new Date(coupon.expiryDate) < today) {
-        status = "Expired";
-      } else if (new Date(coupon.startDate) > today) {
+      } else if (startDate.isAfter(today)) {
         status = "Scheduled";
       } else {
         status = "Active";
@@ -66,22 +87,24 @@ const DealsOverview = () => {
         discountText = `${coupon.value}%`;
       } else if (coupon.type === "flat") {
         discountText = `₹${coupon.value}`;
-      } else if (coupon.type === "bundle") {
-        discountText = "BUY 1 GET 1 Free"; // Assuming this logic
       } else {
         discountText = coupon.value;
       }
+
+      let appliesToText =
+        coupon.appliesTo === "single" ? "A Single Product" : "All Products";
 
       return {
         id: coupon._id, // Add id for deletion
         title: `Coupon: ${coupon.code}`,
         discount: discountText,
+        productId : coupon.productId,
         type: coupon.type,
         status: status,
         validity: `${moment(coupon.startDate).format("MMM DD")} - ${moment(
           coupon.expiryDate
         ).format("MMM DD")}`,
-        appliesTo: "All products", // This field needs to be added to the backend schema
+        appliesTo: appliesToText,
       };
     });
   };
@@ -108,6 +131,7 @@ const DealsOverview = () => {
       toast.success("Deal deleted");
       fetchDeals(); // Refresh the list
     } catch (err) {
+      console.log(err);
       toast.error("Failed to delete deal");
     }
   };
@@ -288,33 +312,58 @@ const DealsOverview = () => {
             </thead>
             <tbody>
               {filteredDeals?.length > 0 ? (
-                filteredDeals.map((deal) => (
-                  <tr
-                    key={deal.id}
-                    className="border-t hover:bg-gray-100 transition-colors"
-                  >
-                    <td className="p-3 font-medium text-black">{deal.title}</td>
-                    <td className="p-3">{deal.discount}</td>
-                    <td className="p-3">{deal.type}</td>
-                    <td
-                      className={`p-3 font-medium ${statusColors[deal.status]}`}
+                filteredDeals.map((deal) => {
+                  console.log(deal); // ✅ log correctly inside {}
+                  return (
+                    <tr
+                      key={deal.id}
+                      className="border-t hover:bg-gray-100 transition-colors"
                     >
-                      {deal.status}
-                    </td>
-                    <td className="p-3">{deal.validity}</td>
-                    <td className="p-3">{deal.appliesTo}</td>
-                    <td className="p-3">
-                      <Trash2
-                        className="w-4 h-4 text-red-500 cursor-pointer"
-                        onClick={() => handleDelete(deal.id)}
-                      />
-                    </td>
-                  </tr>
-                ))
+                      <td className="p-3 font-medium text-black">
+                        {deal.title}
+                      </td>
+                      <td className="p-3">{deal.discount}</td>
+                      <td className="p-3">{deal.type}</td>
+                      <td
+                        className={`p-3 font-medium ${
+                          statusColors[deal.status]
+                        }`}
+                      >
+                        {deal.status}
+                      </td>
+                      <td className="p-3">{deal.validity}</td>
+                      <td className="p-3">
+                        {deal.appliesTo === "A Single Product" ? (
+                          <>
+                            {deal.appliesTo}{" "}
+                            <a
+                              href={`https://knobsshop.store/product/${deal.productId}`}
+                              target="_blank"
+                              title="view Product"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center text-blue-500 hover:text-blue-700"
+                            >
+                              <LinkIcon size={14} />
+                            </a>
+                          </>
+                        ) : (
+                          deal.appliesTo
+                        )}
+                      </td>
+
+                      <td className="p-3">
+                        <Trash2
+                          className="w-4 h-4 text-red-500 cursor-pointer"
+                          onClick={() => handleDelete(deal.id)}
+                        />
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
-                  <td colSpan="7" className="p-4 text-center text-gray-500">
-                    No deals found.
+                  <td colSpan={7} className="p-3 text-center text-gray-500">
+                    No deals found
                   </td>
                 </tr>
               )}
@@ -330,7 +379,10 @@ const DealsOverview = () => {
                 >
                   <div className="flex justify-between items-center mb-2">
                     <h3 className="text-base font-semibold">{deal.title}</h3>
-                    <Trash2 className="w-4 h-4 text-red-500 cursor-pointer" onClick={() => handleDelete(deal.id)} />
+                    <Trash2
+                      className="w-4 h-4 text-red-500 cursor-pointer"
+                      onClick={() => handleDelete(deal.id)}
+                    />
                   </div>
                   <div className="text-sm text-gray-600 space-y-1">
                     <div>

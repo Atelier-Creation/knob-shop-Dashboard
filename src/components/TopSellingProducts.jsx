@@ -26,7 +26,6 @@ const TopSellingProducts = () => {
     try {
       const { topSellingProducts } = await getLatestAnalyticsSnapshot(range);
       console.log(topSellingProducts);
-      
 
       const updatedProducts = topSellingProducts.map((product, index) => ({
         id: product.productId || index,
@@ -78,7 +77,7 @@ const TopSellingProducts = () => {
         ],
         image: product?.image,
       }));
-
+      console.log(topSellingProducts);
       setTopProducts(updatedProducts);
     } catch (err) {
       console.error("Failed to fetch top selling products", err);
@@ -220,7 +219,7 @@ const TopSellingProducts = () => {
                           domain={[0, "auto"]}
                         />
                         <Tooltip
-                        content={<CustomTooltip/>}
+                          content={<CustomTooltip />}
                           cursor={false}
                           contentStyle={{
                             backgroundColor: "#fff",

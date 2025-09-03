@@ -95,3 +95,12 @@ button{
         50% { transform: translateX(0px); opacity: 1; }  /* distance of run */
         100% { transform: translateX(30px); opacity: 0;}
       }
+
+      .tiptap-wrapper .ProseMirror {
+  min-height: 120px;
+  outline: none;
+}
+
+.tiptap-wrapper .ProseMirror p {
+  margin: 0;
+}

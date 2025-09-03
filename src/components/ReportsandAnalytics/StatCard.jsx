@@ -3,6 +3,8 @@ import {
   Area,
   ResponsiveContainer,
   Tooltip,
+  XAxis,
+  YAxis,
 } from "recharts";
 import { ArrowDown, ArrowUpRight } from "lucide-react";
 
@@ -29,6 +31,8 @@ const StatCard = ({ title, value, data, growth, isNegative }) => (
             </linearGradient>
           </defs>
           <Tooltip contentStyle={{ display: "none" }} />
+          <XAxis dataKey="name" hide />
+          <YAxis hide domain={['dataMin', 'dataMax']} />
           <Area
             type="monotone"
             dataKey="value"

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { createProduct } from "../api/productApi";
+
 import {
   Plus,
   ImagePlus,
@@ -21,6 +22,7 @@ import biometric from "/keyfeaturesIcon/biometric.svg";
 import remote from "/keyfeaturesIcon/remote.svg";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
+import TiptapEditor from "./TiptapEditor";
 
 export default function AddProduct({
   mode = "create",
@@ -43,7 +45,7 @@ export default function AddProduct({
         ...initialData,
         productFeatures: initialData.features?.length
           ? initialData.features.map((f) => ({
-              heading: f.title || "",
+              heading: f.heading || "",
               description: f.description || "",
               image: f.image || "",
             }))
@@ -629,7 +631,7 @@ export default function AddProduct({
           extra="bg-white"
         />
       </div>
-      <Section/>
+      <Section />
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 mt-4">
         <Field
           label="SKU / Product Id*"
@@ -686,14 +688,12 @@ export default function AddProduct({
           suffix="(Mm)"
         />
       </div>
-
       <ColorVariants
         colors={colors}
         setColors={setColors}
         picker={picker}
         setPicker={setPicker}
       />
-
       <Section title="Product Video URL" />
       <Field
         label="YouTube Video URL (Installation)"
@@ -720,7 +720,6 @@ export default function AddProduct({
           </div>
         </div>
       )}
-
       <Section title="Key Features" />
       <div className="flex flex-row mt-4 sm:flex-row gap-2 items-start sm:items-center">
         <div
@@ -758,7 +757,6 @@ export default function AddProduct({
           <Plus size={14} />
         </button>
       </div>
-
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {features.map(({ label, icon }) => (
           <ChipFeature
@@ -769,7 +767,6 @@ export default function AddProduct({
           />
         ))}
       </div>
-
       {/* Product Images Upload Section */}
       {/* <div className="mb-6">
         <label className="block mb-2 font-medium text-sm text-gray-700">
@@ -850,7 +847,6 @@ export default function AddProduct({
           Please Upload 1:1 Size images only
         </p>
       </div> */}
-
       <Section title="Brochure (PDF)" />
       <div>
         <label className="block mb-1 font-medium">Upload Brochure (PDF)</label>
@@ -895,7 +891,6 @@ export default function AddProduct({
           </div>
         )}
       </div>
-
       <Section title="Installation Guide" />
       <div className="space-y-4">
         <Field
@@ -934,17 +929,26 @@ export default function AddProduct({
           placeholder="Provide detailed installation instructions here..."
         />
       </div>
-
+      <Section title="" />
+      <TiptapEditor
+        label="Product Description*"
+        placeholder="Provide detailed Product Description here..."
+        option={true}
+        extra="bg-white"
+        value={productData.description}
+        set={(val) => updateField("description", val)}
+      />
       {/* Description and Features */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="space-y-6">
-          <TextAreaField
+          {/* <TextAreaField
             label="Description*"
             option={true}
             extra="bg-white"
             value={productData.description}
             set={(val) => updateField("description", val)}
-          />
+          /> */}
+
           <div className="space-y-3">
             <label className="block font-semibold mb-1">
               Product Features*
@@ -1086,7 +1090,6 @@ export default function AddProduct({
           </div>
         </div>
       </div>
-
       {showModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded shadow-md max-w-md w-full">
