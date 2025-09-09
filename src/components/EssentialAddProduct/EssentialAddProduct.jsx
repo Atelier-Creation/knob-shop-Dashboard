@@ -211,7 +211,7 @@ const handleSave = async () => {
               <ImageUploader multiple={true} onImageUpload={(imgs) => handleCategoryImagesUpload(index, imgs)} />
             </div>
           ))}
-          <button type="button" onClick={addCategory} className="px-3 py-1 border rounded">+ Add Category</button>
+          {/* <button type="button" onClick={addCategory} className="px-3 py-1 border rounded">+ Add Category</button> */}
         </div>
 
         {/* Footer Buttons */}
