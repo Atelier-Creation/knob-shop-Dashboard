@@ -34,6 +34,7 @@ import ReviewDetailsPage from "./components/reviewDetailsPage";
 import ProfilePage from "./components/ProfileModal";
 import Essentials from "./pages/Essentials";
 import ShelfManager from "./pages/ShelfManager";
+import EssentialAddProduct from "./components/EssentialAddProduct/EssentialAddProduct";
 
 function App() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -106,6 +107,10 @@ function App() {
             <Route
               path="orders-customers/order-list/:id"
               element={<OrderDetailsView />}
+            />
+            <Route
+              path="/essential/add-product"
+              element={<EssentialAddProduct/>}
             />
             <Route path="policy-edit" element={<PolicyEditorPage />} />
             <Route path="*" element={<DevelopmentOnProcess />} />
