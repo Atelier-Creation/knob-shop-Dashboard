@@ -112,6 +112,7 @@ const Essentials = () => {
               title: "",
               description: "",
               categories: [],
+              products: [],
               imageFile: null,
               bgImage: "",
             },
@@ -185,7 +186,8 @@ const Essentials = () => {
           number: "",
           title: "",
           description: "",
-          categories: [], // Initialize new card with empty categories array
+          categories: [],
+          products: [],
           imageFile: null,
           bgImage: "",
         },
@@ -227,11 +229,12 @@ const Essentials = () => {
         mainHeading,
         mainDescription,
         cards: uploadedCards.map(
-          ({ number, title, description, categories, bgImage, _id }) => ({
+          ({ number, title, description, categories, products, bgImage, _id }) => ({
             number,
             title,
             description,
             categories,
+            products,
             bgImage,
             _id,
           })
@@ -328,6 +331,27 @@ const Essentials = () => {
           {cards.map((card, index) => (
             <div
               key={card._id || index}
+              onClick={() => {
+                const selectedCardData = {
+                  cardNumber: card.number,
+                  cardTitle: card.title,
+                  cardDescription: card.description,
+                  bgImage: card.bgImage,
+                  mainHeading,
+                  mainDescription,
+                };
+            
+                // 1. Console log
+                console.log("Selected Card Data:", selectedCardData);
+            
+                // 2. Save to localStorage
+                localStorage.setItem("selectedCardData", JSON.stringify(selectedCardData));
+            
+                // 3. Navigate with state
+                navigate("/essential/add-product", {
+                  state: { cardIndex: index, cardData: selectedCardData },
+                });
+              }}
               className="bg-white p-6 rounded-sm border border-gray-200 w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)]"
             >
               <div className="flex justify-between items-center space-x-2 mb-4">
@@ -391,7 +415,7 @@ const Essentials = () => {
                       required
                     />
                   </div>
-                  <div className="relative">
+                  {/* <div className="relative">
                     <label className="block mb-1 text-sm font-medium text-gray-700">
                       Categories
                     </label>
@@ -428,7 +452,7 @@ const Essentials = () => {
                         ))}
                       </div>
                     )}
-                  </div>
+                  </div> */}
                   <div>
                     <label className="block mb-1 text-sm font-medium text-gray-700">
                       Background Image
@@ -476,7 +500,7 @@ const Essentials = () => {
             <Plus size={18} /> Add Card
           </button>
         </div>
-        <div className="flex gap-4 mt-6">
+        {/* <div className="flex gap-4 mt-6">
           <Link
             onClick={() => navigate(-1)}
             className="px-4 py-2 text-sm bg-white border border-black text-black rounded flex items-center justify-center gap-2"
@@ -492,7 +516,7 @@ const Essentials = () => {
             <RxBookmark className="inline" size={18} />{" "}
             {loading ? "Saving..." : "Save & Publish"}
           </button>
-        </div>
+        </div> */}
       </form>
     </div>
   );
