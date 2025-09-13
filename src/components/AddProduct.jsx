@@ -483,23 +483,25 @@ export default function AddProduct({
     }
   };
 
-  const updateField = (keyPath, value) => {
-    setProductData((prev) => {
-      const keys = keyPath.split(".");
-      const updated = { ...prev };
+const updateField = (keyPath, value) => {
+  setProductData((prev) => {
+    const keys = keyPath.split(".");
+    const updated = { ...prev };
 
-      let current = updated;
-      for (let i = 0; i < keys.length - 1; i++) {
-        const k = keys[i];
-        current[k] = { ...current[k] };
-        current = current[k];
-      }
+    let current = updated;
+    for (let i = 0; i < keys.length - 1; i++) {
+      const k = keys[i];
+      current[k] = { ...current[k] };
+      current = current[k];
+    }
 
-      current[keys[keys.length - 1]] = value;
+    const lastKey = keys[keys.length - 1];
+    current[lastKey] = typeof value === "string" ? value.trim() : value;
 
-      return updated;
-    });
-  };
+    return updated;
+  });
+};
+
 
   // const handleImageUpload = async (event) => {
   //   const files = Array.from(event.target.files);

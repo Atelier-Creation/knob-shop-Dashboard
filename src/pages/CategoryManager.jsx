@@ -215,7 +215,7 @@ export default function CategoryManager() {
               type="text"
               placeholder="Category"
               value={categoryName}
-              onChange={(e) => setCategoryName(e.target.value)}
+              onChange={(e) => setCategoryName(e.target.value.trim())}
               className="w-full border border-gray-300 rounded-sm p-2 text-sm"
             />
             <input
