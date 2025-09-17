@@ -132,7 +132,7 @@ export default function OrderDetailsView() {
   }, [id]);
 
   if (loading) return <div className="p-6 text-gray-600">Loading...</div>;
-  if (!order) return <div className="p-6 text-red-600">Order not found</div>;
+  if (!order) return <div className="p-6 text-red-600">Order not found or order belongs to deleted Product.</div>;
 
   const handleDownloadLabel = async () => {
     setDownloading(true);
