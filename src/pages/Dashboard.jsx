@@ -30,6 +30,10 @@ const Dashboard = () => {
   useEffect(() => {
     fetchAnalytics();
   }, [selectedRange, fetchAnalytics]);
+
+  const handleRangeChange = (range) => {
+    setSelectedRange(range);
+  };
   return (
     <>
       {/* Header */}
@@ -118,30 +122,38 @@ const Dashboard = () => {
               title="Total Sales"
               value={analytics?.totalSales || 0}
               change={analytics?.changeStats?.totalSales || 0}
+              selectedRange={selectedRange}
+              onRangeChange={handleRangeChange}
             />
             <StatCard
-              title="Sales Return"
-              value={analytics?.salesReturn || 0}
-              change={Math.abs(analytics?.changeStats?.salesReturn || 0)}
+              title="Total Products Sold"
+              value={analytics?.totalProductsSold || 0}
+              change={Math.abs(analytics?.changeStats?.totalProductsSold || 0)}
               changeType={
                 analytics?.changeStats?.salesReturn < 0 ? "down" : "up"
               }
+              selectedRange={selectedRange}
+              onRangeChange={handleRangeChange}
             />
             <StatCard
-              title="Total Purchase"
-              value={analytics?.totalPurchases || 0}
-              change={Math.abs(analytics?.changeStats?.totalPurchase || 0)}
+              title="AverageOrder Value"
+              value={analytics?.averageOrderValue || 0}
+              change={Math.abs(analytics?.changeStats?.averageOrderValue || 0)}
               changeType={
                 analytics?.changeStats?.totalPurchase < 0 ? "down" : "up"
               }
+              selectedRange={selectedRange}
+              onRangeChange={handleRangeChange}
             />
             <StatCard
-              title="Purchase Return"
-              value={analytics?.purchaseReturn || 0}
-              change={Math.abs(analytics?.changeStats?.purchaseReturn || 0)}
+              title="AverageRevenue Per Customer"
+              value={analytics?.averageRevenuePerCustomer || 0}
+              change={Math.abs(analytics?.changeStats?.averageRevenuePerCustomer || 0)}
               changeType={
                 analytics?.changeStats?.purchaseReturn < 0 ? "down" : "up"
               }
+              selectedRange={selectedRange}
+              onRangeChange={handleRangeChange}
             />
           </div>
 

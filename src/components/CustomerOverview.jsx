@@ -109,22 +109,26 @@ export default function CustomerOverview() {
 }
 
 
-  const { newCustomers, returningCustomers, customerSatisfaction } = analytics;
+const { newCustomers = 0, returningCustomers = 0, customerSatisfaction = {} } = analytics || {};
 
-  const barMax = Math.max(newCustomers, returningCustomers, 1);
-  const normNew = (newCustomers / barMax) * 150;
-  const normReturn = (returningCustomers / barMax) * 150;
+const barMax = Math.max(newCustomers, returningCustomers, 1);
+const normNew = (newCustomers / barMax) * 150;
+const normReturn = (returningCustomers / barMax) * 150;
 
-  const chartData = customerSatisfaction.trend || [
-    // fallback random days
-    { day: "Sun", value: customerSatisfaction.averageRating },
-    { day: "Mon", value: customerSatisfaction.averageRating },
-    { day: "Tue", value: customerSatisfaction.averageRating },
-    { day: "Wed", value: customerSatisfaction.averageRating },
-    { day: "Thu", value: customerSatisfaction.averageRating },
-    { day: "Fri", value: customerSatisfaction.averageRating },
-    { day: "Sat", value: customerSatisfaction.averageRating },
-  ];
+const chartData =
+  customerSatisfaction.trend?.length > 0
+    ? customerSatisfaction.trend
+    : [
+        { day: "Sun", value: customerSatisfaction.averageRating ?? 4.5 },
+        { day: "Mon", value: customerSatisfaction.averageRating ?? 4.5 },
+        { day: "Tue", value: customerSatisfaction.averageRating ?? 4.5 },
+        { day: "Wed", value: customerSatisfaction.averageRating ?? 4.5 },
+        { day: "Thu", value: customerSatisfaction.averageRating ?? 4.5 },
+        { day: "Fri", value: customerSatisfaction.averageRating ?? 4.5 },
+        { day: "Sat", value: customerSatisfaction.averageRating ?? 4.5 },
+      ];
+
+
 
   return (
     <div className="p-4 rounded-2xl border border-[#E5E5E5] bg-white w-full max-w-4xl mx-auto space-y-4">
