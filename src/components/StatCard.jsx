@@ -8,12 +8,12 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-const StatCard = ({ title, value, change, changeType = "up" }) => {
+const StatCard = ({ title, value, change, changeType = "up",onRangeChange,selectedRange }) => {
   const isUp = changeType === "up";
   const changeColor = isUp ? "text-green-600" : "text-red-600";
   const ChangeIcon = isUp ? ArrowUpToLine : ArrowDownToLine;
 
-  const [selectedRange, setSelectedRange] = useState("Weekly");
+  // const [selectedRange, setSelectedRange] = useState("Weekly");
   const [open, setOpen] = useState(false);
   const menuRef = useRef();
   useEffect(() => {
@@ -51,7 +51,7 @@ const StatCard = ({ title, value, change, changeType = "up" }) => {
                 <li
                   key={range}
                   onClick={() => {
-                    setSelectedRange(range);
+                    onRangeChange(range);
                     setOpen(false);
                   }}
                   className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${
