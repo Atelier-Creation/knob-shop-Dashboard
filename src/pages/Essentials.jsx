@@ -72,8 +72,8 @@ const Essentials = () => {
   const [loading, setLoading] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState("error");
-  const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
-  const dropdownRef = useRef(null);
+  // const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
+  // const dropdownRef = useRef(null);
 
   // Combine data fetching into a single useEffect
   useEffect(() => {
@@ -96,7 +96,7 @@ const Essentials = () => {
             essentialData.cards.map((card) => ({
               ...card,
               // Map the existing category objects to just their _id
-              categories: card.categories.map((cat) => cat._id),
+              // categories: card.categories.map((cat) => cat._id),
               imageFile: null,
             }))
           );
@@ -151,35 +151,8 @@ const Essentials = () => {
     setCards(newCards);
   };
 
-  const handleCategoryChange = (index, categoryId) => {
-    const newCards = [...cards];
-    const cardCategories = newCards[index].categories;
-    const categoryIndex = cardCategories.indexOf(categoryId);
-
-    if (categoryIndex === -1) {
-      newCards[index].categories = [...cardCategories, categoryId];
-    } else {
-      newCards[index].categories.splice(categoryIndex, 1);
-    }
-    setCards(newCards);
-  };
-
-  const toggleDropdown = (index) => {
-    setOpenDropdownIndex(openDropdownIndex === index ? null : index);
-  };
-
-  const getCategoryNames = (selectedIds) => {
-    return selectedIds
-      .map((id) => {
-        const category = allCategories.find((cat) => cat._id === id);
-        return category ? category.category_name : null;
-      })
-      .filter(Boolean)
-      .join(", ");
-  };
-
   const addCard = () => {
-    if (cards.length < 3) {
+    if (cards.length < 8) {
       setCards([
         ...cards,
         {
@@ -229,7 +202,15 @@ const Essentials = () => {
         mainHeading,
         mainDescription,
         cards: uploadedCards.map(
-          ({ number, title, description, categories, products, bgImage, _id }) => ({
+          ({
+            number,
+            title,
+            description,
+            categories,
+            products,
+            bgImage,
+            _id,
+          }) => ({
             number,
             title,
             description,
@@ -331,27 +312,6 @@ const Essentials = () => {
           {cards.map((card, index) => (
             <div
               key={card._id || index}
-              onClick={() => {
-                const selectedCardData = {
-                  cardNumber: card.number,
-                  cardTitle: card.title,
-                  cardDescription: card.description,
-                  bgImage: card.bgImage,
-                  mainHeading,
-                  mainDescription,
-                };
-            
-                // 1. Console log
-                console.log("Selected Card Data:", selectedCardData);
-            
-                // 2. Save to localStorage
-                localStorage.setItem("selectedCardData", JSON.stringify(selectedCardData));
-            
-                // 3. Navigate with state
-                navigate("/essential/add-product", {
-                  state: { cardIndex: index, cardData: selectedCardData },
-                });
-              }}
               className="bg-white p-6 rounded-sm border border-gray-200 w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)]"
             >
               <div className="flex justify-between items-center space-x-2 mb-4">
@@ -468,7 +428,7 @@ const Essentials = () => {
                         <img
                           src={URL.createObjectURL(card.imageFile)}
                           alt="Selected preview"
-                          className="w-32 h-32 object-cover rounded border"
+                          className="w-full h-32 object-cover rounded shadow-md border border-gray-400"
                         />
                       </div>
                     )}
@@ -477,10 +437,49 @@ const Essentials = () => {
                         <img
                           src={card.bgImage}
                           alt="Current preview"
-                          className="w-32 h-32 object-cover rounded border"
+                          className="w-full h-32 object-cover rounded shadow-md border border-gray-400"
                         />
                       </div>
                     )}
+                  </div>
+                  <div>
+                    <button
+                      type="button"
+                      className={`px-4 py-2 text-sm w-full rounded flex items-center justify-center gap-2 ${
+                        cards.length >= 8
+                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                          : "bg-[#783904] text-[#FFE3CC]"
+                      }`}
+                      onClick={() => {
+                        const selectedCardData = {
+                          cardNumber: card.number,
+                          cardTitle: card.title,
+                          cardDescription: card.description,
+                          bgImage: card.bgImage,
+                          mainHeading,
+                          mainDescription,
+                        };
+
+                        // 1. Console log
+                        console.log("Selected Card Data:", selectedCardData);
+
+                        // 2. Save to localStorage
+                        localStorage.setItem(
+                          "selectedCardData",
+                          JSON.stringify(selectedCardData)
+                        );
+
+                        // 3. Navigate with state
+                        navigate("/essential/add-product", {
+                          state: {
+                            cardIndex: index,
+                            cardData: selectedCardData,
+                          },
+                        });
+                      }}
+                    >
+                      <Plus size={18} /> Add Card Details
+                    </button>
                   </div>
                 </div>
               </div>
@@ -492,7 +491,7 @@ const Essentials = () => {
             type="button"
             onClick={addCard}
             className={`px-4 py-2 text-sm rounded flex items-center justify-center gap-2 ${
-              cards.length >= 3
+              cards.length >= 8
                 ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                 : "bg-gray-800 text-gray-200"
             }`}
@@ -500,7 +499,7 @@ const Essentials = () => {
             <Plus size={18} /> Add Card
           </button>
         </div>
-        {/* <div className="flex gap-4 mt-6">
+        <div className="flex gap-4 mt-6">
           <Link
             onClick={() => navigate(-1)}
             className="px-4 py-2 text-sm bg-white border border-black text-black rounded flex items-center justify-center gap-2"
@@ -516,7 +515,7 @@ const Essentials = () => {
             <RxBookmark className="inline" size={18} />{" "}
             {loading ? "Saving..." : "Save & Publish"}
           </button>
-        </div> */}
+        </div>
       </form>
     </div>
   );
