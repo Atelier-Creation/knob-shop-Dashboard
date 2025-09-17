@@ -124,6 +124,7 @@ const Dashboard = () => {
               change={analytics?.changeStats?.totalSales || 0}
               selectedRange={selectedRange}
               onRangeChange={handleRangeChange}
+              showCurrencySymbol={true} 
             />
             <StatCard
               title="Total Products Sold"
@@ -134,9 +135,10 @@ const Dashboard = () => {
               }
               selectedRange={selectedRange}
               onRangeChange={handleRangeChange}
+              showCurrencySymbol={false} 
             />
             <StatCard
-              title="AverageOrder Value"
+              title="Avg Order Value"
               value={analytics?.averageOrderValue || 0}
               change={Math.abs(analytics?.changeStats?.averageOrderValue || 0)}
               changeType={
@@ -144,9 +146,10 @@ const Dashboard = () => {
               }
               selectedRange={selectedRange}
               onRangeChange={handleRangeChange}
+              showCurrencySymbol={true} 
             />
             <StatCard
-              title="AverageRevenue Per Customer"
+              title="Avg Rev/Customer"
               value={analytics?.averageRevenuePerCustomer || 0}
               change={Math.abs(analytics?.changeStats?.averageRevenuePerCustomer || 0)}
               changeType={
@@ -154,6 +157,7 @@ const Dashboard = () => {
               }
               selectedRange={selectedRange}
               onRangeChange={handleRangeChange}
+              showCurrencySymbol={true} 
             />
           </div>
 

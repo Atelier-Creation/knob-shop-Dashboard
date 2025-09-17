@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-const StatCard = ({ title, value, change, changeType = "up",onRangeChange,selectedRange }) => {
+const StatCard = ({ title, value, change, changeType = "up",onRangeChange,selectedRange,showCurrencySymbol = true  }) => {
   const isUp = changeType === "up";
   const changeColor = isUp ? "text-green-600" : "text-red-600";
   const ChangeIcon = isUp ? ArrowUpToLine : ArrowDownToLine;
@@ -73,7 +73,7 @@ const StatCard = ({ title, value, change, changeType = "up",onRangeChange,select
             <RefreshCcw size={14} className="text-[#3BC8C4]" />
           </div>
           <span className="text-[22px] font-bold text-gray-900">
-            ₹ {value.toLocaleString()}
+          {showCurrencySymbol ? "₹ " : ""}{value.toLocaleString("en-IN")}
           </span>
         </div>
         <div className={`flex items-center text-sm font-medium ${changeColor}`}>
