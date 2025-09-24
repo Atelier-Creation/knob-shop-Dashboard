@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom"; // ✅ to read query params
 import ProductGrid from "../components/ProductGrid";
 import ProductEditor from "../components/ProductEditor";
 import CategoryTabs from "../components/CategoryTabs";
@@ -12,6 +13,10 @@ export default function ProductManager() {
   const [activeProduct, setActiveProduct] = useState(null);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [loadingCategories, setLoadingCategories] = useState(true);
+
+  const location = useLocation(); // ✅ get URL info
+  const searchParams = new URLSearchParams(location.search);
+  const searchQuery = searchParams.get("q")?.toLowerCase() || "";
 
   // Fetch products
   useEffect(() => {
@@ -50,22 +55,24 @@ export default function ProductManager() {
     }
   };
 
-  // Filter products based on selected category
-  const filteredProducts =
-    selectedCategory === "all"
-      ? products
-      : products.filter((p) => {
-          if (!p.category) return false;
-          const catId =
-            typeof p.category === "object" ? p.category._id : p.category;
-          return catId === selectedCategory;
-        });
+  // ✅ Filtering logic
+  let filteredProducts = products;
 
-  console.log("Selected:", filteredProducts);
-  console.log(
-    "Products:",
-    products.map((p) => p.category)
-  );
+  // If a search query exists in the URL, prioritize search
+  if (searchQuery) {
+    filteredProducts = products.filter((p) =>
+      p.name?.toLowerCase().includes(searchQuery)
+    );
+  } else if (selectedCategory !== "all") {
+    // Otherwise filter by category
+    filteredProducts = products.filter((p) => {
+      if (!p.category) return false;
+      const catId =
+        typeof p.category === "object" ? p.category._id : p.category;
+      return catId === selectedCategory;
+    });
+  }
+
   const SkeletonBox = ({ className }) => (
     <div className={`bg-gray-200 animate-pulse ${className}`}></div>
   );
@@ -93,7 +100,9 @@ export default function ProductManager() {
           activeProduct ? "w-3/5" : "w-full"
         }`}
       >
-        {loadingCategories ? (
+        {searchQuery? <h2 className="font-medium text-xl mb-5">Search Result for "<strong>{`${searchQuery}`}</strong>"</h2>:""}
+        {/* Hide CategoryTabs when searching */}
+        {searchQuery ? null : loadingCategories ? (
           <CategoryTabsSkeleton />
         ) : (
           <CategoryTabs
@@ -135,7 +144,7 @@ export default function ProductManager() {
                 console.error("Error refreshing products:", err);
               } finally {
                 setLoadingProducts(false);
-                setActiveProduct(null); // close editor after update
+                setActiveProduct(null);
               }
             }}
             onClose={() => setActiveProduct(null)}

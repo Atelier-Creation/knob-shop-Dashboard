@@ -1,4 +1,4 @@
-import { useState, useMemo,useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   CalendarDays,
   Search,
@@ -19,7 +19,7 @@ import Dropdown from "../components/Dropdown";
 import StatCardGroup from "../components/orderListDashboard/StatCardGroup";
 import ResponsiveTableCard from "../components/ResponsiveTableCard";
 import { useNavigate } from "react-router-dom";
-import { getAllOrders } from '../api/orderListApi';
+import { getAllOrders } from "../api/orderListApi";
 
 const columns = [
   { label: "Order ID" },
@@ -44,7 +44,7 @@ export default function OrderListDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
 
-    const [sortField, setSortField] = useState(null);
+  const [sortField, setSortField] = useState(null);
   const [sortOrder, setSortOrder] = useState("asc");
 
   useEffect(() => {
@@ -53,7 +53,7 @@ export default function OrderListDashboard() {
         setLoading(true);
         const res = await getAllOrders();
         setOrders(res.orders || []); // Adjust key if different
-        console.log("all orders",res)
+        console.log("all orders", res);
       } catch (error) {
         console.error("Error fetching orders:", error);
       } finally {
@@ -64,7 +64,7 @@ export default function OrderListDashboard() {
     fetchOrders();
   }, []);
 
-   const handleSort = (key) => {
+  const handleSort = (key) => {
     if (sortField === key) {
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     } else {
@@ -80,24 +80,25 @@ export default function OrderListDashboard() {
       const status = order?.paymentStatus || "";
       const date = order?.createdAt || "";
       const total = order?.totalAmount ?? "";
-  
+
       const statusMatch =
-      activeTab === "All" || status.toLowerCase() === activeTab.toLowerCase();
+        activeTab === "All" || status.toLowerCase() === activeTab.toLowerCase();
 
       const paymentMatch =
-      paymentStatus === "All" || status.toLowerCase() === paymentStatus.toLowerCase();
-    
+        paymentStatus === "All" ||
+        status.toLowerCase() === paymentStatus.toLowerCase();
+
       const searchMatch =
         customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
         id.toLowerCase().includes(searchTerm.toLowerCase()) ||
         status.toLowerCase().includes(searchTerm.toLowerCase()) ||
         date.toLowerCase().includes(searchTerm.toLowerCase()) ||
         total.toString().toLowerCase().includes(searchTerm.toLowerCase());
-  
+
       return statusMatch && paymentMatch && searchMatch;
     });
   }, [orders, activeTab, paymentStatus, searchTerm]);
-  
+
   const computedFailedOrders = useMemo(() => {
     const abandoned = orders.filter((o) => o.status === "Abandoned").length;
     const returned = orders.filter((o) => o.status === "Returned").length;
@@ -164,7 +165,6 @@ export default function OrderListDashboard() {
       },
     ];
   }, [orders]);
-  
 
   const paginatedOrders = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
@@ -187,10 +187,9 @@ export default function OrderListDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <StatCardGroup title="Order Statuses" stats={computedOrderStatuses} />
+        <StatCardGroup title="Order Statuses" stats={computedOrderStatuses} />
 
-      {/* <StatCardGroup title="Order Statuses" stats={computedOrderStatuses} /> */}
-
+        {/* <StatCardGroup title="Order Statuses" stats={computedOrderStatuses} /> */}
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -247,24 +246,23 @@ export default function OrderListDashboard() {
         renderRow={(order) => (
           <>
             <td className="p-3 font-medium text-black whitespace-nowrap">
-            {order.orderId}
+              {order.orderId}
             </td>
             <td className="p-3">{order?.userId?.name}</td>
             <td className="p-3">{order.totalAmount}</td>
             <td className="p-3">
               <StatusBadge status={order.paymentStatus} orderId={order._id} />
             </td>
-            <td className="p-3">{new Date(order.createdAt).toLocaleDateString()}</td>
+            <td className="p-3">
+              {new Date(order.createdAt).toLocaleDateString()}
+            </td>
             <td className="p-3">
               <button
                 className="bg-blue-500 text-white px-2 py-1 rounded text-xs cursor-pointer"
                 title="View Details"
                 onClick={() =>
                   navigate(
-                    `/orders-customers/order-list/${order._id.replace(
-                      "#",
-                      ""
-                    )}`
+                    `/orders-customers/order-list/${order._id.replace("#", "")}`
                   )
                 }
               >
@@ -309,7 +307,10 @@ export default function OrderListDashboard() {
               </div>
               <div>
                 <span className="font-medium text-gray-900">Status:</span>{" "}
-                <StatusBadge status={paginatedOrders.status} orderId={paginatedOrders._id}/>
+                <StatusBadge
+                  status={paginatedOrders.status}
+                  orderId={paginatedOrders._id}
+                />
               </div>
               <div>
                 <span className="font-medium text-gray-900">Date:</span>{" "}

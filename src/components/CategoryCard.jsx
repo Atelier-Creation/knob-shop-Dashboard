@@ -129,6 +129,7 @@ export default function CategoryCard({
 
             localStorage.setItem("selectedCategoryName", cat.category_name);
             localStorage.setItem("selectedDescriptionName", cat.description);
+              console.log(localStorage.getItem("selectedCategoryId"));
           }}
           to={`/categories-products/category/${cat._id}`}
           className="w-full flex items-center justify-center gap-2 text-sm font-medium py-2 bg-black text-white rounded-lg hover:bg-gray-900 transition"

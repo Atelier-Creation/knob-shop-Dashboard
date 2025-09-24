@@ -133,12 +133,12 @@ function EssentialAddProduct() {
       alert("Failed to update essentials.");
     }
   };
-
+console.log(cardData)
   return (
     <div>
       <div className="flex items-center gap-1 p-4">
         <h2 className="text-lg font-semibold">
-          Essentials Add Products to Card {cardIndex + 1}
+         Add Essentials {cardData?.cardTitle || ""} Card Details 
         </h2>
       </div>
       <CarouselAdmin />
@@ -156,8 +156,8 @@ function EssentialAddProduct() {
   {/* Show selected products */}
   {selectedProducts.length > 0 && (
     <div className="flex flex-wrap gap-2 mt-2">
-      {selectedProducts.map((id) => {
-        const product = products.find((p) => p._id === id);
+      {selectedProducts?.map((id) => {
+        const product = products?.find((p) => p._id === id);
         console.log(product)
         return (
           <div

@@ -15,6 +15,7 @@ export default function ViewEditProduct() {
       setProduct(data);
     }
     load();
+    console.log(localStorage.getItem("selectedCategoryId")+ localStorage.getItem("selectedCategoryName"))
   }, [id]);
 
   const handleSave = async (finalPayload) => {

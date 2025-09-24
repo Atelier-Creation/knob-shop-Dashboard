@@ -27,6 +27,7 @@ import ProfileModal from "./ProfileModal";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { logout } from "./logout";
+import axios from "axios";
 import { getUnseenOrders, markOrderAsSeen } from "../api/orderListApi";
 import { io } from "socket.io-client";
 import toast from "react-hot-toast";
@@ -47,89 +48,44 @@ const Topbar = ({ toggleSidebar, onSearch }) => {
   const menuRef = useRef();
   const notifRef = useRef();
   const [inputValue, setInputValue] = useState("");
-
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
 
-  const pages = [
-    { name: "Dashboard", path: "/", icon: <LayoutDashboard size={16} /> },
-    {
-      name: "Homepage Ads",
-      path: "/homepage-ads",
-      icon: <MonitorSmartphone size={16} />,
-    },
-    {
-      name: "Policy Page's",
-      path: "/policy-edit",
-      icon: <HeartHandshake size={16} />,
-    },
-    {
-      name: "Reviews & Ratings",
-      path: "/reviews-ratings",
-      icon: <Star size={16} />,
-    },
-    {
-      name: "Shipping & Tax",
-      path: "/shipping-tax",
-      icon: <Truck size={16} />,
-    },
-    {
-      name: "Add Brochure",
-      path: "/brochure/add",
-      icon: <Download size={16} />,
-    },
-    {
-      name: "Brochure List",
-      path: "/brochure/list",
-      icon: <Download size={16} />,
-    },
-    {
-      name: "Order-List",
-      path: "/orders-customers/order-list",
-      icon: <Users size={16} />,
-    },
-    {
-      name: "Customer List",
-      path: "/orders-customers/customer-list",
-      icon: <Users size={16} />,
-    },
-    {
-      name: "Add category",
-      path: "/categories-products/category",
-      icon: <Package size={16} />,
-    },
-    {
-      name: "Product List",
-      path: "/categories-products/product-list",
-      icon: <Package size={16} />,
-    },
-    {
-      name: "Deals & Discounts",
-      path: "/deals-discounts",
-      icon: <Percent size={16} />,
-    },
-    {
-      name: "Product & Stock",
-      path: "/product-stock",
-      icon: <Boxes size={16} />,
-    },
-    {
-      name: "Reports & Analytics",
-      path: "/reports-analytics",
-      icon: <BarChart2 size={16} />,
-    },
-  ];
+  const handleSearchChange = async (e) => {
+    const value = e.target.value;
+    setQuery(value);
 
-  const filteredPages = pages.filter((page) =>
-    page.name.toLowerCase().includes(inputValue.toLowerCase())
-  );
+    if (value.trim().length === 0) {
+      setResults([]);
+      return;
+    }
 
-  const handleInputChange = (e) => {
-    setInputValue(e.target.value);
+    setLoading(true);
+    try {
+      const { data } = await axios.get(`${import.meta.env.VITE_API_BASE_URI}/products/search/${value}`);
+      setResults(data.results);
+    } catch (error) {
+      console.error("Search error:", error);
+    } finally {
+      setLoading(false);
+    }
   };
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    if (onSearch) {
-      onSearch(inputValue); // ✅ send query up to Layout
+console.log(results)
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      setQuery("");
+      navigate(`/search?q=${query}`);
+      setResults([]);
+    }
+  };
+
+  const handleSearchSubmit = () => {
+    if (query.trim()) {
+      setQuery("");
+      navigate(`/search?q=${query}`);
+      setResults([]);
     }
   };
 
@@ -235,7 +191,11 @@ const Topbar = ({ toggleSidebar, onSearch }) => {
       socket.off("newOrder");
     };
   }, []);
-
+const handleclick = (item) =>{
+  localStorage.setItem("selectedCategoryId", item?.category?._id);
+      localStorage.setItem("selectedCategoryName", item?.category?.category_name);
+ navigate(`/products/${item?._id}/edit`);
+}
   return (
     <header className="flex justify-between items-center gap-2 px-4 py-3 bg-white">
       {/* Left: Menu + Search (mobile-first) */}
@@ -243,45 +203,52 @@ const Topbar = ({ toggleSidebar, onSearch }) => {
         <button className="md:hidden" onClick={toggleSidebar}>
           <Menu size={24} />
         </button>
-        <div className="relative flex bg-[#F7FAF9] border border-[#DFDFDF] rounded-full w-full max-w-xs">
+        <div className="relative flex bg-[#F7FAF9] border border-[#DFDFDF] rounded-full w-full min-w-sm">
           <input
-            type="text"
-            placeholder="Search here"
-            value={inputValue}
-            onChange={(e) => {
-              setInputValue(e.target.value);
-              setShowDropdown(true);
-            }}
-            onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
-            className="flex-1 px-4 py-2 text-sm bg-transparent outline-none placeholder:text-gray-500"
+            type="search"
+            placeholder="Search..."
+            value={query}
+            onChange={handleSearchChange}
+            onKeyDown={handleKeyDown}
+            className="flex-1 px-4 py-2 text-sm bg-transparent outline-none placeholder:text-gray-500 rounded-l-full"
           />
           <button
             onClick={handleSearchSubmit}
-            className="bg-black text-white px-3 py-2 flex items-center justify-center rounded-r-full"
+            className="bg-black text-white px-4 py-2 flex items-center justify-center rounded-r-full"
           >
-            <Search size={18} />
+            <i className="bi bi-search"></i>
           </button>
 
-          {/* 🔽 Dropdown */}
-          {showDropdown && inputValue && (
-            <ul className="absolute top-12 left-0 w-full bg-white border border-gray-200 rounded-lg shadow-md max-h-48 overflow-y-auto z-50">
-              {filteredPages.length > 0 ? (
-                filteredPages.map((page, i) => (
+          {/* 🔽 Dropdown Results */}
+          {query && (
+            <ul className="absolute top-12 left-0 w-full bg-white border border-gray-200 rounded-lg shadow-md max-h-100 overflow-y-auto z-50">
+              {loading ? (
+                <li className="px-4 py-2 text-gray-500">Searching...</li>
+              ) : results.length > 0 ? (
+                results.map((item) => (
                   <li
-                    key={i}
+                    key={item._id}
                     onClick={() => {
-                      navigate(page.path);
-                      setInputValue("");
-                      setShowDropdown(false);
+                     handleclick(item)
+                      setQuery("");
+                      setResults([]);
                     }}
                     className="px-4 py-2 cursor-pointer hover:bg-gray-100 flex items-center gap-2"
                   >
-                    <span className="text-gray-600">{page.icon}</span>
-                    <span>{page.name}</span>
+                    <img
+                      src={
+                        item?.images?.[0] ||
+                        item?.category?.categoryImageUrl ||
+                        "/fallback.jpg"
+                      }
+                      alt={item.name}
+                      className="w-8 h-8 rounded object-cover"
+                    />
+                    <span>{item.name}</span>
                   </li>
                 ))
               ) : (
-                <li className="px-4 py-2 text-gray-500">No results</li>
+                <li className="px-4 py-2 text-gray-500">No results found.</li>
               )}
             </ul>
           )}

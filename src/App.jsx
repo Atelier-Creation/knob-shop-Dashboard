@@ -70,6 +70,10 @@ function App() {
               path="categories-products/product-list"
               element={<ProductManager />}
             />
+            <Route
+              path="/search"
+              element={<ProductManager />}
+            />
             <Route path="/products/:id/edit" element={<ViewEditProduct />} />
             <Route
               path="categories-products/category"

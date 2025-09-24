@@ -114,7 +114,7 @@ function CarouselAdmin() {
 
       {/* Slides list */}
       <div className="grid gap-4">
-        {slides.map((s) => (
+        {slides?.map((s) => (
           <div
             key={s._id}
             className="border p-4 flex justify-between items-center"

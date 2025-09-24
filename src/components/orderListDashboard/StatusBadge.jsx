@@ -35,7 +35,7 @@ export default function StatusBadge({ status: initialStatus, orderId }) {
       };
       
 
-  return <span className={`px-2 py-1 rounded-full text-xs font-medium cursor-pointer ${color}`} onClick={handleStatusChange}>{status}      {loading ? (
+  return <span className={`px-2 py-1 rounded-full text-xs font-medium cursor-pointer ${color}`} >{status}      {loading ? (
     <i className="bi bi-arrow-repeat animate-spin"></i>
   ) : (
     <i className="bi bi-pencil-square"></i>

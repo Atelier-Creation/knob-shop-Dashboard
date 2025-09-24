@@ -8,6 +8,7 @@ import {
   MapPin,
   Mail,
   Phone,
+  User,
   MessageCircleMore,
   Loader,
   ChefHat,
@@ -132,7 +133,12 @@ export default function OrderDetailsView() {
   }, [id]);
 
   if (loading) return <div className="p-6 text-gray-600">Loading...</div>;
-  if (!order) return <div className="p-6 text-red-600">Order not found or order belongs to deleted Product.</div>;
+  if (!order)
+    return (
+      <div className="p-6 text-red-600">
+        Order not found or order belongs to deleted Product.
+      </div>
+    );
 
   const handleDownloadLabel = async () => {
     setDownloading(true);
@@ -216,7 +222,8 @@ export default function OrderDetailsView() {
 
             {/* Step 3: Inactive */}
             <div className="flex flex-col items-center">
-               <Truck className="w-4 h-4 text-gray-400 "/> {/* style={{ animation: "truckMove 4s ease-in-out infinite" }} */}
+              <Truck className="w-4 h-4 text-gray-400 " />{" "}
+              {/* style={{ animation: "truckMove 4s ease-in-out infinite" }} */}
               <span className="text-[10px] md:text-xs mt-1 text-gray-500">
                 Shipping
               </span>
@@ -238,17 +245,34 @@ export default function OrderDetailsView() {
             <button className="text-black underline cursor-pointer">
               Cancel order
             </button>
-            <button
-              className={`flex items-center cursor-pointer border px-3 py-1.5 rounded-md font-medium shadow-sm  transition-colors ${downloaded ? "bg-black/80 text-white/80" : 'hover:bg-black hover:text-white'}`}
-              onClick={handleDownloadLabel}
-            >
-              {downloading
-                ? "Downloading..."
-                : downloaded
-                ? "Shipping Label Downloaded"
-                : "Create Shipping Label"}
-              {!downloaded && <ChevronRight className="w-4 h-4 ml-1" />}
-            </button>
+            {/* Bottom Buttons */}
+
+              {order?.dtdcReferenceNumber === "PICKUP" ? (
+                <button
+                  disabled
+                  className="flex items-center border px-3 py-1.5 rounded-full font-medium shadow-sm bg-gray-800 text-gray-100 cursor-not-allowed"
+                >
+                 SHOP PICKUP ORDER
+                </button>
+              ) : (
+                <button
+                  className={`flex items-center cursor-pointer border px-3 py-1.5 rounded-md font-medium shadow-sm  transition-colors ${
+                    downloaded
+                      ? "bg-black/80 text-white/80"
+                      : "hover:bg-black hover:text-white"
+                  }`}
+                  onClick={handleDownloadLabel}
+                >
+                  {downloading
+                    ? "Downloading..."
+                    : downloaded
+                    ? "Shipping Label Downloaded"
+                    : "Create Shipping Label"}
+                  {!downloaded && !downloading && (
+                    <ChevronRight className="w-4 h-4 ml-1" />
+                  )}
+                </button>
+              )}
           </div>
         </div>
 
@@ -314,7 +338,10 @@ export default function OrderDetailsView() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <img
-                src={order.customer.avatar}
+                src={
+                  order.customer.avatar ||
+                  "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_640.png"
+                }
                 alt={order.customer.name}
                 className="w-10 h-10 rounded-full object-cover"
               />
@@ -338,7 +365,7 @@ export default function OrderDetailsView() {
           </h3>
           <div className="rounded-lg overflow-hidden border">
             <iframe
-              src={order.shipping.mapurl}
+              src={order.shipping.mapurl + "&output=embed"}
               width="100%"
               height="200"
               className="w-full"
