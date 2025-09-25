@@ -36,9 +36,10 @@ export default function ImageUploader({
   const uploadToSpaces = useCallback(
     async (file, onProgress) => {
       if (!file) return null;
+      const safeFileName = file.name.replace(/\s+/g, "_");
 
       const bucketName = "knobsshopcdn";
-      const fileKey = `uploads/${Date.now()}-${file.name}`;
+      const fileKey = `uploads/${Date.now()}-${safeFileName}`;
 
       try {
         const parallelUploads3 = new Upload({
@@ -159,53 +160,60 @@ export default function ImageUploader({
     [cloudName, uploadPreset]
   );
 
-const onDrop = useCallback(
-  async (acceptedFiles) => {
-    if (!acceptedFiles.length) return;
+  const onDrop = useCallback(
+    async (acceptedFiles) => {
+      if (!acceptedFiles.length) return;
 
-    setIsUploading(true);
-    setUploadProgress(0);
+      setIsUploading(true);
+      setUploadProgress(0);
 
-    if (multiple) {
-      const uploadedImagesData = [];
-      try {
-        for (const file of acceptedFiles) {
-          const { url, deleteToken } = await uploadToSpaces(file, setUploadProgress);
-          console.log(url);
-          uploadedImagesData.push({ url, deleteToken });
+      if (multiple) {
+        const uploadedImagesData = [];
+        try {
+          for (const file of acceptedFiles) {
+            const { url, deleteToken } = await uploadToSpaces(
+              file,
+              setUploadProgress
+            );
+            console.log(url);
+            uploadedImagesData.push({ url, deleteToken });
+          }
+          if (onImageUpload) onImageUpload(uploadedImagesData);
+          toast.success(
+            `${acceptedFiles.length} image(s) uploaded successfully`
+          );
+        } catch (err) {
+          console.error("Multi-image upload failed", err);
+          toast.error("Failed to upload all images.");
+        } finally {
+          setIsUploading(false);
+          setUploadProgress(0);
         }
-        if (onImageUpload) onImageUpload(uploadedImagesData);
-        toast.success(`${acceptedFiles.length} image(s) uploaded successfully`);
-      } catch (err) {
-        console.error("Multi-image upload failed", err);
-        toast.error("Failed to upload all images.");
-      } finally {
-        setIsUploading(false);
-        setUploadProgress(0);
+      } else {
+        const file = acceptedFiles[0];
+        const localUrl = URL.createObjectURL(file);
+        setSinglePreview(localUrl);
+        try {
+          const { url, deleteToken } = await uploadToSpaces(
+            file,
+            setUploadProgress
+          );
+          console.log(url);
+          setSingleDeleteToken(deleteToken);
+          if (onImageUpload) onImageUpload(url);
+          toast.success("Image uploaded successfully");
+        } catch (err) {
+          console.error("Single image upload failed", err);
+          toast.error("Upload failed");
+          setSinglePreview(null);
+        } finally {
+          setIsUploading(false);
+          setUploadProgress(0);
+        }
       }
-    } else {
-      const file = acceptedFiles[0];
-      const localUrl = URL.createObjectURL(file);
-      setSinglePreview(localUrl);
-      try {
-        const { url, deleteToken } = await uploadToSpaces(file, setUploadProgress);
-        console.log(url);
-        setSingleDeleteToken(deleteToken);
-        if (onImageUpload) onImageUpload(url);
-        toast.success("Image uploaded successfully");
-      } catch (err) {
-        console.error("Single image upload failed", err);
-        toast.error("Upload failed");
-        setSinglePreview(null);
-      } finally {
-        setIsUploading(false);
-        setUploadProgress(0);
-      }
-    }
-  },
-  [multiple, onImageUpload, uploadToSpaces]
-);
-
+    },
+    [multiple, onImageUpload, uploadToSpaces]
+  );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
