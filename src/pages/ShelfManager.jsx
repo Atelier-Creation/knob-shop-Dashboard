@@ -42,7 +42,7 @@ async function uploadToSpaces(file) {
 
     await parallelUploads3.done();
 
-    return `https://${bucketName}.blr1.digitaloceanspaces.com/${fileKey}`;
+    return `https://${bucketName}.blr1.cdn.digitaloceanspaces.com/${fileKey}`;
   } catch (err) {
     console.error("Error uploading to Spaces:", err);
     throw err;

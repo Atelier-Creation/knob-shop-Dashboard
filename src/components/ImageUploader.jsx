@@ -71,7 +71,7 @@ export default function ImageUploader({
 
         await parallelUploads3.done();
 
-        const publicUrl = `https://${bucketName}.blr1.digitaloceanspaces.com/${fileKey}`;
+        const publicUrl = `https://${bucketName}.blr1.cdn.digitaloceanspaces.com/${fileKey}`;
         return { url: publicUrl, deleteToken: null };
       } catch (err) {
         console.error("Error uploading to Spaces:", err);

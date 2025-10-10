@@ -45,7 +45,7 @@ async function uploadToSpaces(file) {
 
     await parallelUploads3.done();
 
-    const publicUrl = `https://${bucketName}.blr1.digitaloceanspaces.com/${fileKey}`;
+    const publicUrl = `https://${bucketName}.blr1.cdn.digitaloceanspaces.com/${fileKey}`;
     return publicUrl;
   } catch (err) {
     console.error("Error uploading to Spaces:", err);

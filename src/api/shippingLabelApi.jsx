@@ -1,9 +1,9 @@
 // src/api/shippingLabelApi.js
 import axios from "axios";
 
-const BASE_URL = "https://alphademodashboardapi.shipsy.io/api/customer/integration/consignment/shippinglabel/stream";
+const BASE_URL = "https://dtdcapi.shipsy.io/api/customer/integration/consignment/shippinglabel/stream";
 
-const API_KEY = "da66dccac00b76c795e827ffaafd5d";
+const API_KEY = "e72ca0c0abd5e15dc59aefb964fcf8";
 
 export const downloadShippingLabel = async (referenceNumber) => {
   try {

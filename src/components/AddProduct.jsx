@@ -242,7 +242,7 @@ export default function AddProduct({
       await parallelUploads3.done();
 
       // Construct the public URL
-      const publicUrl = `https://${bucketName}.blr1.digitaloceanspaces.com/${fileKey}`;
+      const publicUrl = `https://${bucketName}.blr1.cdn.digitaloceanspaces.com/${fileKey}`;
       return publicUrl;
     } catch (err) {
       console.error("Error uploading to Spaces:", err);
@@ -427,12 +427,12 @@ export default function AddProduct({
       }));
 
       const finalPayload = {
-        name: productData.name,
-        productId: productData.productId,
-        hsncode: productData.hsncode,
+        name: productData.name.trim(),
+        productId: productData.productId.trim(),
+        hsncode: productData.hsncode.trim(),
         stock: Number(productData.stock),
-        description: productData.description,
-        brand: productData.brand,
+        description: productData.description.trim(),
+        brand: productData.brand.trim(),
         category: localStorage.getItem("selectedCategoryId"),
         status: productData.status,
         images: allVariantImages,
@@ -496,7 +496,7 @@ const updateField = (keyPath, value) => {
     }
 
     const lastKey = keys[keys.length - 1];
-    current[lastKey] = typeof value === "string" ? value.trim() : value;
+    current[lastKey] = value;
 
     return updated;
   });

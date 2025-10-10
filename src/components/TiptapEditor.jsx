@@ -24,8 +24,6 @@ const TiptapEditor = ({
 }) => {
   const fileInputRef = React.useRef(null);
 
-;
-
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -35,9 +33,10 @@ const TiptapEditor = ({
         HTMLAttributes: {
           class: "text-blue-600 underline",
         },
-      }),Placeholder.configure({
-      placeholder: placeholder || "Start typing...", // 👈 use your prop
-    }),
+      }),
+      Placeholder.configure({
+        placeholder: placeholder || "Start typing...",
+      }),
     ],
     content: value || "",
     editorProps: {
@@ -49,7 +48,14 @@ const TiptapEditor = ({
       set?.(editor.getHTML());
     },
   });
-  editor?.commands.setContent(value)
+
+  // ✅ Sync external value changes safely
+  React.useEffect(() => {
+    if (editor && value !== editor.getHTML()) {
+      editor.commands.setContent(value);
+    }
+  }, [value, editor]);
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file && file.type === "text/plain") {
@@ -66,7 +72,7 @@ const TiptapEditor = ({
   const setLink = () => {
     const previousUrl = editor.getAttributes("link").href;
     const url = window.prompt("Enter URL", previousUrl);
-    if (url === null) return; // cancel
+    if (url === null) return;
     if (url === "") {
       editor.chain().focus().unsetLink().run();
       return;
@@ -137,9 +143,15 @@ const TiptapEditor = ({
         </button>
       </div>
 
-      {/* Tiptap Editor */}
-      <div className="w-full border border-gray-300 rounded-md px-3 py-2 min-h-[200px] bg-white">
-        <EditorContent editor={editor} className="min-h-[200px]" />
+      {/* ✅ Editor container — clickable anywhere including top-left */}
+      <div
+        className="w-full border border-gray-300 rounded-md bg-white min-h-[200px] px-3 py-2 cursor-text"
+        onClick={() => editor?.commands.focus()}
+      >
+        <EditorContent
+          editor={editor}
+          className="min-h-[200px] leading-relaxed text-gray-800"
+        />
       </div>
 
       {/* Hidden file input */}
