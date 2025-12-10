@@ -35,6 +35,7 @@ import ProfilePage from "./components/ProfileModal";
 import Essentials from "./pages/Essentials";
 import ShelfManager from "./pages/ShelfManager";
 import EssentialAddProduct from "./components/EssentialAddProduct/EssentialAddProduct";
+import Invoice from "./components/Invoice/Invoice";
 
 function App() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -79,10 +80,10 @@ function App() {
               path="categories-products/category"
               element={<CategoryManager />}
             />
-            <Route
+            {/* <Route
               path="categories-products/product-status"
               element={<ProductStatusTable />}
-            />
+            /> */}
             <Route path="homepage-ads" element={<ShelfManager />} />
             <Route path="homepage-ads/create" element={<CreateNewAd />} />
             <Route path="deals-discounts" element={<DealsOverview />} />
@@ -116,6 +117,7 @@ function App() {
               path="/essential/add-product"
               element={<EssentialAddProduct/>}
             />
+            <Route path="/invoice" element={<Invoice />} />
             <Route path="policy-edit" element={<PolicyEditorPage />} />
             <Route path="*" element={<DevelopmentOnProcess />} />
           </Route>

@@ -1,21 +1,61 @@
 import {
   RefreshCcw,
   ChevronDown,
-  ArrowUpRight,
   ChevronUp,
   ArrowUpToLine,
   ArrowDownToLine,
+  ArrowUpRight,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import { getLatestAnalyticsSnapshot } from "../api/analyticsApi"; // same API you already have
 
-const StatCard = ({ title, value, change, changeType = "up",onRangeChange,selectedRange,showCurrencySymbol = true  }) => {
+const StatCard = ({
+  id,
+  title,
+  value: initialValue,
+  change: initialChange,
+  changeType = "up",
+  showCurrencySymbol = true,
+}) => {
+  const [selectedRange, setSelectedRange] = useState("Weekly");
+  const [value, setValue] = useState(initialValue);
+  const [change, setChange] = useState(initialChange);
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef();
   const isUp = changeType === "up";
   const changeColor = isUp ? "text-green-600" : "text-red-600";
   const ChangeIcon = isUp ? ArrowUpToLine : ArrowDownToLine;
 
-  // const [selectedRange, setSelectedRange] = useState("Weekly");
-  const [open, setOpen] = useState(false);
-  const menuRef = useRef();
+  const ranges = ["Daily", "Weekly", "Monthly"];
+
+  const fetchAnalytics = async (range) => {
+    try {
+      const data = await getLatestAnalyticsSnapshot(range);
+      if (id === "totalSales") {
+        setValue(data.totalSales);
+        setChange(data.changeStats.totalSales.toFixed(2));
+      } else if (id === "totalProductsSold") {
+        setValue(data.totalProductsSold);
+        setChange(data.changeStats.totalProductsSold);
+      } else  if (id === "avgOrderValue") {
+        setValue(data.averageOrderValue);
+        setChange(data.changeStats.averageOrderValue.toFixed(2));
+      } else if (id === "avgRevenuePerCustomer") {
+        setValue(data.averageRevenuePerCustomer);
+        setChange(data.changeStats.averageRevenuePerCustomer.toFixed(2));
+      }
+      // extend for other cards
+    } catch (err) {
+      console.error("Failed to fetch stat for", title, err);
+    }
+  };
+
+  useEffect(() => {
+    fetchAnalytics(selectedRange);
+  }, [selectedRange]);
+
+  const toggleDropdown = () => setOpen(!open);
+
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
@@ -26,13 +66,8 @@ const StatCard = ({ title, value, change, changeType = "up",onRangeChange,select
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const ranges = ["Daily", "Weekly", "Monthly"];
-
-  const toggleDropdown = () => setOpen(!open);
-
   return (
     <div className="bg-white border border-[#E5E5E5] rounded-xl p-3 w-full hover:border-[#914200] transition-colors duration-300 cursor-pointer flex justify-between flex-col">
-      {/* Top: Title and Dropdown */}
       <div className="flex items-center justify-between mb-4 relative z-10">
         <span className="text-sm font-medium text-gray-800">{title}</span>
 
@@ -51,11 +86,13 @@ const StatCard = ({ title, value, change, changeType = "up",onRangeChange,select
                 <li
                   key={range}
                   onClick={() => {
-                    onRangeChange(range);
+                    setSelectedRange(range);
                     setOpen(false);
                   }}
                   className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${
-                    selectedRange === range ? "font-medium text-[#b15000]" : ""
+                    selectedRange === range
+                      ? "font-medium text-[#b15000]"
+                      : ""
                   }`}
                 >
                   {range}
@@ -66,14 +103,14 @@ const StatCard = ({ title, value, change, changeType = "up",onRangeChange,select
         </div>
       </div>
 
-      {/* Middle: Icon, Amount, Change */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-full bg-[#DFF6F5] flex items-center justify-center">
             <RefreshCcw size={14} className="text-[#3BC8C4]" />
           </div>
           <span className="text-[22px] font-bold text-gray-900">
-          {showCurrencySymbol ? "₹ " : ""}{value.toLocaleString("en-IN")}
+            {showCurrencySymbol ? "₹ " : ""}
+            {value?.toLocaleString("en-IN")}
           </span>
         </div>
         <div className={`flex items-center text-sm font-medium ${changeColor}`}>
@@ -82,10 +119,6 @@ const StatCard = ({ title, value, change, changeType = "up",onRangeChange,select
         </div>
       </div>
 
-      {/* Divider */}
-      {/* <div className=""></div> */}
-
-      {/* Bottom: Description + Link */}
       <div className="border-t border-gray-200 pt-2 flex items-center justify-between text-xs text-gray-500">
         <span>Sales return vs Last month</span>
         <a href="#" className="flex items-center text-blue-500 hover:underline">

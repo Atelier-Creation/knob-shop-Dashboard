@@ -14,11 +14,25 @@ export const createProduct = async (data) => {
   return res.data;
 };
 
+export const getAllProduct = async () => {
+  try {
+    const res = await axios.get(BASE_URL);
+    return res.data; // full response includes pagination info
+  } catch (err) {
+    console.error("Error fetching products:", err);
+    throw err;
+  }
+};
 
-  export const getAllProducts = async () => {
-    const res = await axios.get(`${BASE_URL}`);
-    return res.data.data;
-  };
+export const getAllProducts = async (params = {}) => {
+  try {
+    const res = await axios.get(BASE_URL, { params });
+    return res.data; // full response includes pagination info
+  } catch (err) {
+    console.error("Error fetching products:", err);
+    throw err;
+  }
+};
 
   export const getProductById = async (id) => {
       const res = await axios.get(`${BASE_URL}/${id}`);

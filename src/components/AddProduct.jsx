@@ -14,7 +14,6 @@ import ColorVariants from "./ColorVariants";
 import ColorNamer from "color-namer";
 import ImageUploader from "./ImageUploader";
 import toast from "react-hot-toast";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import app from "/keyfeaturesIcon/app.svg";
 import key from "/keyfeaturesIcon/manual_key.svg";
 import card from "/keyfeaturesIcon/card.png";
@@ -35,6 +34,9 @@ export default function AddProduct({
 
   useEffect(() => {
     if (initialData) {
+      if (initialData.category) {
+        localStorage.setItem("selectedCategoryId", initialData.category);
+      }
       setProductData({
         dimensions: {
           weight: initialData?.dimensions?.weight || "",
@@ -136,16 +138,6 @@ export default function AddProduct({
     },
   ]);
 
-  // const handleImageReorder = (result) => {
-  //   if (!result.destination) return;
-
-  //   const reordered = Array.from(productData.images);
-  //   const [removed] = reordered.splice(result.source.index, 1);
-  //   reordered.splice(result.destination.index, 0, removed);
-
-  //   updateField("images", reordered);
-  // };
-
   const resetForm = () => {
     setProductData({
       name: "",
@@ -204,9 +196,7 @@ export default function AddProduct({
     const name = ColorNamer(hex)?.ntc?.[0]?.name || "Custom Color";
     return name === "Grey" ? "Custom Color" : name;
   }
-  const cloudName = import.meta.env.cloudinery_name || "dpea4iv0b"; // Corrected env variable name
-  const uploadPreset =
-    import.meta.env.cloudinery_presetName || "product_upload"; // Corrected env variable name
+
   // Configure DigitalOcean Spaces
   const s3 = new S3Client({
     endpoint: "https://blr1.digitaloceanspaces.com",
@@ -247,50 +237,6 @@ export default function AddProduct({
     } catch (err) {
       console.error("Error uploading to Spaces:", err);
       throw err;
-    }
-  }
-
-  async function uploadToCloudinary(file) {
-    if (!file) return null;
-
-    // ✅ Skip if already a Cloudinary URL
-    if (
-      typeof file === "string" &&
-      file.startsWith("https://res.cloudinary.com")
-    ) {
-      console.log("Skipping upload: already a Cloudinary URL");
-      return file;
-    }
-
-    // ✅ Ensure it's a File or Blob
-    if (!(file instanceof File || file instanceof Blob)) {
-      console.warn("Invalid file type. Must be a File or Blob.");
-      return null;
-    }
-
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", uploadPreset);
-
-    try {
-      const res = await fetch(
-        `https://api.cloudinary.com/v1_1/${cloudName}/upload`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error.message || "Cloudinary upload failed");
-      }
-
-      const data = await res.json();
-      return data.secure_url;
-    } catch (error) {
-      console.error("Error uploading to Cloudinary:", error);
-      throw error;
     }
   }
 
@@ -352,18 +298,6 @@ export default function AddProduct({
       const validTechSpecs = productData.techSpecs?.filter(
         (s) => s.title || s.value
       );
-
-      // Upload main product images concurrently
-      // const mainImageUploadTasks = productData.images.map((fileOrUrl) => {
-      //   if (typeof fileOrUrl === "string") return Promise.resolve(fileOrUrl);
-      //   if (fileOrUrl instanceof File)
-      //     return uploadToCloudinary(fileOrUrl).then((res) => res.url || res);
-      //   return Promise.resolve(null);
-      // });
-
-      // const uploadedMainImages = (
-      //   await Promise.all(mainImageUploadTasks)
-      // ).filter(Boolean);
 
       // Upload variant images concurrently
       const uploadedVariants = await Promise.all(
@@ -433,7 +367,11 @@ export default function AddProduct({
         stock: Number(productData.stock),
         description: productData.description.trim(),
         brand: productData.brand.trim(),
-        category: localStorage.getItem("selectedCategoryId"),
+        category:
+          mode === "edit"
+            ? productData.category || initialData?.category
+            : localStorage.getItem("selectedCategoryId"),
+
         status: productData.status,
         images: allVariantImages,
         video: productData.video,
@@ -483,30 +421,24 @@ export default function AddProduct({
     }
   };
 
-const updateField = (keyPath, value) => {
-  setProductData((prev) => {
-    const keys = keyPath.split(".");
-    const updated = { ...prev };
+  const updateField = (keyPath, value) => {
+    setProductData((prev) => {
+      const keys = keyPath.split(".");
+      const updated = { ...prev };
 
-    let current = updated;
-    for (let i = 0; i < keys.length - 1; i++) {
-      const k = keys[i];
-      current[k] = { ...current[k] };
-      current = current[k];
-    }
+      let current = updated;
+      for (let i = 0; i < keys.length - 1; i++) {
+        const k = keys[i];
+        current[k] = { ...current[k] };
+        current = current[k];
+      }
 
-    const lastKey = keys[keys.length - 1];
-    current[lastKey] = value;
+      const lastKey = keys[keys.length - 1];
+      current[lastKey] = value;
 
-    return updated;
-  });
-};
-
-
-  // const handleImageUpload = async (event) => {
-  //   const files = Array.from(event.target.files);
-  //   updateField("images", [...productData.images, ...files]);
-  // };
+      return updated;
+    });
+  };
 
   const handleFeatureImage = (imageUrl, index) => {
     updateFeatureField(index, "image", imageUrl);
@@ -769,86 +701,6 @@ const updateField = (keyPath, value) => {
           />
         ))}
       </div>
-      {/* Product Images Upload Section */}
-      {/* <div className="mb-6">
-        <label className="block mb-2 font-medium text-sm text-gray-700">
-          Product Images *
-        </label>
-
-        <label className="flex flex-col items-center justify-center gap-2 w-full h-40 border border-dashed border-blue-300 bg-blue-50 rounded-md cursor-pointer transition hover:bg-blue-100">
-          <div className="flex flex-col items-center text-gray-500">
-            <ImagePlus size={28} />
-            <p className="text-sm font-medium mt-1">
-              <span className="text-blue-600 underline">Click to Upload</span>{" "}
-              or
-            </p>
-            <p className="text-xs">Drag & Drop</p>
-          </div>
-          <input
-            type="file"
-            multiple
-            className="hidden"
-            onChange={handleImageUpload}
-          />
-        </label>
-
-        <DragDropContext onDragEnd={handleImageReorder}>
-          <Droppable droppableId="images" direction="horizontal">
-            {(provided) => (
-              <div
-                className="flex flex-wrap gap-3 mt-4"
-                ref={provided.innerRef}
-                {...provided.droppableProps}
-              >
-                {productData.images.map((img, index) => (
-                  <Draggable
-                    key={index}
-                    draggableId={`img-${index}`}
-                    index={index}
-                  >
-                    {(provided) => (
-                      <div
-                        className={`relative rounded-md overflow-hidden border border-gray-300 shadow-sm ${
-                          index === 0 ? "w-48 h-48" : "w-24 h-24"
-                        }`}
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                      >
-                        <img
-                          src={
-                            typeof img === "string"
-                              ? img
-                              : URL.createObjectURL(img)
-                          }
-                          alt={`Product ${index}`}
-                          className="w-full h-full object-cover"
-                        />
-                        <button
-                          type="button"
-                          onClick={() =>
-                            updateField(
-                              "images",
-                              productData.images.filter((_, i) => i !== index)
-                            )
-                          }
-                          className="absolute top-1 right-1 w-8 h-8 rounded-full bg-black/30 border-2 border-gray-100 flex items-center justify-center text-white/80 hover:bg-red-500 hover:text-white"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    )}
-                  </Draggable>
-                ))}
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
-        </DragDropContext>
-        <p className="text-xs mt-4 text-gray-500">
-          Please Upload 1:1 Size images only
-        </p>
-      </div> */}
       <Section title="Brochure (PDF)" />
       <div>
         <label className="block mb-1 font-medium">Upload Brochure (PDF)</label>

@@ -28,7 +28,7 @@ const navItems = [
       { label: "Add category", path: "/categories-products/category" },
       { label: "Product List", path: "/categories-products/product-list" },
       // { label: "Bulk Upload", path: "/categories-products/bulk-add-product" },
-      { label: "Product Status", path: "/categories-products/product-status" },
+      // { label: "Product Status", path: "/categories-products/product-status" },
       // { label: "Filters", path: "/categories-products/filters" },
     ],
   },
@@ -47,11 +47,11 @@ const navItems = [
     icon: <Percent size={20} />,
     path: "/deals-discounts",
   },
-  {
-    label: "Product & Stock",
-    icon: <Boxes size={20} />,
-    path: "/product-stock",
-  },
+  // {
+  //   label: "Product & Stock",
+  //   icon: <Boxes size={20} />,
+  //   path: "/product-stock",
+  // },
   {
     label: "Reports & Analytics",
     icon: <BarChart2 size={20} />,
@@ -79,12 +79,12 @@ const navItems = [
     icon: <Star size={20} />,
     path: "/reviews-ratings",
   },
-  { label: "Shipping & Tax", icon: <Truck size={20} />, path: "/shipping-tax" },
-  {
-    label: "Policy Page's",
-    icon: <HeartHandshake size={20} />,
-    path: "/policy-edit",
-  },
+  // { label: "Shipping & Tax", icon: <Truck size={20} />, path: "/shipping-tax" },
+  // {
+  //   label: "Policy Page's",
+  //   icon: <HeartHandshake size={20} />,
+  //   path: "/policy-edit",
+  // },
 ];
 
 const Sidebar = ({ isOpen, toggleSidebar, searchQuery }) => {

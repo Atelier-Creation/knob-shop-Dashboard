@@ -167,29 +167,70 @@ export default function ImageUploader({
       setIsUploading(true);
       setUploadProgress(0);
 
+      // Helper: upload files in batches of 3 (configurable)
+      const uploadInBatches = async (files, batchSize = 3) => {
+        const results = [];
+        for (let i = 0; i < files.length; i += batchSize) {
+          const batch = files.slice(i, i + batchSize);
+
+          // Upload this batch in parallel
+          const batchResults = await Promise.allSettled(
+            batch.map(async (file) => {
+              let attempts = 0;
+              while (attempts < 3) {
+                try {
+                  const result = await uploadToSpaces(file, (p) => {
+                    // Each file progress contributes proportionally
+                    const fileIndex = i + batch.indexOf(file);
+                    const overallPercent = Math.min(
+                      100,
+                      Math.round(
+                        ((fileIndex + p / 100) / acceptedFiles.length) * 100
+                      )
+                    );
+                    setUploadProgress(overallPercent);
+                  });
+                  return result;
+                } catch (err) {
+                  attempts++;
+                  console.warn(
+                    `Retrying ${file.name} (attempt ${attempts}/3)...`
+                  );
+                  if (attempts >= 3) throw err;
+                  await new Promise((res) => setTimeout(res, 1000 * attempts));
+                }
+              }
+            })
+          );
+
+          // Merge successful results
+          batchResults.forEach((res) => {
+            if (res.status === "fulfilled" && res.value?.url)
+              results.push(res.value);
+          });
+
+          // Optional delay between batches to avoid hitting rate limits
+          await new Promise((res) => setTimeout(res, 300));
+        }
+        return results;
+      };
+
       if (multiple) {
-        const uploadedImagesData = [];
         try {
-          for (const file of acceptedFiles) {
-            const { url, deleteToken } = await uploadToSpaces(
-              file,
-              setUploadProgress
-            );
-            console.log(url);
-            uploadedImagesData.push({ url, deleteToken });
-          }
+          const uploadedImagesData = await uploadInBatches(acceptedFiles, 3);
           if (onImageUpload) onImageUpload(uploadedImagesData);
           toast.success(
-            `${acceptedFiles.length} image(s) uploaded successfully`
+            `${uploadedImagesData.length} image(s) uploaded successfully`
           );
         } catch (err) {
           console.error("Multi-image upload failed", err);
-          toast.error("Failed to upload all images.");
+          toast.error("Some uploads failed — check console for details");
         } finally {
           setIsUploading(false);
           setUploadProgress(0);
         }
       } else {
+        // Single image mode
         const file = acceptedFiles[0];
         const localUrl = URL.createObjectURL(file);
         setSinglePreview(localUrl);
@@ -198,7 +239,6 @@ export default function ImageUploader({
             file,
             setUploadProgress
           );
-          console.log(url);
           setSingleDeleteToken(deleteToken);
           if (onImageUpload) onImageUpload(url);
           toast.success("Image uploaded successfully");

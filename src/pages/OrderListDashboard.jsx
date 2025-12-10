@@ -31,7 +31,7 @@ const columns = [
   { label: "Actions" },
 ];
 
-const tabs = [{ label: "All" }, { label: "Paid", icon: CircleCheck }];
+const tabs = [{ label: "All" }, { label: "Success", icon: CircleCheck }];
 
 export default function OrderListDashboard() {
   const [orders, setOrders] = useState([]);
@@ -42,6 +42,7 @@ export default function OrderListDashboard() {
   const [activeTab, setActiveTab] = useState("All");
   const [paymentStatus, setPaymentStatus] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
+  const [timeFilter, setTimeFilter] = useState("All"); // 🕓 New state
   const navigate = useNavigate();
 
   const [sortField, setSortField] = useState(null);
@@ -60,7 +61,6 @@ export default function OrderListDashboard() {
         setLoading(false);
       }
     };
-
     fetchOrders();
   }, []);
 
@@ -74,30 +74,60 @@ export default function OrderListDashboard() {
   };
 
   const filteredOrders = useMemo(() => {
-    return orders.filter((order) => {
-      const customer = order?.userId?.name || "";
-      const id = order?.orderId || "";
-      const status = order?.paymentStatus || "";
-      const date = order?.createdAt || "";
-      const total = order?.totalAmount ?? "";
+  const now = new Date();
 
-      const statusMatch =
-        activeTab === "All" || status.toLowerCase() === activeTab.toLowerCase();
+  // 🗓️ Last 7 days (rolling week, including today)
+  const endOfWeek = new Date();
+  endOfWeek.setHours(23, 59, 59, 999);
 
-      const paymentMatch =
-        paymentStatus === "All" ||
-        status.toLowerCase() === paymentStatus.toLowerCase();
+  const startOfWeek = new Date();
+  startOfWeek.setDate(endOfWeek.getDate() - 6); // 7 days ago
+  startOfWeek.setHours(0, 0, 0, 0);
 
-      const searchMatch =
-        customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        status.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        date.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        total.toString().toLowerCase().includes(searchTerm.toLowerCase());
+  // 🗓️ Current month range
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  endOfMonth.setHours(23, 59, 59, 999);
 
-      return statusMatch && paymentMatch && searchMatch;
-    });
-  }, [orders, activeTab, paymentStatus, searchTerm]);
+  return orders.filter((order) => {
+    const customer = order?.userId?.name || "";
+    const id = order?.orderId || "";
+    const orderStatus = order?.status || "";
+    const paymentStat = order?.paymentStatus || "";
+    const date = new Date(order?.createdAt);
+    const total = order?.totalAmount ?? "";
+
+    // 🟢 Tab filter
+    const statusMatch =
+      activeTab === "All" ||
+      (activeTab === "Confirmed"
+        ? paymentStat.toLowerCase() === "success"
+        : orderStatus.toLowerCase() === "confirmed");
+
+    // 🟣 Payment status filter
+    const paymentMatch =
+      paymentStatus === "All" ||
+      paymentStat.toLowerCase() === paymentStatus.toLowerCase();
+
+    // 🕓 Time filter (updated)
+    const timeMatch =
+      timeFilter === "All" ||
+      (timeFilter === "This Week (last 7D)" && date >= startOfWeek && date <= endOfWeek) ||
+      (timeFilter === "This Month" && date >= startOfMonth && date <= endOfMonth);
+
+    // 🔍 Search filter
+    const searchMatch =
+      customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      orderStatus.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      paymentStat.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      total.toString().toLowerCase().includes(searchTerm.toLowerCase());
+
+    setCurrentPage(1);
+    return statusMatch && paymentMatch && timeMatch && searchMatch;
+  });
+}, [orders, activeTab, paymentStatus, searchTerm, timeFilter]);
+
 
   const computedFailedOrders = useMemo(() => {
     const abandoned = orders.filter((o) => o.status === "Abandoned").length;
@@ -132,11 +162,12 @@ export default function OrderListDashboard() {
       },
     ];
   }, [orders]);
+
   const computedOrderStatuses = useMemo(() => {
     const total = orders.length;
-    const pending = orders.filter((o) => o.status === "Pending").length;
-    const completed = orders.filter((o) => o.status === "Completed").length;
-    const processing = orders.filter((o) => o.status === "Processing").length;
+    const pending = orders.filter((o) => o.status === "pending").length;
+    const confirmed = orders.filter((o) => o.status === "confirmed").length;
+    const cancelled = orders.filter((o) => o.status === "cancelled").length;
 
     return [
       {
@@ -152,14 +183,14 @@ export default function OrderListDashboard() {
         iconColor: "text-emerald-500",
       },
       {
-        label: "Completed",
-        value: completed.toLocaleString(),
+        label: "Confirmed",
+        value: confirmed.toLocaleString(),
         icon: CheckCircle,
         iconColor: "text-blue-500",
       },
       {
-        label: "Processing",
-        value: processing.toLocaleString(),
+        label: "cancelled",
+        value: cancelled.toLocaleString(),
         icon: Loader2,
         iconColor: "text-rose-500",
       },
@@ -171,6 +202,24 @@ export default function OrderListDashboard() {
     const end = start + itemsPerPage;
     return filteredOrders.slice(start, end);
   }, [filteredOrders, currentPage]);
+
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+
+  const getPagination = () => {
+    const pages = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (currentPage > 4) pages.push("left-ellipsis");
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+      for (let i = start; i <= end; i++) pages.push(i);
+      if (currentPage < totalPages - 3) pages.push("right-ellipsis");
+      pages.push(totalPages);
+    }
+    return pages;
+  };
 
   return (
     <div className="space-y-6">
@@ -188,8 +237,6 @@ export default function OrderListDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <StatCardGroup title="Order Statuses" stats={computedOrderStatuses} />
-
-        {/* <StatCardGroup title="Order Statuses" stats={computedOrderStatuses} /> */}
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -209,12 +256,13 @@ export default function OrderListDashboard() {
                   activeTab === label ? "text-green-600" : "text-gray-600"
                 }`}
               />
-            )}{" "}
+            )}
             {label}
           </button>
         ))}
       </div>
 
+      {/* Filters */}
       <div className="flex flex-col md:flex-row md:items-center md:gap-6 gap-3 mb-4">
         <div className="flex items-center w-full md:w-1/3 max-w-full rounded-full border border-gray-400 overflow-hidden">
           <input
@@ -234,12 +282,31 @@ export default function OrderListDashboard() {
             label="Payment Status"
             value={paymentStatus}
             onChange={(e) => setPaymentStatus(e.target.value)}
-            options={["All", "Paid", "Pending", "Cancelled"]}
+            options={[
+              "All",
+              "success",
+              "Pending",
+              "failure",
+              "refund",
+              "timeout",
+            ]}
+            islable={false}
+          />
+        </div>
+
+        {/* 🕓 New Time Filter */}
+        <div className="w-full md:w-1/4">
+          <Dropdown
+            label="Time Filter"
+            value={timeFilter}
+            onChange={(e) => setTimeFilter(e.target.value)}
+            options={["All", "This Week (last 7D)", "This Month"]}
             islable={false}
           />
         </div>
       </div>
 
+      {/* Table */}
       <ResponsiveTableCard
         data={paginatedOrders}
         columns={columns}
@@ -249,7 +316,7 @@ export default function OrderListDashboard() {
               {order.orderId}
             </td>
             <td className="p-3">{order?.userId?.name}</td>
-            <td className="p-3">{order.totalAmount}</td>
+            <td className="p-3">{Number(order?.finalAmount).toFixed(2)}</td>
             <td className="p-3">
               <StatusBadge status={order.paymentStatus} orderId={order._id} />
             </td>
@@ -299,14 +366,16 @@ export default function OrderListDashboard() {
             <div className="text-sm text-gray-600 space-y-1">
               <div>
                 <span className="font-medium text-gray-900">Customer:</span>{" "}
-                {paginatedOrders.customer}
+                {paginatedOrders?.userId?.name}
               </div>
               <div>
                 <span className="font-medium text-gray-900">Total:</span>{" "}
-                {paginatedOrders.total}
+                {Number(paginatedOrders.totalAmount).toFixed(2)}
               </div>
               <div>
-                <span className="font-medium text-gray-900">Status:</span>{" "}
+                <span className="font-medium text-gray-900">
+                  Order Status:
+                </span>{" "}
                 <StatusBadge
                   status={paginatedOrders.status}
                   orderId={paginatedOrders._id}
@@ -314,7 +383,7 @@ export default function OrderListDashboard() {
               </div>
               <div>
                 <span className="font-medium text-gray-900">Date:</span>{" "}
-                {paginatedOrders.date}
+                {new Date(paginatedOrders.createdAt).toLocaleDateString()}
               </div>
               <div className="p-1">
                 <button
@@ -337,6 +406,7 @@ export default function OrderListDashboard() {
         )}
       />
 
+      {/* Pagination */}
       <div className="flex flex-col-reverse gap-4 md:flex-row justify-between items-center pt-4">
         <p className="text-xs text-gray-500">
           Showing{" "}
@@ -355,35 +425,32 @@ export default function OrderListDashboard() {
             Previous
           </button>
 
-          {Array.from({
-            length: Math.ceil(filteredOrders.length / itemsPerPage),
-          }).map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setCurrentPage(i + 1)}
-              className={`px-3 py-1 rounded cursor-pointer ${
-                currentPage === i + 1
-                  ? "bg-blue-500 text-white"
-                  : "text-gray-700 hover:bg-gray-200"
-              }`}
-            >
-              {i + 1}
-            </button>
-          ))}
+          {getPagination().map((p, i) =>
+            p === "left-ellipsis" || p === "right-ellipsis" ? (
+              <span key={i} className="px-2">
+                ...
+              </span>
+            ) : (
+              <button
+                key={i}
+                onClick={() => setCurrentPage(p)}
+                className={`px-3 py-1 rounded cursor-pointer ${
+                  currentPage === p
+                    ? "bg-blue-500 text-white"
+                    : "text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                {p}
+              </button>
+            )
+          )}
 
           <button
             className="px-3 py-1 border border-gray-300 rounded disabled:opacity-50 cursor-pointer"
             onClick={() =>
-              setCurrentPage((prev) =>
-                Math.min(
-                  prev + 1,
-                  Math.ceil(filteredOrders.length / itemsPerPage)
-                )
-              )
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
             }
-            disabled={
-              currentPage === Math.ceil(filteredOrders.length / itemsPerPage)
-            }
+            disabled={currentPage === totalPages}
           >
             Next
           </button>

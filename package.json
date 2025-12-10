@@ -28,6 +28,7 @@
     "axios": "^1.10.0",
     "bootstrap-icons": "^1.13.1",
     "color-namer": "^1.4.0",
+    "jspdf": "^3.0.4",
     "lexical": "^0.33.1",
     "lottie-react": "^2.4.1",
     "lucide-react": "^0.525.0",

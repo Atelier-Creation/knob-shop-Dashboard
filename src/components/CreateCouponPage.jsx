@@ -3,7 +3,7 @@ import { Plus, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { createCoupon } from "../api/dealsApi";
-import { getAllProducts as getProducts } from "../api/productApi";
+import { getAllProduct } from "../api/productApi";
 import { RxBookmark } from "react-icons/rx";
 import SearchableProductDropdown from "../components/SearchableProductDropdown";
 
@@ -28,7 +28,8 @@ const CreateCouponPage = () => {
 
   const fetchProducts = async () => {
     try {
-      const data = await getProducts();
+      const data = await getAllProduct();
+      console.log("Fetched products:", data);
       setProducts(data);
     } catch (err) {
       console.error("Failed to fetch products:", err);

@@ -26,7 +26,13 @@ export const updateEssentials = async (id, data) => {
   const res = await axios.put(`${BASE_URL}/${id}`, data);
   return res.data;
 };
-
+export const updateCardInEssentials = async (essentialsId, cardId, data) => {
+  const res = await axios.put(
+    `${BASE_URL}/${essentialsId}/cards/${cardId}`,
+    data
+  );
+  return res.data;
+};
 // Delete essentials section by ID
 export const deleteEssentials = async (id) => {
   const res = await axios.delete(`${BASE_URL}/${id}`);

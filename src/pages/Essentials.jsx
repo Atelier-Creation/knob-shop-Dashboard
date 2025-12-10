@@ -209,13 +209,15 @@ const Essentials = () => {
             categories,
             products,
             bgImage,
+            sliders,
             _id,
           }) => ({
             number,
-            title,
-            description,
+            title: title?.trim(), // 🔥 remove trailing & leading spaces
+            description: description?.trim(),
             categories,
             products,
+            sliders,
             bgImage,
             _id,
           })

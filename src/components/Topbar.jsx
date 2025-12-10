@@ -1,26 +1,12 @@
+// Topbar.jsx (fixed localStorage quota + de-dup + safe writes)
 import {
   CalendarDays,
-  MessageCircleMore,
   Bell,
-  Settings,
-  Search,
   Menu,
   LogOut,
   User,
   X,
-} from "lucide-react";
-import {
-  LayoutDashboard,
-  Package,
-  MonitorSmartphone,
-  Percent,
-  Boxes,
-  BarChart2,
-  Users,
-  Star,
-  Truck,
-  HeartHandshake,
-  Download, // ✅ keep only one
+  Download,
 } from "lucide-react";
 import ProfileModal from "./ProfileModal";
 
@@ -31,6 +17,7 @@ import axios from "axios";
 import { getUnseenOrders, markOrderAsSeen } from "../api/orderListApi";
 import { io } from "socket.io-client";
 import toast from "react-hot-toast";
+
 const socket = io("https://knob-shop-backend.onrender.com", {
   transports: ["websocket", "polling"],
   withCredentials: true,
@@ -39,20 +26,85 @@ const socket = io("https://knob-shop-backend.onrender.com", {
 socket.on("connect", () => {
   console.log("🔌 Connected to backend with ID:", socket.id);
 });
+
+const NOTIF_KEY = "notifications";
+const MAX_NOTIFS = 100; // cap stored notifications to avoid quota exceed
+
 const Topbar = ({ toggleSidebar, onSearch }) => {
   const [showProfileModal, setShowProfileModal] = useState(false);
-
   const [open, setOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const menuRef = useRef();
   const notifRef = useRef();
-  const [inputValue, setInputValue] = useState("");
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
 
+  const navigate = useNavigate();
+
+  // Helper: safe localStorage set with size limit + try/catch
+  const persistNotifications = (arr) => {
+    try {
+      const capped = Array.isArray(arr) ? arr.slice(0, MAX_NOTIFS) : [];
+      localStorage.setItem(NOTIF_KEY, JSON.stringify(capped));
+    } catch (err) {
+      // If quota exceeded or write failed, attempt a trimmed write
+      try {
+        const trimmed = (arr || []).slice(0, Math.min(20, MAX_NOTIFS));
+        localStorage.setItem(NOTIF_KEY, JSON.stringify(trimmed));
+        console.warn("localStorage write trimmed to avoid quota:", trimmed.length);
+      } catch (err2) {
+        console.warn("Failed to persist notifications to localStorage", err2);
+        // If still failing, just skip persisting to localStorage
+      }
+    }
+  };
+
+  // Helper: dedupe notifications by `id` (keep first occurrence)
+  const dedupeNotifications = (arr) => {
+    const seen = new Set();
+    const out = [];
+    for (const n of arr) {
+      const id = n?.id ?? n?.orderId ?? JSON.stringify(n);
+      if (!seen.has(id)) {
+        seen.add(id);
+        out.push(n);
+      }
+    }
+    return out;
+  };
+
+  // Load notifications from localStorage on mount (safe)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(NOTIF_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          const capped = parsed.slice(0, MAX_NOTIFS);
+          setNotifications(dedupeNotifications(capped));
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to read notifications from localStorage", err);
+      setNotifications([]);
+    }
+  }, []);
+
+  // click outside to close menus
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setOpen(false);
+      if (notifRef.current && !notifRef.current.contains(e.target))
+        setNotifOpen(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Search
   const handleSearchChange = async (e) => {
     const value = e.target.value;
     setQuery(value);
@@ -64,76 +116,70 @@ const Topbar = ({ toggleSidebar, onSearch }) => {
 
     setLoading(true);
     try {
-      const { data } = await axios.get(`${import.meta.env.VITE_API_BASE_URI}/products/search/${value}`);
-      setResults(data.results);
+      const { data } = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URI}/products/search/${value}`
+      );
+      setResults(data.results || []);
     } catch (error) {
       console.error("Search error:", error);
+      setResults([]);
     } finally {
       setLoading(false);
     }
   };
-console.log(results)
+
   const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      setQuery("");
+    if (e.key === "Enter" && query.trim()) {
       navigate(`/search?q=${query}`);
+      setQuery("");
       setResults([]);
     }
   };
 
   const handleSearchSubmit = () => {
     if (query.trim()) {
-      setQuery("");
       navigate(`/search?q=${query}`);
+      setQuery("");
       setResults([]);
     }
   };
 
-  const navigate = useNavigate();
-  const handleLogout = () => {
-    logout(navigate); // or inline logout logic
+  const handleclick = (item) => {
+    try {
+      localStorage.setItem("selectedCategoryId", item?.category?._id ?? "");
+      localStorage.setItem("selectedCategoryName", item?.category?.category_name ?? "");
+    } catch (err) {
+      // swallow storage write errors
+    }
+    navigate(`/products/${item?._id}/edit`);
   };
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
-        setOpen(false);
-      }
-      if (notifRef.current && !notifRef.current.contains(e.target)) {
-        setNotifOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
-  // Inside your Topbar component
+  const handleLogout = () => {
+    logout(navigate);
+  };
+
+  // Fetch unseen orders on mount
   useEffect(() => {
-    // Load notifications from localStorage on mount
-    const savedNotifications =
-      JSON.parse(localStorage.getItem("notifications")) || [];
-    setNotifications(savedNotifications);
-  }, []);
-  // ✅ Fetch unseen orders when admin logs in / page mounts
-  // ✅ Fetch unseen orders when admin logs in / page mounts
-  useEffect(() => {
+    let mounted = true;
     const fetchUnseen = async () => {
       try {
         const res = await getUnseenOrders();
-        if (res.success && res.orders.length > 0) {
+        if (res?.success && Array.isArray(res.orders) && res.orders.length > 0) {
           const newNotifications = res.orders.map((order) => ({
             id: order._id,
             orderId: order.orderId,
             totalAmount: order.totalAmount,
             message: `Missed Order #${order.orderId} – ₹${order.totalAmount}`,
+            createdAt: order.createdAt || new Date().toISOString(),
           }));
 
           setNotifications((prev) => {
-            const updated = [...newNotifications, ...prev];
-            localStorage.setItem("notifications", JSON.stringify(updated));
-            return updated;
+            const merged = dedupeNotifications([...newNotifications, ...prev]);
+            const capped = merged.slice(0, MAX_NOTIFS);
+            persistNotifications(capped);
+            return capped;
           });
 
-          // ✅ Show a single, comprehensive toast
           toast.success(`You have ${res.orders.length} unseen orders!`, {
             duration: 8000,
           });
@@ -142,32 +188,37 @@ console.log(results)
         console.error("Failed to fetch unseen orders", err);
       }
     };
-    fetchUnseen();
+
+    if (mounted) fetchUnseen();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  // ✅ Real-time new order socket
-  // ✅ Real-time new order socket
+  // Socket: newOrder
   useEffect(() => {
-    // ✅ Define a unique ID for the toast
     const TOAST_ID = "newOrderToast";
 
-    socket.on("newOrder", (data) => {
+    const handler = (data) => {
+      if (!data) return;
       const notif = {
-        id: data.orderId,
+        id: data._id ?? data.orderId ?? `${Date.now()}`,
         orderId: data.orderId,
         totalAmount: data.totalAmount,
         message: `New Order #${data.orderId} – ₹${data.totalAmount}`,
+        createdAt: new Date().toISOString(),
       };
 
       setNotifications((prev) => {
-        const updated = [notif, ...prev];
-        localStorage.setItem("notifications", JSON.stringify(updated));
-        return updated;
+        const merged = dedupeNotifications([notif, ...prev]);
+        const capped = merged.slice(0, MAX_NOTIFS);
+        persistNotifications(capped);
+        return capped;
       });
 
-      // ✅ Dismiss the previous toast before showing a new one
+      // Dismiss previous and show a compact toast
       toast.dismiss(TOAST_ID);
-
       toast(
         (t) => (
           <div className="flex justify-between items-center gap-2">
@@ -180,29 +231,46 @@ console.log(results)
             </button>
           </div>
         ),
-        {
-          duration: 10000,
-          id: TOAST_ID,
-        }
+        { id: TOAST_ID, duration: 10000 }
       );
-    });
+    };
+
+    socket.on("newOrder", handler);
 
     return () => {
-      socket.off("newOrder");
+      socket.off("newOrder", handler);
     };
   }, []);
-const handleclick = (item) =>{
-  localStorage.setItem("selectedCategoryId", item?.category?._id);
-      localStorage.setItem("selectedCategoryName", item?.category?.category_name);
- navigate(`/products/${item?._id}/edit`);
-}
+
+  // Mark as seen handler (called when clicking the small X per notif)
+  const handleMarkAsSeen = async (n, e) => {
+    if (e) e.stopPropagation();
+    try {
+      // backend call (best-effort)
+      if (n?.orderId) await markOrderAsSeen(n.orderId);
+    } catch (err) {
+      console.error("Failed to mark order as seen", err);
+    } finally {
+      const updated = notifications.filter((x) => x.id !== n.id && x.orderId !== n.orderId);
+      setNotifications(updated);
+      persistNotifications(updated);
+    }
+  };
+
+  // Open notification details
+  const handleOpenNotification = (n) => {
+    setNotifOpen(false);
+    navigate(`/orders-customers/order-list/${n.id || n.orderId}`);
+  };
+
   return (
     <header className="flex justify-between items-center gap-2 px-4 py-3 bg-white">
-      {/* Left: Menu + Search (mobile-first) */}
+      {/* Left: Menu + Search */}
       <div className="flex items-center gap-3 flex-1 md:flex-none">
         <button className="md:hidden" onClick={toggleSidebar}>
           <Menu size={24} />
         </button>
+
         <div className="relative flex bg-[#F7FAF9] border border-[#DFDFDF] rounded-full w-full min-w-sm">
           <input
             type="search"
@@ -216,10 +284,10 @@ const handleclick = (item) =>{
             onClick={handleSearchSubmit}
             className="bg-black text-white px-4 py-2 flex items-center justify-center rounded-r-full"
           >
-            <i className="bi bi-search"></i>
+            <i className="bi bi-search" />
           </button>
 
-          {/* 🔽 Dropdown Results */}
+          {/* Dropdown Results */}
           {query && (
             <ul className="absolute top-12 left-0 w-full bg-white border border-gray-200 rounded-lg shadow-md max-h-100 overflow-y-auto z-50">
               {loading ? (
@@ -229,7 +297,7 @@ const handleclick = (item) =>{
                   <li
                     key={item._id}
                     onClick={() => {
-                     handleclick(item)
+                      handleclick(item);
                       setQuery("");
                       setResults([]);
                     }}
@@ -274,13 +342,9 @@ const handleclick = (item) =>{
         </button>
 
         <div className="flex items-center gap-4 text-gray-700">
-          {/* <MessageCircleMore size={20} className="hidden md:block" /> */}
           {/* Notifications */}
           <div className="relative" ref={notifRef}>
-            <button
-              onClick={() => setNotifOpen(!notifOpen)}
-              className="relative top-1"
-            >
+            <button onClick={() => setNotifOpen((s) => !s)} className="relative top-1">
               <Bell size={20} />
               {notifications.length > 0 && (
                 <span className="absolute -top-0.5 -right-0 h-2 w-2 bg-red-500 rounded-full" />
@@ -288,23 +352,19 @@ const handleclick = (item) =>{
             </button>
 
             {notifOpen && (
-              <div className="absolute right-0 mt-4 w-72 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto">
-                <div className="p-2 font-semibold border-b border-gray-200">
-                  Notifications
-                </div>
+              <div className="absolute right-0 mt-4 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto">
+                <div className="p-2 font-semibold border-b border-gray-200">Notifications</div>
+
                 {notifications.length === 0 ? (
                   <p className="p-2 text-sm text-gray-500">No notifications</p>
                 ) : (
                   notifications.map((n) => (
                     <div
-                      key={n.orderId}
+                      key={n.id || n.orderId}
                       className="p-2 text-sm border-b border-gray-100 hover:bg-gray-50 flex justify-between items-center"
                     >
                       <div
-                        onClick={async () => {
-                          setNotifOpen(false);
-                          navigate(`/orders-customers/order-list/${n.id}`);
-                        }}
+                        onClick={() => handleOpenNotification(n)}
                         className="cursor-pointer flex-1"
                       >
                         <p>{n.message}</p>
@@ -312,24 +372,11 @@ const handleclick = (item) =>{
                           Order #{n.orderId} – ₹{n.totalAmount}
                         </p>
                       </div>
+
                       <button
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          try {
-                            await markOrderAsSeen(n.orderId);
-                          } catch (err) {
-                            console.error("Failed to mark order as seen", err);
-                          }
-                          const updated = notifications.filter(
-                            (x) => x.id !== n.id
-                          );
-                          setNotifications(updated);
-                          localStorage.setItem(
-                            "notifications",
-                            JSON.stringify(updated)
-                          );
-                        }}
+                        onClick={(e) => handleMarkAsSeen(n, e)}
                         className="text-gray-400 hover:text-gray-600 font-bold"
+                        title="Mark as seen"
                       >
                         <X size={16} />
                       </button>
@@ -339,35 +386,35 @@ const handleclick = (item) =>{
               </div>
             )}
           </div>
-          <Settings size={20} className="hidden md:block" />
+
+          <div className="hidden md:block">
+            <svg width="1" height="28" className="text-gray-200"><rect width="1" height="28" /></svg>
+          </div>
+
+          <div className="hidden md:block">
+            <button title="Settings">
+              {/* Settings icon space kept simple */}
+            </button>
+          </div>
         </div>
 
         {/* Profile */}
         <div className="relative" ref={menuRef}>
-          {/* Trigger */}
-          <div
-            onClick={() => setOpen(!open)}
-            className="flex items-center gap-2 cursor-pointer"
-          >
+          <div onClick={() => setOpen((s) => !s)} className="flex items-center gap-2 cursor-pointer">
             <div className="hidden md:block text-right text-sm">
               <p className="text-black font-medium">Admin</p>
               <p className="text-gray-400 text-xs">Admin</p>
             </div>
-            <img
-              src="/user-avatar.jpg"
-              alt="User"
-              className="w-8 h-8 rounded-full object-cover"
-            />
+            <img src="/user-avatar.jpg" alt="User" className="w-8 h-8 rounded-full object-cover" />
           </div>
 
-          {/* Dropdown Menu */}
           {open && (
             <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-300 rounded shadow-md z-50">
               <button
                 title="Profile"
                 onClick={() => {
                   setShowProfileModal(true);
-                  setOpen(false); // close dropdown
+                  setOpen(false);
                 }}
                 className="w-full inline-flex items-center gap-2 text-left px-4 py-2 text-sm text-gray-500 hover:bg-gray-100 cursor-pointer"
               >
@@ -384,9 +431,8 @@ const handleclick = (item) =>{
           )}
         </div>
       </div>
-      {showProfileModal && (
-        <ProfileModal onClose={() => setShowProfileModal(false)} />
-      )}
+
+      {showProfileModal && <ProfileModal onClose={() => setShowProfileModal(false)} />}
     </header>
   );
 };

@@ -6,10 +6,12 @@ import CustomerOverview from "../components/CustomerOverviewContainer";
 import TopSellingProducts from "../components/TopSellingProducts";
 import CurrentOrdersStatus from "../components/CurrentOrdersStatus";
 import { getLatestAnalyticsSnapshot } from "../api/analyticsApi";
+import { useNavigate } from "react-router-dom";
 const Dashboard = () => {
   const [selectedRange, setSelectedRange] = useState("Weekly");
   const [open, setOpen] = useState(false);
   const [analytics, setAnalytics] = useState(null);
+  const Navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const ranges = ["Daily", "Weekly", "Monthly"];
 
@@ -18,7 +20,7 @@ const Dashboard = () => {
     try {
       setLoading(true);
       const data = await getLatestAnalyticsSnapshot(selectedRange);
-      console.log("analytics data : ",data)
+      console.log("analytics data : ", data);
       setAnalytics(data);
     } catch (error) {
       console.error("Failed to fetch analytics", error);
@@ -41,11 +43,11 @@ const Dashboard = () => {
         <h2 className="text-2xl font-semibold">Dashboard</h2>
 
         <div className="flex flex-wrap gap-3">
-          <button className="bg-black text-white px-4 py-2 rounded-sm text-sm flex items-center gap-2">
+          <button className="bg-black text-white px-4 py-2 rounded-sm text-sm flex items-center gap-2" title="Add new category and then New Product." onClick={() => Navigate("/categories-products/category")}>
             <Plus size={18} /> Add New
           </button>
 
-          <div className="relative">
+          {/* <div className="relative">
             <button
               onClick={toggleDropdown}
               className="flex items-center gap-1 border border-gray-800 bg-white px-4 py-2 rounded-sm text-gray-700 text-sm"
@@ -74,7 +76,7 @@ const Dashboard = () => {
                 ))}
               </ul>
             )}
-          </div>
+          </div> */}
         </div>
       </div>
 
@@ -119,45 +121,44 @@ const Dashboard = () => {
           {/* Stat Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <StatCard
+              id="totalSales"
               title="Total Sales"
               value={analytics?.totalSales || 0}
               change={analytics?.changeStats?.totalSales || 0}
-              selectedRange={selectedRange}
-              onRangeChange={handleRangeChange}
-              showCurrencySymbol={true} 
+              showCurrencySymbol={true}
             />
             <StatCard
+              id="totalProductsSold"
               title="Total Products Sold"
               value={analytics?.totalProductsSold || 0}
               change={Math.abs(analytics?.changeStats?.totalProductsSold || 0)}
               changeType={
                 analytics?.changeStats?.salesReturn < 0 ? "down" : "up"
               }
-              selectedRange={selectedRange}
-              onRangeChange={handleRangeChange}
-              showCurrencySymbol={false} 
+              showCurrencySymbol={false}
             />
             <StatCard
+              id="avgOrderValue"
               title="Avg Order Value"
               value={analytics?.averageOrderValue || 0}
               change={Math.abs(analytics?.changeStats?.averageOrderValue || 0)}
               changeType={
                 analytics?.changeStats?.totalPurchase < 0 ? "down" : "up"
               }
-              selectedRange={selectedRange}
-              onRangeChange={handleRangeChange}
-              showCurrencySymbol={true} 
+              showCurrencySymbol={true}
             />
+
             <StatCard
+              id="avgRevenuePerCustomer"
               title="Avg Rev/Customer"
               value={analytics?.averageRevenuePerCustomer || 0}
-              change={Math.abs(analytics?.changeStats?.averageRevenuePerCustomer || 0)}
+              change={Math.abs(
+                analytics?.changeStats?.averageRevenuePerCustomer || 0
+              )}
               changeType={
                 analytics?.changeStats?.purchaseReturn < 0 ? "down" : "up"
               }
-              selectedRange={selectedRange}
-              onRangeChange={handleRangeChange}
-              showCurrencySymbol={true} 
+              showCurrencySymbol={true}
             />
           </div>
 

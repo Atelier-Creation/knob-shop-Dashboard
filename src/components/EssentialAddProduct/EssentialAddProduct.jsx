@@ -3,14 +3,10 @@ import { Plus, X } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { RxBookmark } from "react-icons/rx";
 import "./EssentialAddProduct.css";
-import { getAllProducts as getProducts } from "../../api/productApi";
+
+import { getProductById, getAllProducts } from "../../api/productApi";
 import SearchableProductDropdown from "../SearchableProductDropdown";
-import ImageUploader from "../ImageUploader";
-import {
-  createEssentials,
-  updateEssentials,
-  getEssentials,
-} from "../../api/essentialApi";
+import { getEssentials, updateCardInEssentials } from "../../api/essentialApi";
 import CarouselAdmin from "../CarouselAdmin";
 
 function EssentialAddProduct() {
@@ -20,108 +16,168 @@ function EssentialAddProduct() {
 
   const [essentials, setEssentials] = useState(null);
   const [products, setProducts] = useState([]);
-  const [selectedProducts, setSelectedProducts] = useState([]); // ✅ array
-  const [cardData, setCardData] = useState(null);
+  const [selectedProducts, setSelectedProducts] = useState([]);
+  const [selectedProductDetails, setSelectedProductDetails] = useState({});
+  const [sliderData, setSliderData] = useState([]);
 
+  const [cardData, setCardData] = useState(null);
   const [categories, setCategories] = useState([]);
   const [essentialImage, setEssentialImage] = useState(null);
   const [bannerImage, setBannerImage] = useState(null);
   const [relatedImages, setRelatedImages] = useState([]);
 
-  // Load card data from router or localStorage
   useEffect(() => {
-    if (location.state?.cardData) setCardData(location.state.cardData);
-    else {
+    if (essentials && cardIndex != null) {
+      const card = essentials.cards[cardIndex];
+      setSliderData(card.sliders || []);
+    }
+  }, [essentials, cardIndex]);
+
+  // Load cardData
+  useEffect(() => {
+    if (location.state?.cardData) {
+      setCardData(location.state.cardData);
+    } else {
       const stored = localStorage.getItem("selectedCardData");
       if (stored) setCardData(JSON.parse(stored));
     }
   }, [location.state]);
 
-  // Fetch essentials + products
-  // Fetch essentials + products
-useEffect(() => {
-  const loadData = async () => {
-    try {
-      const essentialsRes = await getEssentials();
-      const essentialsData = essentialsRes[0];
-      setEssentials(essentialsData);
+  // Load essentials + existing card info
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const essentialsRes = await getEssentials();
+        const essentialsData = essentialsRes[0];
+        setEssentials(essentialsData);
 
-      if (typeof cardIndex === "number" && essentialsData.cards?.[cardIndex]) {
-        const currentCard = essentialsData.cards[cardIndex];
+        if (typeof cardIndex === "number") {
+          const currentCard = essentialsData.cards?.[cardIndex];
 
-        // ✅ Pre-fill existing products
-        if (Array.isArray(currentCard.products)) {
-          // if products are stored as objects, extract ids
-          const productIds = currentCard.products.map((p) =>
-            typeof p === "object" ? p._id : p
-          );
-          setSelectedProducts(productIds);
+          if (currentCard) {
+            if (Array.isArray(currentCard.products)) {
+              const ids = currentCard.products.map((p) =>
+                typeof p === "object" ? p._id : p
+              );
+              setSelectedProducts(ids);
+            }
+
+            setCategories(currentCard.categories || []);
+            setEssentialImage(
+              currentCard.bgImage ? { url: currentCard.bgImage } : null
+            );
+            setBannerImage(
+              currentCard.bannerImageUrl
+                ? { url: currentCard.bannerImageUrl }
+                : null
+            );
+            setRelatedImages(currentCard.images || []);
+          }
         }
-
-        // also restore other card info
-        setCategories(currentCard.categories || []);
-        setEssentialImage(currentCard.bgImage ? { url: currentCard.bgImage } : null);
-        setBannerImage(currentCard.bannerImageUrl ? { url: currentCard.bannerImageUrl } : null);
-        setRelatedImages(currentCard.images || []);
+      } catch (err) {
+        console.error("Failed to load essentials:", err);
       }
-    } catch (err) {
-      console.error("Failed to fetch essentials:", err);
-    }
-  };
+    };
 
-  loadData();
-  fetchProducts();
-}, [cardIndex]);
+    load();
+    fetchProducts();
+  }, [cardIndex]);
 
-
+  // Fetch product list for dropdown search
   const fetchProducts = async () => {
     try {
-      const data = await getProducts();
-      setProducts(data);
+      const data = await getAllProducts({ page: 1, limit: 500 });
+      setProducts(data.data || []);
     } catch (err) {
       console.error("Failed to fetch products:", err);
     }
   };
 
+  // Load details for each selected product
+  useEffect(() => {
+    const loadSelectedProductDetails = async () => {
+      for (let id of selectedProducts) {
+        if (!selectedProductDetails[id]) {
+          try {
+            const product = await getProductById(id);
+            setSelectedProductDetails((prev) => ({
+              ...prev,
+              [id]: product,
+            }));
+          } catch (err) {
+            console.error("Failed to fetch product details:", id, err);
+          }
+        }
+      }
+    };
+    loadSelectedProductDetails();
+  }, [selectedProducts]);
+
   // Save handler
   const handleSave = async () => {
     if (!essentials) return;
 
-    const updatedEssentials = { ...essentials };
-    const targetCard = { ...updatedEssentials.cards[cardIndex] };
+    const cardId = essentials.cards[cardIndex]._id;
 
-    // Update card fields dynamically
-    targetCard.number = cardData?.cardNumber || targetCard.number;
-    targetCard.title = cardData?.cardTitle || targetCard.title;
-    targetCard.description =
-      cardData?.cardDescription || targetCard.description;
-
-    // Images
-    targetCard.bgImage = essentialImage?.url || targetCard.bgImage;
-    targetCard.bannerImageUrl = bannerImage?.url || targetCard.bannerImageUrl;
-    targetCard.images = relatedImages.length
-      ? relatedImages
-      : targetCard.images;
-
-    // Categories
-    targetCard.categories = categories;
-
-    // Products
-    targetCard.products = selectedProducts.length
-      ? selectedProducts
-      : targetCard.products;
-
-    // Put card back in essentials
-    updatedEssentials.cards[cardIndex] = targetCard;
+    const targetCard = {
+      number: cardData?.cardNumber || essentials.cards[cardIndex].number,
+      title: cardData?.cardTitle || essentials.cards[cardIndex].title,
+      description:
+        cardData?.cardDescription || essentials.cards[cardIndex].description,
+      bgImage: essentialImage?.url || essentials.cards[cardIndex].bgImage,
+      bannerImageUrl:
+        bannerImage?.url || essentials.cards[cardIndex].bannerImageUrl,
+      images: relatedImages.length
+        ? relatedImages
+        : essentials.cards[cardIndex].images,
+      categories,
+      products: selectedProducts,
+      sliders: sliderData,
+    };
 
     try {
-      console.log("Data to be saved:", updatedEssentials);
-      await updateEssentials(essentials._id, updatedEssentials);
-      alert("Essentials updated successfully!");
-      navigate("/edit-essential"); // go back
+      await updateCardInEssentials(essentials._id, cardId, targetCard);
+      alert("Card updated successfully!");
+      navigate("/edit-essential");
     } catch (err) {
-      console.error(err);
-      alert("Failed to update essentials.");
+      console.error("Error updating card:", err);
+      alert("Failed to update card.");
+    }
+  };
+
+  const handleRemoveProduct = async (id) => {
+    const updated = selectedProducts.filter((p) => p !== id);
+    setSelectedProducts(updated);
+    await syncProducts(updated);
+  };
+
+  const handleRemoveAllProducts = async () => {
+    if (!selectedProducts.length) return;
+
+    if (!window.confirm("Remove all products?")) return;
+
+    setSelectedProducts([]);
+    await syncProducts([]);
+  };
+
+  const syncProducts = async (updated) => {
+    if (!essentials || typeof cardIndex !== "number") return;
+    try {
+      const updatedEssentials = { ...essentials };
+      const targetCard = { ...updatedEssentials.cards[cardIndex] };
+
+      targetCard.products = updated;
+      updatedEssentials.cards[cardIndex] = targetCard;
+
+      await updateCardInEssentials(
+        essentials._id,
+        essentials.cards[cardIndex]._id,
+        { products: updated }
+      );
+
+      console.log("Products synced");
+    } catch (err) {
+      console.error("Failed syncing products:", err);
     }
   };
 
@@ -134,16 +190,28 @@ useEffect(() => {
       </div>
 
       <CarouselAdmin
-        essentials={essentials}
-        setEssentials={setEssentials}
-        cardIndex={cardIndex}
+        sliders={sliderData}
+        cardTitle={essentials?.cards?.[cardIndex]?.title}
+        onSliderChange={setSliderData}
       />
 
-      {/* Product Selector */}
+      {selectedProducts.length > 0 && (
+        <div className="flex justify-end mt-4">
+          <button
+            type="button"
+            onClick={handleRemoveAllProducts}
+            className="text-sm px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Remove All Products
+          </button>
+        </div>
+      )}
+
       <div className="grid gap-4 my-6">
         <label className="block mb-1 text-sm font-medium text-gray-700">
           Select Products
         </label>
+
         <SearchableProductDropdown
           products={products}
           multiple={true}
@@ -151,11 +219,11 @@ useEffect(() => {
           onSelectProduct={setSelectedProducts}
         />
 
-        {/* Show selected products */}
         {selectedProducts.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-2">
             {selectedProducts.map((id) => {
-              const product = products.find((p) => p._id === id);
+              const product = selectedProductDetails[id];
+
               return (
                 <div
                   key={id}
@@ -168,14 +236,12 @@ useEffect(() => {
                       alt=""
                     />
                   </div>
-                  <span>{product ? product.name : id}</span>
+
+                  <span>{product?.name || "Loading..."}</span>
+
                   <button
                     type="button"
-                    onClick={() =>
-                      setSelectedProducts(
-                        selectedProducts.filter((pid) => pid !== id)
-                      )
-                    }
+                    onClick={() => handleRemoveProduct(id)}
                     className="text-gray-500 m-2 hover:text-red-600"
                   >
                     <X size={14} />
@@ -187,7 +253,6 @@ useEffect(() => {
         )}
       </div>
 
-      {/* Save / Cancel buttons */}
       <div className="flex gap-4 mt-6">
         <Link
           to={"/edit-essential"}
@@ -195,6 +260,7 @@ useEffect(() => {
         >
           <X className="inline" size={18} /> Cancel
         </Link>
+
         <button
           type="button"
           onClick={handleSave}

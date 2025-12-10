@@ -22,7 +22,10 @@ async function uploadToSpaces(file) {
   if (!file) return null;
 
   const bucketName = "knobsshopcdn";
-  const fileKey = `uploads/${Date.now()}-${file.name}`;
+  const sanitizedFileName = file.name
+    .replace(/\s+/g, "_")      // replace spaces with underscores
+    .replace(/[^\w.\-]/g, ""); // remove invalid characters
+  const fileKey = `uploads/${Date.now()}-${sanitizedFileName}`;
 
   try {
     const parallelUploads3 = new Upload({
