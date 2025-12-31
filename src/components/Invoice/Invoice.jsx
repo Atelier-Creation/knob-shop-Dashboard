@@ -212,7 +212,7 @@ function Invoice() {
             
             <div>
                 {/* Header: Company Name & Buttons */}
-                <div className="flex flex-row-reverse justify-between items-center mb-6">
+                <div className="no-export flex flex-row-reverse justify-between items-center mb-6">
                     <div className="no-export flex gap-2">
 
                         <button onClick={handlePrint} className="bg-white border border-gray-300 text-gray-700 px-3 py-1 text-sm rounded hover:bg-gray-50 flex items-center gap-2">
@@ -223,7 +223,7 @@ function Invoice() {
                 </div>
 
                 {/* Info Block: From / To / Details */}
-                <div className="bg-invoice-gray p-6 -mx-4 mb-6 flex justify-between text-sm">
+                <div className="bg-invoice-gray p-3 -mx-4 mb-3 flex justify-between text-sm">
                     {/* FROM */}
                     <div className="w-1/3 pr-4">
                         <small className="block text-gray-500 uppercase font-semibold mb-1">From</small>
