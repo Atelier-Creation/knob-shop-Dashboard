@@ -52,11 +52,11 @@ const navItems = [
   //   icon: <Boxes size={20} />,
   //   path: "/product-stock",
   // },
-  {
-    label: "Reports & Analytics",
-    icon: <BarChart2 size={20} />,
-    path: "/reports-analytics",
-  },
+  // {
+  //   label: "Reports & Analytics",
+  //   icon: <BarChart2 size={20} />,
+  //   path: "/reports-analytics",
+  // },
   {
     label: "Orders & Customers",
     icon: <Users size={20} />,
@@ -69,10 +69,7 @@ const navItems = [
   {
     label: "Brochure Management",
     icon: <Download size={20} />,
-    children: [
-      { label: "Add Brochure", path: "/brochure/add" },
-      { label: "Brochure List", path: "/brochure/list" },
-    ],
+    path: "/brochure",
   },
   {
     label: "Reviews & Ratings",

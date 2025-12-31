@@ -13,6 +13,7 @@ export const login = (data) => {
   return axiosInstance.post("api/auth/login", data);
 };
 
+
 export const getUserById = async (userId) => {
   try {
     const res = await axios.get(`${Front_BASE_URL}/${userId}`);

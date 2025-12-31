@@ -9,7 +9,7 @@ const isTokenValid = () => {
     if (!payload.exp) return false;
 
     // Add 2 sec buffer
-    return Date.now() < payload.exp * 1000 - 2000;
+    return Date.now() < payload.exp * 1000;
   } catch (err) {
     console.error("Invalid token:", err);
     return false;

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { createProduct } from "../api/productApi";
-
 import {
   Plus,
   ImagePlus,
@@ -22,6 +21,7 @@ import remote from "/keyfeaturesIcon/remote.svg";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import TiptapEditor from "./TiptapEditor";
+import imageCompression from "browser-image-compression";
 
 export default function AddProduct({
   mode = "create",
@@ -207,6 +207,8 @@ export default function AddProduct({
     },
   });
 
+  
+
   async function uploadToSpaces(file) {
     if (!file) return null;
 
@@ -273,14 +275,56 @@ export default function AddProduct({
       if (!color.sizes || !color.sizes.length) {
         errors.push(`Add sizes for variant "${color.name}"`);
       }
-      if (!color.sizes.stock <= 0) {
-        errors.push(
-          "Stock cannot Be less than or equal to 0,it leads to move product state Out Off Stock"
-        );
-      }
+      color.sizes.forEach((size) => {
+        if (Number(size.stock) <= 0) {
+          errors.push(
+            `Stock must be greater than 0 for size "${size.label}" in color "${color.name}"`
+          );
+        }
+      });
     }
     return errors;
   };
+
+// Compress image before upload
+async function compressImage(file) {
+  return await imageCompression(file, {
+    maxSizeMB: 0.6,                // Reduce file size
+    maxWidthOrHeight: 1800,
+    useWebWorker: true,
+  });
+}
+
+
+// Upload images in batches instead of all at once (prevents freezing)
+async function uploadInBatches(files, batchSize = 3) {
+  const result = [];
+
+  for (let i = 0; i < files.length; i += batchSize) {
+    const chunk = files.slice(i, i + batchSize);
+
+    const uploaded = await Promise.all(
+      chunk.map(async (imgObj) => {
+
+        // If it's a new File, compress then upload
+        if (imgObj instanceof File) {
+          const compressed = await compressImage(imgObj);
+          return await uploadToSpaces(compressed);
+        }
+
+        // If already has url (editing mode), keep it
+        if (typeof imgObj === "object" && imgObj.url) return imgObj;
+
+        return null;
+      })
+    );
+
+    result.push(...uploaded.filter(Boolean));
+  }
+
+  return result;
+}
+
 
   const handleSaveProduct = async () => {
     const errors = validateProductData();
@@ -302,19 +346,7 @@ export default function AddProduct({
       // Upload variant images concurrently
       const uploadedVariants = await Promise.all(
         colors.map(async (color) => {
-          const variantImageTasks = color.images.map((imgObj) => {
-            if (imgObj instanceof File) {
-              return uploadToSpaces(imgObj).then((res) => ({
-                url: res.url,
-                deleteToken: res.deleteToken,
-              }));
-            } else if (typeof imgObj === "object" && imgObj.url) {
-              return Promise.resolve(imgObj);
-            }
-            return Promise.resolve(null);
-          });
-
-          const images = (await Promise.all(variantImageTasks)).filter(Boolean);
+          const images = await uploadInBatches(color.images, 2);
 
           return {
             title: color.name,
@@ -406,10 +438,11 @@ export default function AddProduct({
       console.log("Final Payload to be sent:", finalPayload);
       if (onSave) {
         await onSave(finalPayload);
+        resetForm();   
       } else {
         const response = await createProduct(finalPayload);
-        resetForm();
         toast.success("Product created successfully!");
+        resetForm();
         console.log("product Added", response);
       }
     } catch (err) {

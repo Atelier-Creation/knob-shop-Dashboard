@@ -61,8 +61,7 @@ function App() {
               path="categories-products/hidden"
               element={<CategoryAndProductPage />}
             />
-            <Route path="/brochure/add" element={<Brochuer />} />
-            <Route path="/brochure/list" element={<BroucherList />} />
+            <Route path="/brochure" element={<Brochuer />} />
             <Route
               path="categories-products/category/:id"
               element={<AddProduct />}

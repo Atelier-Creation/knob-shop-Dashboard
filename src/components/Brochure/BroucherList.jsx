@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { getAllBrochures, editBrochure, deleteBrochure } from "../../api/brochureApi";
+import {
+  getAllBrochures,
+  editBrochure,
+  deleteBrochure,
+} from "../../api/brochureApi";
 import { Pencil, Trash2, X } from "lucide-react";
 import toast from "react-hot-toast";
 import { S3Client } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
-import './Brochure.css'
+import "./Brochure.css";
 
 // Configure DigitalOcean Spaces
 const s3 = new S3Client({
@@ -54,7 +58,6 @@ async function uploadToSpaces(file, setUploading) {
     setUploading(false);
   }
 }
-
 
 function BrochureList() {
   const [brochures, setBrochures] = useState([]);
@@ -161,7 +164,7 @@ function BrochureList() {
           return;
         }
       }
-      
+
       await editBrochure(editingBrochure._id, brochureData);
       toast.success("Brochure updated successfully!");
       fetchData();
@@ -218,6 +221,14 @@ function BrochureList() {
           )}
         </div>
       </div>
+      {filteredBrochures.length === 0 && (
+        <div
+          onClick={() => handleSort("newest")}
+          className="mt-10 text-center text-gray-500 cursor-pointer"
+        >
+          No brochure is available
+        </div>
+      )}
       <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 mt-10">
         {filteredBrochures.map((item, index) => (
           <div
@@ -299,7 +310,9 @@ function BrochureList() {
                 />
               </div>
               <div>
-                <label className="block font-medium mb-1">Brochure Category</label>
+                <label className="block font-medium mb-1">
+                  Brochure Category
+                </label>
                 <input
                   type="text"
                   name="category"
@@ -309,7 +322,9 @@ function BrochureList() {
                 />
               </div>
               <div>
-                <label className="block font-medium mb-1">New Brochure File (Optional)</label>
+                <label className="block font-medium mb-1">
+                  New Brochure File (Optional)
+                </label>
                 <input
                   type="file"
                   name="pdfFile"

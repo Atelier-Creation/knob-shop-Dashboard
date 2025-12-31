@@ -130,7 +130,7 @@ export default function CategoryManager() {
       return;
     }
     const payload = {
-      category_name: categoryName,
+      category_name: categoryName?.trim(),
       description: brand,
       categoryImageUrl: imageData,
       bannerImageUrl: bannerImageData,
@@ -215,7 +215,7 @@ export default function CategoryManager() {
               type="text"
               placeholder="Category"
               value={categoryName}
-              onChange={(e) => setCategoryName(e.target.value.trim())}
+              onChange={(e) => setCategoryName(e.target.value)}
               className="w-full border border-gray-300 rounded-sm p-2 text-sm"
             />
             <input

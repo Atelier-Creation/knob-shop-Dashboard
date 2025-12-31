@@ -4,6 +4,7 @@ import "./Brochure.css";
 import toast from "react-hot-toast";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
+import BrochureList from "./BroucherList";
 
 const s3 = new S3Client({
   endpoint: "https://blr1.digitaloceanspaces.com",
@@ -91,6 +92,7 @@ function Brochure() {
   };
 
   return (
+    <>
     <form
       onSubmit={handleSubmit}
       className="pe-16 ps-8 py-6 space-y-6 font-inter text-sm text-[#1c1c1c]"
@@ -147,6 +149,9 @@ function Brochure() {
         </button>
       </div>
     </form>
+
+    <BrochureList/>
+    </>
   );
 }
 

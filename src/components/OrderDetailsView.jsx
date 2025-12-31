@@ -181,7 +181,11 @@ export default function OrderDetailsView() {
     userId: order.userId?._id || null,              // user ID
     paymentMethod: order.payment?.method || "online",
     invoiceDate: new Date().toLocaleDateString(),     // today
-    orderId: order.orderId                                 // order number
+    orderId: order.orderId,                                 // order number
+    company: {
+      companyName: order.company?.companyName || null,
+      GST: order.company?.GST || null
+    }
   };
 
   localStorage.setItem("latestInvoiceData", JSON.stringify(payload));

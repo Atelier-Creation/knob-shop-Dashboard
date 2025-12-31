@@ -28,7 +28,6 @@ const columns = [
   { label: "Payment Status" },
   { label: "Order Date" },
   { label: "View More" },
-  { label: "Actions" },
 ];
 
 const tabs = [{ label: "All" }, { label: "Success", icon: CircleCheck }];
@@ -336,7 +335,7 @@ export default function OrderListDashboard() {
                 View Details
               </button>
             </td>
-            <td className="p-3 relative">
+            {/* <td className="p-3 relative">
               <ActionMenu
                 isOpen={selectedMenu === order._id}
                 onClose={() => setSelectedMenu(null)}
@@ -344,7 +343,7 @@ export default function OrderListDashboard() {
                   setSelectedMenu(selectedMenu === order._id ? null : order._id)
                 }
               />
-            </td>
+            </td> */}
           </>
         )}
         renderCard={(paginatedOrders) => (
