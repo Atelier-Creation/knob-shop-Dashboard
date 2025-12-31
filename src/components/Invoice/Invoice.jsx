@@ -316,7 +316,7 @@ function Invoice() {
                                     <td className="p-3 text-gray-500">{i + 1}</td>
                                     <td className="p-3 font-medium text-invoice-dark">
                                         {item.productName || item.title || product.name}
-                                        <div className="text-xs text-gray-400 mt-1">{item.sku}</div>
+                                        <div className="text-xs text-gray-400 mt-1"><strong>SKU: </strong>{(item.sku && item.sku !== "N/A") ? item.sku : (product.productId || item.size)}</div>
                                     </td>
                                     <td className="p-3 text-center text-gray-500">{product.hsncode || "9983"}</td>
                                     <td className="p-3 text-center text-invoice-dark">{qty}</td>
@@ -340,9 +340,7 @@ function Invoice() {
                 <div className="bg-invoice-gray p-0 flex items-stretch relative overflow-hidden mb-3">
                     <div className="w-full flex">
                          <div className="w-2/3 p-4 flex justify-between gap-3 text-right text-sm text-gray-600 font-medium">
-                            <div>SUBTOTAL <span className="ml-2 text-invoice-dark font-mono flex items-center"><i className="bi bi-currency-rupee"></i> {subtotal.toFixed(2)}</span></div>
-                            <div>GST TOTAL <span className="ml-2 text-invoice-dark font-mono flex items-center"><i className="bi bi-currency-rupee"></i> {totalGST.toFixed(2)}</span></div>
-                            <div>ROUND OFF <span className="ml-2 text-invoice-dark font-mono flex items-center"><i className="bi bi-currency-rupee"></i> {roundOff}</span></div>
+                            <div>SUBTOTAL <span className="ml-2 text-invoice-dark font-mono flex items-center"><i className="bi bi-currency-rupee"></i> {subtotal.toFixed(2)-totalGST.toFixed(2)}</span></div>
                             {isTamilNadu ? (
                             <>
                                 <div className="flex flex-col justify-between mb-1">
@@ -360,6 +358,8 @@ function Invoice() {
                                     <span className="flex items-center"><i className="bi bi-currency-rupee"></i> {totalGST.toFixed(2)}</span>
                                 </div>
                          )}
+                            <div>GST TOTAL <span className="ml-2 text-invoice-dark font-mono flex items-center"><i className="bi bi-currency-rupee"></i> {totalGST.toFixed(2)}</span></div>
+                            <div>ROUND OFF <span className="ml-2 text-invoice-dark font-mono flex items-center"><i className="bi bi-currency-rupee"></i> {roundOff}</span></div>
                          </div>
                          <div className="w-1/3 bg-invoice-dark p-4 flex flex-col justify-center text-right text-white">
                             <span className="text-xs opacity-75 block">TOTAL</span>
