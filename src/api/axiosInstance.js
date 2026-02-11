@@ -15,4 +15,24 @@ axiosInstance.interceptors.request.use((config) => {
   return config;
 });
 
+// Add response interceptor to handle 401 errors
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // Don't redirect if the error is from the login page itself (invalid credentials)
+      if (error.config.url && error.config.url.includes("login")) {
+        return Promise.reject(error);
+      }
+
+      console.log("❌ Token expired or unauthorized. Logging out...");
+      localStorage.removeItem("authUser");
+      localStorage.removeItem("authEmail");
+      localStorage.removeItem("authToken");
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default axiosInstance;

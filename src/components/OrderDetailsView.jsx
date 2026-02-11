@@ -26,8 +26,8 @@ const formatCurrency = (num) =>
   new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
-    maximumFractionDigits: 2,
-  }).format(num);
+    maximumFractionDigits: 0,
+  }).format(Math.round(num));
 
 export default function OrderDetailsView() {
   const { id } = useParams();
@@ -172,25 +172,26 @@ export default function OrderDetailsView() {
 
   const handleInvoice = (order) => {
     // console.log("Generating invoice for order:", order);
-  const payload = {
-    shippingAddress: order.shippingAddress,          // full address
-    cartItems: order.items,                           // product list
-    totalAmount: order.totalAmount,     
-    discountAmount: order.payment.discountAmount || 0,
-    dtdcReferenceNumber: order.dtdcReferenceNumber || "PICKUP",
-    userId: order.userId?._id || null,              // user ID
-    paymentMethod: order.payment?.method || "online",
-    invoiceDate: new Date().toLocaleDateString(),     // today
-    orderId: order.orderId,                                 // order number
-    company: {
-      companyName: order.company?.companyName || null,
-      GST: order.company?.GST || null
-    }
-  };
+    const payload = {
+      shippingAddress: order.shippingAddress,          // full address
+      cartItems: order.items,                           // product list
+      totalAmount: order.totalAmount,
+      discountAmount: order.payment.discountAmount || 0,
+      dtdcReferenceNumber: order.dtdcReferenceNumber || "PICKUP",
+      userId: order.userId?._id || null,              // user ID
+      paymentMethod: order.payment?.method || "online",
+      invoiceDate: new Date().toLocaleDateString(),     // today
+      orderId: order.orderId,                                 // order number
+      company: {
+        companyName: order.company?.companyName || null,
+        GST: order.company?.GST || null
+      },
+      couponCode: order.payment?.couponCode || null
+    };
 
-  localStorage.setItem("latestInvoiceData", JSON.stringify(payload));
-  navigate("/invoice");
-};
+    localStorage.setItem("latestInvoiceData", JSON.stringify(payload));
+    navigate("/invoice");
+  };
 
   const handleDownloadLabel = async (labelCode) => {
     setDownloading(true);
@@ -329,16 +330,14 @@ export default function OrderDetailsView() {
                 <ChefHat className="w-4 h-4 text-gray-400" />
               )}
               <span
-                className={`text-[10px] md:text-xs mt-1 ${
-                  downloaded ? "font-medium text-black" : "text-gray-500"
-                }`}
+                className={`text-[10px] md:text-xs mt-1 ${downloaded ? "font-medium text-black" : "text-gray-500"
+                  }`}
               >
                 Preparing order
               </span>
               <div
-                className={`mt-2 w-full h-1 rounded-full ${
-                  downloaded ? "bg-black" : "bg-gray-200"
-                }`}
+                className={`mt-2 w-full h-1 rounded-full ${downloaded ? "bg-black" : "bg-gray-200"
+                  }`}
               />
             </div>
 
@@ -416,18 +415,17 @@ export default function OrderDetailsView() {
             ) : (
               <div className="relative">
                 <button
-                  className={`flex items-center border px-3 py-1.5 rounded-md font-medium shadow-sm transition-colors ${
-                    downloaded
+                  className={`flex items-center border px-3 py-1.5 rounded-md font-medium shadow-sm transition-colors ${downloaded
                       ? "bg-black/80 text-white/80"
                       : "hover:bg-black hover:text-white"
-                  }`}
+                    }`}
                   onClick={() => setShowLabelOptions(!showLabelOptions)}
                 >
                   {downloading
                     ? "Downloading..."
                     : downloaded
-                    ? "Shipping Label Downloaded"
-                    : "Create Shipping Label"}
+                      ? "Shipping Label Downloaded"
+                      : "Create Shipping Label"}
                   {!downloaded && !downloading && (
                     <ChevronRight className="w-4 h-4 ml-1" />
                   )}
@@ -481,7 +479,7 @@ export default function OrderDetailsView() {
                         <span className="text-xs inline-flex font-bold mt-1 items-center gap-2">
                           Color:
                           {/^#([0-9A-F]{3}){1,2}$/i.test(item.color) ||
-                          /^rgb/.test(item.color) ? (
+                            /^rgb/.test(item.color) ? (
                             <span
                               style={{
                                 backgroundColor: item.color,
@@ -531,17 +529,16 @@ export default function OrderDetailsView() {
               <span
                 className={`
         text-xs font-semibold rounded-full px-2 py-0.5 capitalize
-        ${
-          order.payment.Paymentstatus === "success"
-            ? "text-green-700 bg-green-100"
-            : order.payment.Paymentstatus === "pending"
-            ? "text-yellow-700 bg-yellow-100"
-            : order.payment.Paymentstatus === "failure"
-            ? "text-red-700 bg-red-100"
-            : order.payment.Paymentstatus === "refund"
-            ? "text-blue-700 bg-blue-100"
-            : "text-gray-700 bg-gray-100"
-        }
+        ${order.payment.Paymentstatus === "success"
+                    ? "text-green-700 bg-green-100"
+                    : order.payment.Paymentstatus === "pending"
+                      ? "text-yellow-700 bg-yellow-100"
+                      : order.payment.Paymentstatus === "failure"
+                        ? "text-red-700 bg-red-100"
+                        : order.payment.Paymentstatus === "refund"
+                          ? "text-blue-700 bg-blue-100"
+                          : "text-gray-700 bg-gray-100"
+                  }
       `}
               >
                 {order.payment.Paymentstatus}
@@ -725,9 +722,8 @@ export default function OrderDetailsView() {
                     setUpdatingStatus(false);
                   }
                 }}
-                className={`px-4 py-2 rounded-md text-white ${
-                  updatingStatus ? "bg-gray-400" : "bg-black hover:bg-gray-800"
-                }`}
+                className={`px-4 py-2 rounded-md text-white ${updatingStatus ? "bg-gray-400" : "bg-black hover:bg-gray-800"
+                  }`}
               >
                 {updatingStatus ? "Updating..." : "Confirm"}
               </button>

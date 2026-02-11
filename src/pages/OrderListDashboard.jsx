@@ -73,59 +73,59 @@ export default function OrderListDashboard() {
   };
 
   const filteredOrders = useMemo(() => {
-  const now = new Date();
+    const now = new Date();
 
-  // 🗓️ Last 7 days (rolling week, including today)
-  const endOfWeek = new Date();
-  endOfWeek.setHours(23, 59, 59, 999);
+    // 🗓️ Last 7 days (rolling week, including today)
+    const endOfWeek = new Date();
+    endOfWeek.setHours(23, 59, 59, 999);
 
-  const startOfWeek = new Date();
-  startOfWeek.setDate(endOfWeek.getDate() - 6); // 7 days ago
-  startOfWeek.setHours(0, 0, 0, 0);
+    const startOfWeek = new Date();
+    startOfWeek.setDate(endOfWeek.getDate() - 6); // 7 days ago
+    startOfWeek.setHours(0, 0, 0, 0);
 
-  // 🗓️ Current month range
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-  endOfMonth.setHours(23, 59, 59, 999);
+    // 🗓️ Current month range
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    endOfMonth.setHours(23, 59, 59, 999);
 
-  return orders.filter((order) => {
-    const customer = order?.userId?.name || "";
-    const id = order?.orderId || "";
-    const orderStatus = order?.status || "";
-    const paymentStat = order?.paymentStatus || "";
-    const date = new Date(order?.createdAt);
-    const total = order?.totalAmount ?? "";
+    return orders.filter((order) => {
+      const customer = order?.userId?.name || "";
+      const id = order?.orderId || "";
+      const orderStatus = order?.status || "";
+      const paymentStat = order?.paymentStatus || "";
+      const date = new Date(order?.createdAt);
+      const total = order?.totalAmount ?? "";
 
-    // 🟢 Tab filter
-    const statusMatch =
-      activeTab === "All" ||
-      (activeTab === "Confirmed"
-        ? paymentStat.toLowerCase() === "success"
-        : orderStatus.toLowerCase() === "confirmed");
+      // 🟢 Tab filter
+      const statusMatch =
+        activeTab === "All" ||
+        (activeTab === "Confirmed"
+          ? paymentStat.toLowerCase() === "success"
+          : orderStatus.toLowerCase() === "confirmed");
 
-    // 🟣 Payment status filter
-    const paymentMatch =
-      paymentStatus === "All" ||
-      paymentStat.toLowerCase() === paymentStatus.toLowerCase();
+      // 🟣 Payment status filter
+      const paymentMatch =
+        paymentStatus === "All" ||
+        paymentStat.toLowerCase() === paymentStatus.toLowerCase();
 
-    // 🕓 Time filter (updated)
-    const timeMatch =
-      timeFilter === "All" ||
-      (timeFilter === "This Week (last 7D)" && date >= startOfWeek && date <= endOfWeek) ||
-      (timeFilter === "This Month" && date >= startOfMonth && date <= endOfMonth);
+      // 🕓 Time filter (updated)
+      const timeMatch =
+        timeFilter === "All" ||
+        (timeFilter === "This Week (last 7D)" && date >= startOfWeek && date <= endOfWeek) ||
+        (timeFilter === "This Month" && date >= startOfMonth && date <= endOfMonth);
 
-    // 🔍 Search filter
-    const searchMatch =
-      customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      orderStatus.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      paymentStat.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      total.toString().toLowerCase().includes(searchTerm.toLowerCase());
+      // 🔍 Search filter
+      const searchMatch =
+        customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        orderStatus.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        paymentStat.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        total.toString().toLowerCase().includes(searchTerm.toLowerCase());
 
-    setCurrentPage(1);
-    return statusMatch && paymentMatch && timeMatch && searchMatch;
-  });
-}, [orders, activeTab, paymentStatus, searchTerm, timeFilter]);
+      setCurrentPage(1);
+      return statusMatch && paymentMatch && timeMatch && searchMatch;
+    });
+  }, [orders, activeTab, paymentStatus, searchTerm, timeFilter]);
 
 
   const computedFailedOrders = useMemo(() => {
@@ -243,17 +243,15 @@ export default function OrderListDashboard() {
           <button
             key={label}
             onClick={() => setActiveTab(label)}
-            className={`px-2 py-2 text-sm flex items-center gap-1 cursor-pointer ${
-              activeTab === label
+            className={`px-2 py-2 text-sm flex items-center gap-1 cursor-pointer ${activeTab === label
                 ? "border-b-2 border-black text-black font-medium"
                 : "text-gray-500"
-            }`}
+              }`}
           >
             {Icon && (
               <Icon
-                className={`w-4 h-4 ${
-                  activeTab === label ? "text-green-600" : "text-gray-600"
-                }`}
+                className={`w-4 h-4 ${activeTab === label ? "text-green-600" : "text-gray-600"
+                  }`}
               />
             )}
             {label}
@@ -315,7 +313,7 @@ export default function OrderListDashboard() {
               {order.orderId}
             </td>
             <td className="p-3">{order?.userId?.name}</td>
-            <td className="p-3">{Number(order?.finalAmount).toFixed(2)}</td>
+            <td className="p-3">{Math.round(Number(order?.finalAmount))}</td>
             <td className="p-3">
               <StatusBadge status={order.paymentStatus} orderId={order._id} />
             </td>
@@ -369,7 +367,7 @@ export default function OrderListDashboard() {
               </div>
               <div>
                 <span className="font-medium text-gray-900">Total:</span>{" "}
-                {Number(paginatedOrders.totalAmount).toFixed(2)}
+                {Math.round(Number(paginatedOrders.totalAmount))}
               </div>
               <div>
                 <span className="font-medium text-gray-900">
@@ -433,11 +431,10 @@ export default function OrderListDashboard() {
               <button
                 key={i}
                 onClick={() => setCurrentPage(p)}
-                className={`px-3 py-1 rounded cursor-pointer ${
-                  currentPage === p
+                className={`px-3 py-1 rounded cursor-pointer ${currentPage === p
                     ? "bg-blue-500 text-white"
                     : "text-gray-700 hover:bg-gray-200"
-                }`}
+                  }`}
               >
                 {p}
               </button>

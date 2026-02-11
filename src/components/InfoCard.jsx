@@ -1,13 +1,15 @@
-import {ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-export const InfoCard = ({ icon, title, value, selected }) => {
-   return (
+export const InfoCard = ({ icon, title, value, selected, path }) => {
+  const navigate = useNavigate();
+
+  return (
     <div
-      className={`flex items-center justify-between gap-2 p-4 rounded-lg transition-all ${
-        selected
+      className={`flex items-center justify-between gap-2 p-4 rounded-lg transition-all ${selected
           ? "bg-[#0C1D2C] text-white"
           : "bg-[#EFEFEF] text-gray-800 hover:shadow"
-      }`}
+        }`}
     >
       <div className="flex flex-col gap-3">
         <h3 className="text-2xl font-bold">{value}</h3>
@@ -16,7 +18,11 @@ export const InfoCard = ({ icon, title, value, selected }) => {
           <p className="text-xs mt-1 text-inherit">{title}</p>
         </div>
       </div>
-      <div className="bg-white p-2 rounded-full flex items-center justify-center">
+      <div
+        className={`bg-white p-2 rounded-full flex items-center justify-center ${path ? "cursor-pointer hover:bg-gray-200" : ""
+          }`}
+        onClick={() => path && navigate(path)}
+      >
         <ChevronRight size={"1rem"} className="text-black" />
       </div>
     </div>

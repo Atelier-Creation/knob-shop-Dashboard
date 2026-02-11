@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import CustomerOverview from "./CustomerOverview";
 import { InfoCard } from "./InfoCard";
-import {getLatestAnalyticsSnapshot} from '../api/analyticsApi'
+import { getLatestAnalyticsSnapshot } from '../api/analyticsApi'
 import { useEffect, useState } from "react";
 // const cards = [
 //   {
@@ -57,6 +57,7 @@ const CustomerOverviewContainer = () => {
       title: "Users",
       value: loading ? "..." : analyticsData?.totalUsers?.toLocaleString() || "0",
       selected: true, // highlighted (dark) card
+      path: "/orders-customers/customer-list",
     },
     {
       id: 2,
@@ -64,6 +65,7 @@ const CustomerOverviewContainer = () => {
       title: "Customers",
       value: loading ? "..." : analyticsData?.totalCustomers?.toLocaleString() || "0",
       selected: false,
+      path: "/orders-customers/customer-list",
     },
     {
       id: 3,
@@ -71,6 +73,7 @@ const CustomerOverviewContainer = () => {
       title: "Orders",
       value: loading ? "..." : analyticsData?.totalOrders?.toLocaleString() || "0",
       selected: false,
+      path: "/orders-customers/order-list",
     },
   ];
 
@@ -88,13 +91,14 @@ const CustomerOverviewContainer = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-          {cards.map(({ id, icon, title, value, selected }) => (
+          {cards.map(({ id, icon, title, value, selected, path }) => (
             <InfoCard
               key={id}
               icon={icon}
               title={title}
               value={value}
               selected={selected}
+              path={path}
             />
           ))}
         </div>

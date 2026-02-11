@@ -1,12 +1,29 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "./components/Sidebar";
 import Topbar from "./components/Topbar";
 import { Outlet, useNavigate } from "react-router-dom";
+import { isTokenValid } from "./utils/authUtils";
 
 const Layout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkToken = () => {
+      if (!isTokenValid()) {
+        console.log("Token expired during active session. Logging out.");
+        localStorage.removeItem("authUser");
+        localStorage.removeItem("authEmail");
+        localStorage.removeItem("authToken");
+        navigate("/login");
+      }
+    };
+
+    const interval = setInterval(checkToken, 30000); // Check every 30s
+    return () => clearInterval(interval);
+  }, [navigate]);
+
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };

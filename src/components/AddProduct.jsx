@@ -47,16 +47,16 @@ export default function AddProduct({
         ...initialData,
         productFeatures: initialData.features?.length
           ? initialData.features.map((f) => ({
-              heading: f.heading || "",
-              description: f.description || "",
-              image: f.image || "",
-            }))
+            heading: f.heading || "",
+            description: f.description || "",
+            image: f.image || "",
+          }))
           : [{ heading: "", description: "", image: "" }],
         techSpecs: initialData.tech_spec?.length
           ? initialData.tech_spec.map((s) => ({
-              title: s.title || "",
-              value: s.value || "",
-            }))
+            title: s.title || "",
+            value: s.value || "",
+          }))
           : [{ title: "", value: "" }],
 
         installation: {
@@ -207,7 +207,7 @@ export default function AddProduct({
     },
   });
 
-  
+
 
   async function uploadToSpaces(file) {
     if (!file) return null;
@@ -276,9 +276,9 @@ export default function AddProduct({
         errors.push(`Add sizes for variant "${color.name}"`);
       }
       color.sizes.forEach((size) => {
-        if (Number(size.stock) <= 0) {
+        if (Number(size.stock) < 0) {
           errors.push(
-            `Stock must be greater than 0 for size "${size.label}" in color "${color.name}"`
+            `Stock cannot be negative for size "${size.label}" in color "${color.name}"`
           );
         }
       });
@@ -286,44 +286,44 @@ export default function AddProduct({
     return errors;
   };
 
-// Compress image before upload
-async function compressImage(file) {
-  return await imageCompression(file, {
-    maxSizeMB: 0.6,                // Reduce file size
-    maxWidthOrHeight: 1800,
-    useWebWorker: true,
-  });
-}
-
-
-// Upload images in batches instead of all at once (prevents freezing)
-async function uploadInBatches(files, batchSize = 3) {
-  const result = [];
-
-  for (let i = 0; i < files.length; i += batchSize) {
-    const chunk = files.slice(i, i + batchSize);
-
-    const uploaded = await Promise.all(
-      chunk.map(async (imgObj) => {
-
-        // If it's a new File, compress then upload
-        if (imgObj instanceof File) {
-          const compressed = await compressImage(imgObj);
-          return await uploadToSpaces(compressed);
-        }
-
-        // If already has url (editing mode), keep it
-        if (typeof imgObj === "object" && imgObj.url) return imgObj;
-
-        return null;
-      })
-    );
-
-    result.push(...uploaded.filter(Boolean));
+  // Compress image before upload
+  async function compressImage(file) {
+    return await imageCompression(file, {
+      maxSizeMB: 0.6,                // Reduce file size
+      maxWidthOrHeight: 1800,
+      useWebWorker: true,
+    });
   }
 
-  return result;
-}
+
+  // Upload images in batches instead of all at once (prevents freezing)
+  async function uploadInBatches(files, batchSize = 3) {
+    const result = [];
+
+    for (let i = 0; i < files.length; i += batchSize) {
+      const chunk = files.slice(i, i + batchSize);
+
+      const uploaded = await Promise.all(
+        chunk.map(async (imgObj) => {
+
+          // If it's a new File, compress then upload
+          if (imgObj instanceof File) {
+            const compressed = await compressImage(imgObj);
+            return await uploadToSpaces(compressed);
+          }
+
+          // If already has url (editing mode), keep it
+          if (typeof imgObj === "object" && imgObj.url) return imgObj;
+
+          return null;
+        })
+      );
+
+      result.push(...uploaded.filter(Boolean));
+    }
+
+    return result;
+  }
 
 
   const handleSaveProduct = async () => {
@@ -438,7 +438,7 @@ async function uploadInBatches(files, batchSize = 3) {
       console.log("Final Payload to be sent:", finalPayload);
       if (onSave) {
         await onSave(finalPayload);
-        resetForm();   
+        resetForm();
       } else {
         const response = await createProduct(finalPayload);
         toast.success("Product created successfully!");
@@ -934,11 +934,10 @@ async function uploadInBatches(files, batchSize = 3) {
             {mode === "edit" ? (
               <>
                 <button
-                  className={`px-4 py-2 rounded-md text-white ${
-                    isSaving
+                  className={`px-4 py-2 rounded-md text-white ${isSaving
                       ? "bg-gray-500 cursor-not-allowed"
                       : "bg-black cursor-pointer"
-                  }`}
+                    }`}
                   onClick={handleSaveProduct}
                   disabled={isSaving}
                 >
@@ -1034,9 +1033,8 @@ const Field = ({
         placeholder={placeholder || label}
         onChange={(e) => set?.(e.target.value)}
         onWheel={(e) => e.target.blur()}
-        className={`w-full border border-gray-300 rounded-md px-3 py-[10px] focus:ring-1 ring-gray-300 outline-0 ${
-          prefix ? "pl-6" : ""
-        } ${suffix ? "pr-6" : ""} ${extra}`}
+        className={`w-full border border-gray-300 rounded-md px-3 py-[10px] focus:ring-1 ring-gray-300 outline-0 ${prefix ? "pl-6" : ""
+          } ${suffix ? "pr-6" : ""} ${extra}`}
       />
       {suffix && (
         <span className="absolute right-2.5 top-[11px] font-bold">
