@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Search, Star, Trash } from "lucide-react";
 import moment from "moment";
-import { getAllReviews,deleteReview } from "../api/reviewApi";
+import { getAllReviews, deleteReview } from "../api/reviewApi";
 import { getProductById } from "../api/productApi";
 import { getUserById } from "../api/frontUserApi";
 import { useNavigate } from "react-router-dom";
 
-function ReviewCard({ review,onDelete }) {
+function ReviewCard({ review, onDelete }) {
   const [expanded, setExpanded] = useState(false);
   const navigate = useNavigate();
 
@@ -23,9 +23,9 @@ function ReviewCard({ review,onDelete }) {
     }
   };
   return (
-    <div 
-    onClick={handleCardClick}
-    className="relative p-4 border border-gray-200 rounded-2xl bg-white flex flex-col gap-4 cursor-pointer hover:shadow-md transition">
+    <div
+      onClick={handleCardClick}
+      className="relative p-4 border border-gray-200 rounded-2xl bg-white flex flex-col gap-4 cursor-pointer hover:shadow-md transition">
       {/* Product Info */}
       <div className="flex items-center gap-4 border-b border-gray-200 pb-3">
         <img
@@ -34,40 +34,40 @@ function ReviewCard({ review,onDelete }) {
           className="w-16 h-16 rounded-md object-contain border border-gray-200"
         />
         <div>
-        <h3 className="font-semibold">
-  {review.product.name.length > 10
-    ? review.product.name.slice(0, 10) + "..."
-    : review.product.name}
-</h3>
+          <h3 className="font-semibold">
+            {review.product.name.length > 10
+              ? review.product.name.slice(0, 10) + "..."
+              : review.product.name}
+          </h3>
 
           <p className="text-xs text-gray-500">Product ID: {review.product.id}</p>
         </div>
 
         <Trash
-        size={18}
-        className="absolute top-3 right-3 text-gray-500 cursor-pointer hover:text-red-500"
-        onClick={(e) => {
-          e.stopPropagation();
-          onDelete(review._id);
-        }}
-      />
+          size={18}
+          className="absolute top-3 right-3 text-gray-500 cursor-pointer hover:text-red-500"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(review._id);
+          }}
+        />
       </div>
 
       {/* User Review */}
       <div className="flex flex-col md:flex-row gap-4">
         {/* Avatar */}
-{/* Avatar */}
-<div className="w-12 h-12 flex items-center justify-center rounded-full bg-gray-200 text-gray-700 font-semibold overflow-hidden">
-{review.user?.image ? (
-    <img
-      src={review.user.image}
-      alt={review.user.name}
-      className="w-full h-full object-cover"
-    />
-  ) : (
-    review.user?.name?.[0] || "U"
-  )}
-</div>
+        {/* Avatar */}
+        <div className="w-12 h-12 flex items-center justify-center rounded-full bg-gray-200 text-gray-700 font-semibold overflow-hidden">
+          {review.user?.image ? (
+            <img
+              src={review.user.image}
+              alt={review.user.name}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            review.user?.name?.[0] || "U"
+          )}
+        </div>
 
 
         {/* Review Content */}
@@ -87,11 +87,10 @@ function ReviewCard({ review,onDelete }) {
             {[...Array(5)].map((_, i) => (
               <Star
                 key={i}
-                className={`w-4 h-4 ${
-                  i < review.rating
+                className={`w-4 h-4 ${i < review.rating
                     ? "text-yellow-500 fill-yellow-500"
                     : "text-gray-300"
-                }`}
+                  }`}
               />
             ))}
           </div>
@@ -115,93 +114,99 @@ function ReviewCard({ review,onDelete }) {
 }
 
 function ReviewPage() {
-    const [reviews, setReviews] = useState([]);
-    const [search, setSearch] = useState("");
+  const [reviews, setReviews] = useState([]);
+  const [search, setSearch] = useState("");
 
-    useEffect(() => {
-        const fetchReviews = async () => {
-          try {
-            const { reviews } = await getAllReviews();
-            // 1. Sort reviews (latest first)
-            const sorted = reviews.sort(
-              (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-            );
-      
-            // 2. Deduplicate: keep only the latest review per product
-            const seenProducts = new Set();
-            const latestPerProduct = sorted.filter((rev) => {
-              const productId = rev.product?._id;
-              if (!productId) return false;
-              if (seenProducts.has(productId)) return false;
-              seenProducts.add(productId);
-              return true;
-            });
-      
-            // 3. Fetch product + user info for each review
-            const reviewsWithDetails = await Promise.all(
-              latestPerProduct.map(async (rev) => {
-                let product, user;
-                try {
-                  product = await getProductById(rev.product._id);
-                } catch {
-                  product = {
-                    _id: rev.product?._id || "unknown",
-                    name: rev.product?.name || "Unknown Product",
-                    images: [],
-                  };
-                }
-      
-                try {
-                  user = await getUserById(rev.user._id); // rev.user contains userId
-                } catch {
-                  user = { user: { name: "Anonymous", email: "", profileUrl: "" } };
-                }
-      
-                return {
-                  ...rev,
-                  product: {
-                    id: product._id,
-                    name: product.name,
-                    image:
-                      product.images?.[0] ||
-                      "https://via.placeholder.com/100x100.png?text=No+Image",
-                  },
-                  user: {
-                    name: user.user?.name || "Anonymous",
-                    email: user.user?.email || "No email",
-                    image: user.user?.profileUrl || "",
-                  },
-                };
-              })
-            );
-      
-            setReviews(reviewsWithDetails);
-          } catch (error) {
-            console.error("Failed to fetch reviews:", error);
-          }
-        };
-      
-        fetchReviews();
-      }, []);
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const { reviews } = await getAllReviews();
+        // 1. Sort reviews (latest first)
+        const sorted = reviews.sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
 
-      const handleDelete = async (reviewId) => {
-        try {
-          await deleteReview(reviewId);
-          setReviews((prev) => prev.filter((r) => r._id !== reviewId));
-        } catch (err) {
-          console.error("Failed to delete review:", err.response?.data || err.message);
-        }
-      };
-      
-      
-    
-      // Filter reviews by search
-      const filteredReviews = reviews.filter(
-        (r) =>
-          r.user?.name?.toLowerCase().includes(search.toLowerCase()) ||
-          r.product?.name?.toLowerCase().includes(search.toLowerCase()) ||
-          r.comment?.toLowerCase().includes(search.toLowerCase())
-      );
+        // 2. Deduplicate: keep only the latest review per product
+        const seenProducts = new Set();
+        const latestPerProduct = sorted.filter((rev) => {
+          const productId = rev.product?._id;
+          if (!productId) return false;
+          if (seenProducts.has(productId)) return false;
+          seenProducts.add(productId);
+          return true;
+        });
+
+        // 3. Fetch product + user info for each review
+        const reviewsWithDetails = await Promise.all(
+          latestPerProduct.map(async (rev) => {
+            let product, user;
+            try {
+              product = await getProductById(rev.product._id);
+            } catch {
+              product = {
+                _id: rev.product?._id || "unknown",
+                name: rev.product?.name || "Unknown Product",
+                images: [],
+              };
+            }
+
+            try {
+              user = await getUserById(rev.user._id); // rev.user contains userId
+            } catch {
+              user = { user: { name: "Anonymous", email: "", profileUrl: "" } };
+            }
+
+            return {
+              ...rev,
+              product: {
+                id: product._id,
+                name: product.name,
+                image:
+                  product.images?.[0] ||
+                  "https://via.placeholder.com/100x100.png?text=No+Image",
+              },
+              user: {
+                name: user.user?.name || "Anonymous",
+                email: user.user?.email || "No email",
+                image: user.user?.profileUrl || "",
+              },
+            };
+          })
+        );
+
+        setReviews(reviewsWithDetails);
+      } catch (error) {
+        console.error("Failed to fetch reviews:", error);
+      }
+    };
+
+    fetchReviews();
+  }, []);
+
+const handleDelete = async (reviewId) => {
+  const confirmDelete = window.confirm(
+    "Are you sure you want to delete this review?"
+  );
+
+  if (!confirmDelete) return;
+
+  try {
+    await deleteReview(reviewId);
+    setReviews((prev) => prev.filter((r) => r._id !== reviewId));
+  } catch (err) {
+    console.error("Failed to delete review:", err.response?.data || err.message);
+  }
+};
+
+
+
+  // Filter reviews by search
+  const filteredReviews = reviews.filter(
+    (r) =>
+      r.user?.name?.toLowerCase().includes(search.toLowerCase()) ||
+      r.product?.name?.toLowerCase().includes(search.toLowerCase()) ||
+      r.comment?.toLowerCase().includes(search.toLowerCase())
+  );
 
 
   return (
@@ -224,8 +229,8 @@ function ReviewPage() {
 
       {/* Reviews Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {filteredReviews.map((review) => (
-          <ReviewCard key={review._id} review={review} onDelete={handleDelete}/>
+        {filteredReviews.map((review) => (
+          <ReviewCard key={review._id} review={review} onDelete={handleDelete} />
         ))}
       </div>
     </div>

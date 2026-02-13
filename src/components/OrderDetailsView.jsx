@@ -416,8 +416,8 @@ export default function OrderDetailsView() {
               <div className="relative">
                 <button
                   className={`flex items-center border px-3 py-1.5 rounded-md font-medium shadow-sm transition-colors ${downloaded
-                      ? "bg-black/80 text-white/80"
-                      : "hover:bg-black hover:text-white"
+                    ? "bg-black/80 text-white/80"
+                    : "hover:bg-black hover:text-white"
                     }`}
                   onClick={() => setShowLabelOptions(!showLabelOptions)}
                 >
@@ -710,10 +710,22 @@ export default function OrderDetailsView() {
                 onClick={async () => {
                   try {
                     setUpdatingStatus(true);
-                    await updateOrderByOrderId(order.id, {
+
+                    const response = await updateOrderByOrderId(order.id, {
                       status: selectedStatus,
                     });
-                    setOrder((prev) => ({ ...prev, status: selectedStatus }));
+
+                    const updated = response.order; // 👈 important
+
+                    setOrder((prev) => ({
+                      ...prev,
+                      status: updated.status,
+                      payment: {
+                        ...prev.payment,
+                        Paymentstatus: updated.paymentStatus,
+                      },
+                    }));
+
                     setShowStatusModal(false);
                   } catch (err) {
                     console.error("Failed to update order status", err);
