@@ -8,7 +8,7 @@ export default function AuthPage() {
     <div className="flex h-screen   ">
       <div className="hidden lg:flex w-1/2 relative p-2">
         <img
-          src={image}
+          src="/authImg.jpg"
           alt="auth"
           className="h-full w-full object-cover rounded-[20px]"
         />
