@@ -88,8 +88,8 @@ function ReviewCard({ review, onDelete }) {
               <Star
                 key={i}
                 className={`w-4 h-4 ${i < review.rating
-                    ? "text-yellow-500 fill-yellow-500"
-                    : "text-gray-300"
+                  ? "text-yellow-500 fill-yellow-500"
+                  : "text-gray-300"
                   }`}
               />
             ))}
@@ -107,6 +107,24 @@ function ReviewCard({ review, onDelete }) {
               </button>
             )}
           </p>
+
+          {/* Review Images */}
+          {review.image && review.image.length > 0 && (
+            <div className="flex gap-2 mt-3 flex-wrap">
+              {review.image.map((img, idx) => (
+                <img
+                  key={idx}
+                  src={img}
+                  alt={`Review attachment ${idx}`}
+                  className="w-16 h-16 object-cover rounded-md border border-gray-200 hover:opacity-90 transition cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.open(img, "_blank");
+                  }}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -183,20 +201,20 @@ function ReviewPage() {
     fetchReviews();
   }, []);
 
-const handleDelete = async (reviewId) => {
-  const confirmDelete = window.confirm(
-    "Are you sure you want to delete this review?"
-  );
+  const handleDelete = async (reviewId) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this review?"
+    );
 
-  if (!confirmDelete) return;
+    if (!confirmDelete) return;
 
-  try {
-    await deleteReview(reviewId);
-    setReviews((prev) => prev.filter((r) => r._id !== reviewId));
-  } catch (err) {
-    console.error("Failed to delete review:", err.response?.data || err.message);
-  }
-};
+    try {
+      await deleteReview(reviewId);
+      setReviews((prev) => prev.filter((r) => r._id !== reviewId));
+    } catch (err) {
+      console.error("Failed to delete review:", err.response?.data || err.message);
+    }
+  };
 
 
 

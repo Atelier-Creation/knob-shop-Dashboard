@@ -244,8 +244,8 @@ export default function OrderListDashboard() {
             key={label}
             onClick={() => setActiveTab(label)}
             className={`px-2 py-2 text-sm flex items-center gap-1 cursor-pointer ${activeTab === label
-                ? "border-b-2 border-black text-black font-medium"
-                : "text-gray-500"
+              ? "border-b-2 border-black text-black font-medium"
+              : "text-gray-500"
               }`}
           >
             {Icon && (
@@ -432,8 +432,8 @@ export default function OrderListDashboard() {
                 key={i}
                 onClick={() => setCurrentPage(p)}
                 className={`px-3 py-1 rounded cursor-pointer ${currentPage === p
-                    ? "bg-blue-500 text-white"
-                    : "text-gray-700 hover:bg-gray-200"
+                  ? "bg-blue-500 text-white"
+                  : "text-gray-700 hover:bg-gray-200"
                   }`}
               >
                 {p}
