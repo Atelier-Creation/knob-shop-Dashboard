@@ -179,6 +179,95 @@ const Essentials = () => {
     setToastMessage("");
   };
 
+  const handleSaveAndNavigate = async (index, card) => {
+    // Optional validations
+    if (!mainHeading || !mainDescription) {
+      setToastType("error");
+      setToastMessage("Please fill out the Section Heading and Description first.");
+      return;
+    }
+
+    setLoading(true);
+    setToastMessage("Auto-saving work before navigating...");
+
+    try {
+      const uploadedCards = await Promise.all(
+        cards.map(async (c) => {
+          if (c.imageFile) {
+            const imageUrl = await uploadToSpaces(c.imageFile);
+            return {
+              ...c,
+              bgImage: imageUrl,
+            };
+          }
+          return c;
+        })
+      );
+
+      const payload = {
+        mainHeading,
+        mainDescription,
+        cards: uploadedCards.map(
+          ({
+            number,
+            title,
+            description,
+            categories,
+            products,
+            bgImage,
+            sliders,
+            _id,
+          }) => ({
+            number,
+            title: title?.trim(),
+            description: description?.trim(),
+            categories,
+            products,
+            sliders,
+            bgImage,
+            _id,
+          })
+        ),
+      };
+
+      let response;
+      if (editId) {
+        response = await updateEssentials(editId, payload);
+      } else {
+        response = await createEssentials(payload);
+        setEditId(response.data._id);
+      }
+
+      setToastType("success");
+      setToastMessage("Form saved. Navigating to layout...");
+
+      const selectedCardData = {
+        cardNumber: card.number,
+        cardTitle: card.title,
+        cardDescription: card.description,
+        bgImage: uploadedCards[index].bgImage,
+        mainHeading,
+        mainDescription,
+      };
+
+      localStorage.setItem("selectedCardData", JSON.stringify(selectedCardData));
+
+      navigate("/essential/add-product", {
+        state: {
+          cardIndex: index,
+          cardData: selectedCardData,
+        },
+      });
+
+    } catch (error) {
+      console.error("Error auto-saving form:", error);
+      setToastType("error");
+      setToastMessage("Failed to auto-save before navigating. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -258,9 +347,8 @@ const Essentials = () => {
     <div className="p-0 md:p-6 space-y-6 max-w-6xl mx-auto font-sans">
       {toastMessage && (
         <div
-          className={`fixed bottom-4 right-4 text-white px-4 py-2 rounded-sm shadow-lg ${
-            toastType === "success" ? "bg-green-500" : "bg-red-500"
-          }`}
+          className={`fixed bottom-4 right-4 text-white px-4 py-2 rounded-sm shadow-lg ${toastType === "success" ? "bg-green-500" : "bg-red-500"
+            }`}
         >
           {toastMessage}
         </div>
@@ -447,37 +535,13 @@ const Essentials = () => {
                   <div>
                     <button
                       type="button"
-                      className={`px-4 py-2 text-sm w-full rounded flex items-center justify-center gap-2 ${
-                        cards.length >= 8
+                      className={`px-4 py-2 text-sm w-full rounded flex items-center justify-center gap-2 ${cards.length >= 8
                           ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                           : "bg-[#783904] text-[#FFE3CC]"
-                      }`}
-                      onClick={() => {
-                        const selectedCardData = {
-                          cardNumber: card.number,
-                          cardTitle: card.title,
-                          cardDescription: card.description,
-                          bgImage: card.bgImage,
-                          mainHeading,
-                          mainDescription,
-                        };
-
-                        // 1. Console log
-                        console.log("Selected Card Data:", selectedCardData);
-
-                        // 2. Save to localStorage
-                        localStorage.setItem(
-                          "selectedCardData",
-                          JSON.stringify(selectedCardData)
-                        );
-
-                        // 3. Navigate with state
-                        navigate("/essential/add-product", {
-                          state: {
-                            cardIndex: index,
-                            cardData: selectedCardData,
-                          },
-                        });
+                        }`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleSaveAndNavigate(index, card);
                       }}
                     >
                       <Plus size={18} /> Add Card Details
@@ -492,11 +556,10 @@ const Essentials = () => {
           <button
             type="button"
             onClick={addCard}
-            className={`px-4 py-2 text-sm rounded flex items-center justify-center gap-2 ${
-              cards.length >= 8
+            className={`px-4 py-2 text-sm rounded flex items-center justify-center gap-2 ${cards.length >= 8
                 ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                 : "bg-gray-800 text-gray-200"
-            }`}
+              }`}
           >
             <Plus size={18} /> Add Card
           </button>

@@ -36,6 +36,7 @@ import Essentials from "./pages/Essentials";
 import ShelfManager from "./pages/ShelfManager";
 import EssentialAddProduct from "./components/EssentialAddProduct/EssentialAddProduct";
 import Invoice from "./components/Invoice/Invoice";
+import CategorySelectProducts from "./pages/CategorySelectProducts";
 
 function App() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -52,7 +53,7 @@ function App() {
             path="/"
             element={
               <ProtectedRoute>
-                <Layout searchQuery={searchQuery} setSearchQuery={setSearchQuery}/>
+                <Layout searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
               </ProtectedRoute>
             }
           >
@@ -65,6 +66,10 @@ function App() {
             <Route
               path="categories-products/category/:id"
               element={<AddProduct />}
+            />
+            <Route
+              path="categories-products/category/select-products/:id"
+              element={<CategorySelectProducts />}
             />
             <Route
               path="categories-products/product-list"
@@ -98,15 +103,15 @@ function App() {
             />
             <Route
               path="orders-customers/customer-list"
-              element={<CustomerList/>}
+              element={<CustomerList />}
             />
             <Route
               path="reviews-ratings"
-              element={<ReviewPage/>}
+              element={<ReviewPage />}
             />
             <Route
               path="reviews/:productId"
-              element={<ReviewDetailsPage/>}
+              element={<ReviewDetailsPage />}
             />
             <Route
               path="orders-customers/order-list/:id"
@@ -114,7 +119,7 @@ function App() {
             />
             <Route
               path="/essential/add-product"
-              element={<EssentialAddProduct/>}
+              element={<EssentialAddProduct />}
             />
             <Route path="/invoice" element={<Invoice />} />
             <Route path="policy-edit" element={<PolicyEditorPage />} />

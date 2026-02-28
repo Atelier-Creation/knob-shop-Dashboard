@@ -29,7 +29,7 @@ function EssentialAddProduct() {
   useEffect(() => {
     if (essentials && cardIndex != null) {
       const card = essentials.cards[cardIndex];
-      setSliderData(card.sliders || []);
+      setSliderData(card?.sliders || []);
     }
   }, [essentials, cardIndex]);
 
