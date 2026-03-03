@@ -19,25 +19,19 @@ async function uploadToSpaces(file, setUploading) {
   if (!file) return null;
   setUploading(true);
   const bucketName = "knobsshopcdn";
-  const fileKey = `uploads/${Date.now()}-${file.name}`;
+  const fileKey = `uploads/${Date.now()}-${file.name.replace(/\s+/g, '_')}`;
 
   try {
-    const parallelUploads3 = new Upload({
-      client: s3,
-      params: {
-        Bucket: bucketName,
-        Key: fileKey,
-        Body: file,
-        ACL: "public-read",
-        ContentType: file.type,
-      },
+    const fileBuffer = await file.arrayBuffer();
+    const command = new PutObjectCommand({
+      Bucket: bucketName,
+      Key: fileKey,
+      Body: new Uint8Array(fileBuffer),
+      ACL: "public-read",
+      ContentType: file.type,
     });
 
-    parallelUploads3.on("httpUploadProgress", (progress) => {
-      console.log(progress);
-    });
-
-    await parallelUploads3.done();
+    await s3.send(command);
 
     // Construct the public URL
     const publicUrl = `https://${bucketName}.blr1.cdn.digitaloceanspaces.com/${fileKey}`;
@@ -45,7 +39,7 @@ async function uploadToSpaces(file, setUploading) {
   } catch (err) {
     console.error("Error uploading to Spaces:", err);
     throw err;
-  } finally{
+  } finally {
     setUploading(false)
   }
 }
@@ -55,6 +49,7 @@ function Brochure() {
   const [category, setCategory] = useState("");
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const fileInputRef = useRef(null);
 
@@ -85,6 +80,9 @@ function Brochure() {
       setCategory("");
       setFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
+
+      // Trigger list refresh
+      setRefreshKey((prev) => prev + 1);
     } catch (error) {
       console.error("❌ Error uploading brochure:", error);
       toast.error("❌ Failed to upload brochure to backend.");
@@ -93,64 +91,64 @@ function Brochure() {
 
   return (
     <>
-    <form
-      onSubmit={handleSubmit}
-      className="pe-16 ps-8 py-6 space-y-6 font-inter text-sm text-[#1c1c1c]"
-    >
-      <div className="text-lg font-semibold">
-        Brochure Management / Add Brochure /
-      </div>
-      <hr className="border-t border-dashed border-gray-300" />
+      <form
+        onSubmit={handleSubmit}
+        className="pe-16 ps-8 py-6 space-y-6 font-inter text-sm text-[#1c1c1c]"
+      >
+        <div className="text-lg font-semibold">
+          Brochure Management / Add Brochure /
+        </div>
+        <hr className="border-t border-dashed border-gray-300" />
 
-      {/* Brochure Name */}
-      <div>
-        <label className="block font-medium mb-1">Brochure Name</label>
-        <input
-          type="text"
-          placeholder="Brochure Name*"
-          className="w-full border border-gray-300 rounded-md px-3 py-[10px] focus:ring-1 ring-gray-300 outline-0 bg-white"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-      </div>
+        {/* Brochure Name */}
+        <div>
+          <label className="block font-medium mb-1">Brochure Name</label>
+          <input
+            type="text"
+            placeholder="Brochure Name*"
+            className="w-full border border-gray-300 rounded-md px-3 py-[10px] focus:ring-1 ring-gray-300 outline-0 bg-white"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </div>
 
-      {/* PDF Upload */}
-      <div>
-        <label className="block font-medium mb-1">Upload Brochure (PDF)*</label>
-        <input
-          type="file"
-          accept="application/pdf"
-          ref={fileInputRef}
-          className="block w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
-          onChange={(e) => setFile(e.target.files[0])}
-        />
-      </div>
+        {/* PDF Upload */}
+        <div>
+          <label className="block font-medium mb-1">Upload Brochure (PDF)*</label>
+          <input
+            type="file"
+            accept="application/pdf"
+            ref={fileInputRef}
+            className="block w-full border border-gray-300 rounded-md px-3 py-2 bg-white"
+            onChange={(e) => setFile(e.target.files[0])}
+          />
+        </div>
 
-      {/* Category */}
-      <div>
-        <label className="block font-medium mb-1">Brochure Category Name</label>
-        <input
-          type="text"
-          placeholder="Brochure Category Name*"
-          className="w-full border border-gray-300 rounded-md px-3 py-[10px] focus:ring-1 ring-gray-300 outline-0 bg-white"
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-        />
-      </div>
+        {/* Category */}
+        <div>
+          <label className="block font-medium mb-1">Brochure Category Name</label>
+          <input
+            type="text"
+            placeholder="Brochure Category Name*"
+            className="w-full border border-gray-300 rounded-md px-3 py-[10px] focus:ring-1 ring-gray-300 outline-0 bg-white"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+          />
+        </div>
 
-      {/* Submit */}
-      <div className="flex justify-end gap-4 mt-6">
-        <button
-          type="submit"
-          className="bg-black text-white px-4 py-2 rounded-md font-medium cursor-pointer"
-          disabled={uploading}
-        >
-          {uploading ? "Uploading..." : "Save Brochure"}
-        </button>
-      </div>
-    </form>
+        {/* Submit */}
+        <div className="flex justify-end gap-4 mt-6">
+          <button
+            type="submit"
+            className="bg-black text-white px-4 py-2 rounded-md font-medium cursor-pointer"
+            disabled={uploading}
+          >
+            {uploading ? "Uploading..." : "Save Brochure"}
+          </button>
+        </div>
+      </form>
 
-    <BrochureList/>
+      <BrochureList refreshKey={refreshKey} />
     </>
   );
 }

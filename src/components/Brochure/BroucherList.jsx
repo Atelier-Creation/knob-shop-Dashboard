@@ -6,7 +6,7 @@ import {
 } from "../../api/brochureApi";
 import { Pencil, Trash2, X } from "lucide-react";
 import toast from "react-hot-toast";
-import { S3Client } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import "./Brochure.css";
 
@@ -26,25 +26,19 @@ async function uploadToSpaces(file, setUploading) {
 
   setUploading(true);
   const bucketName = "knobsshopcdn";
-  const fileKey = `uploads/${Date.now()}-${file.name}`;
+  const fileKey = `uploads/${Date.now()}-${file.name.replace(/\s+/g, '_')}`;
 
   try {
-    const parallelUploads3 = new Upload({
-      client: s3,
-      params: {
-        Bucket: bucketName,
-        Key: fileKey,
-        Body: file,
-        ACL: "public-read",
-        ContentType: file.type,
-      },
+    const fileBuffer = await file.arrayBuffer();
+    const command = new PutObjectCommand({
+      Bucket: bucketName,
+      Key: fileKey,
+      Body: new Uint8Array(fileBuffer),
+      ACL: "public-read",
+      ContentType: file.type,
     });
 
-    parallelUploads3.on("httpUploadProgress", (progress) => {
-      console.log(progress);
-    });
-
-    await parallelUploads3.done();
+    await s3.send(command);
 
     // Construct the public URL
     const publicUrl = `https://${bucketName}.blr1.cdn.digitaloceanspaces.com/${fileKey}`;
@@ -59,7 +53,7 @@ async function uploadToSpaces(file, setUploading) {
   }
 }
 
-function BrochureList() {
+function BrochureList({ refreshKey }) {
   const [brochures, setBrochures] = useState([]);
   const [filteredBrochures, setFilteredBrochures] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -90,7 +84,7 @@ function BrochureList() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [refreshKey]);
 
   useEffect(() => {
     let temp = [...brochures];
@@ -205,9 +199,8 @@ function BrochureList() {
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className={`lucide lucide-chevron-down ml-2 transition-transform ${
-                sortVisible ? "rotate-180" : ""
-              }`}
+              className={`lucide lucide-chevron-down ml-2 transition-transform ${sortVisible ? "rotate-180" : ""
+                }`}
             >
               <path d="m6 9 6 6 6-6" />
             </svg>

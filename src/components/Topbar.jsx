@@ -119,7 +119,7 @@ const Topbar = ({ toggleSidebar, onSearch }) => {
       const { data } = await axios.get(
         `${import.meta.env.VITE_API_BASE_URI}/products/search/${value}`
       );
-      setResults(data.results || []);
+      setResults(data.data || []);
     } catch (error) {
       console.error("Search error:", error);
       setResults([]);
