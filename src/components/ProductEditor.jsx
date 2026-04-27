@@ -64,8 +64,8 @@ export default function ProductEditor({ product, onUpdate, onClose }) {
           ? product.variant.map((v) => ({
               hex: v.value,
               name: v.title || getSuggestedName(v.value), // fallback name
-              images: Array.isArray(v.images) ? v.images : [],
-              sizes: Array.isArray(v.sizes) ? v.sizes : [],
+              images: Array.isArray(v.images) ? [...v.images] : [],
+              sizes: Array.isArray(v.sizes) ? v.sizes.map(s => ({ ...s })) : [],
             }))
           : [],
       });
@@ -80,7 +80,7 @@ export default function ProductEditor({ product, onUpdate, onClose }) {
     if (!product) return;
 
     const changedPayload = {};
-    const updatedColors = [];
+    let anyColorChanged = false;
 
     // ───────── Compare general fields ─────────
     if (form.name !== product.name) changedPayload.name = form.name;
@@ -92,55 +92,56 @@ export default function ProductEditor({ product, onUpdate, onClose }) {
     if (form.hsncode !== product.hsncode) changedPayload.hsncode = form.hsncode;
 
     // ───────── Handle variants ─────────
-    form.colors.forEach((color, cIndex) => {
-      const originalColor = product.variant?.[cIndex];
+    const allUpdatedVariants = form.colors.map((color, cIndex) => {
+      const originalColor = product.variant?.[cIndex] || {};
       const updatedColor = {
-        ...originalColor,
-        title: color.name, // or color.title
-        value: color.hex, // match your schema
+        title: color.name,
+        value: color.hex,
         images: color.images,
-        sizes: [],
+        sizes: color.sizes.map((size, sIndex) => {
+          const originalSize = originalColor?.sizes?.[sIndex] || {};
+          const updatedSize = {
+            ...originalSize,
+            label: size.label,
+            mrp: Number(size.mrp),
+            discountPercentage: Number(size.discountPercentage),
+            taxPercentage: Number(size.taxPercentage),
+          };
+
+          // recal selling price
+          const discounted =
+            updatedSize.mrp -
+            (updatedSize.mrp * updatedSize.discountPercentage) / 100;
+          updatedSize.sellingPrice = Math.round(
+            discounted + (discounted * updatedSize.taxPercentage) / 100
+          );
+
+          // Track if this size changed
+          if (
+            updatedSize.mrp !== originalSize.mrp ||
+            updatedSize.discountPercentage !== originalSize.discountPercentage ||
+            updatedSize.taxPercentage !== originalSize.taxPercentage
+          ) {
+            anyColorChanged = true;
+          }
+
+          return updatedSize;
+        }),
       };
-
-      let colorChanged = false;
-
-      color.sizes.forEach((size, sIndex) => {
-        const originalSize = originalColor?.sizes?.[sIndex] || {};
-        const updatedSize = {
-          ...originalSize,
-          label: size.label,
-          mrp: Number(size.mrp),
-          discountPercentage: Number(size.discountPercentage),
-          taxPercentage: Number(size.taxPercentage),
-        };
-
-        // recalc selling price
-        const discounted =
-          updatedSize.mrp -
-          (updatedSize.mrp * updatedSize.discountPercentage) / 100;
-        updatedSize.sellingPrice = Math.round(
-          discounted + (discounted * updatedSize.taxPercentage) / 100
-        );
-
-        updatedColor.sizes.push(updatedSize);
-
-        // mark as changed if not same as original
-        if (
-          updatedSize.mrp !== originalSize.mrp ||
-          updatedSize.discountPercentage !== originalSize.discountPercentage ||
-          updatedSize.taxPercentage !== originalSize.taxPercentage
-        ) {
-          colorChanged = true;
-        }
-      });
-
-      if (colorChanged) {
-        updatedColors.push(updatedColor);
+      
+      // Also check if color metadata changed
+      if (
+        updatedColor.title !== originalColor.title ||
+        updatedColor.value !== originalColor.value
+      ) {
+        anyColorChanged = true;
       }
+
+      return updatedColor;
     });
 
-    if (updatedColors.length > 0) {
-      changedPayload.variant = updatedColors;
+    if (anyColorChanged) {
+      changedPayload.variant = allUpdatedVariants;
     }
 
     if (Object.keys(changedPayload).length === 0) {
@@ -207,7 +208,7 @@ export default function ProductEditor({ product, onUpdate, onClose }) {
           <img
             src={form.image}
             alt={form.name || "Product Image"}
-            className="h-full w-full object-cover  rounded-xl"
+            className="h-full w-full object-contain  rounded-xl"
           />
         ) : (
           <span className="text-gray-400 text-sm">No Image</span>
@@ -338,11 +339,20 @@ export default function ProductEditor({ product, onUpdate, onClose }) {
                       .mrp || 0
                   }
                   onChange={(e) => {
-                    const updatedColors = [...form.colors];
-                    updatedColors[selectedColorIndex].sizes[
-                      selectedSizeIndex
-                    ].mrp = Number(e.target.value);
-                    setForm((prev) => ({ ...prev, colors: updatedColors }));
+                    const newValue = Number(e.target.value);
+                    setForm((prev) => ({
+                      ...prev,
+                      colors: prev.colors.map((color, cIdx) => {
+                        if (cIdx !== selectedColorIndex) return color;
+                        return {
+                          ...color,
+                          sizes: color.sizes.map((size, sIdx) => {
+                            if (sIdx !== selectedSizeIndex) return size;
+                            return { ...size, mrp: newValue };
+                          })
+                        };
+                      })
+                    }));
                   }}
                 />
               </div>
@@ -359,11 +369,20 @@ export default function ProductEditor({ product, onUpdate, onClose }) {
                       .discountPercentage || 0
                   }
                   onChange={(e) => {
-                    const updatedColors = [...form.colors];
-                    updatedColors[selectedColorIndex].sizes[
-                      selectedSizeIndex
-                    ].discountPercentage = Number(e.target.value);
-                    setForm((prev) => ({ ...prev, colors: updatedColors }));
+                    const newValue = Number(e.target.value);
+                    setForm((prev) => ({
+                      ...prev,
+                      colors: prev.colors.map((color, cIdx) => {
+                        if (cIdx !== selectedColorIndex) return color;
+                        return {
+                          ...color,
+                          sizes: color.sizes.map((size, sIdx) => {
+                            if (sIdx !== selectedSizeIndex) return size;
+                            return { ...size, discountPercentage: newValue };
+                          })
+                        };
+                      })
+                    }));
                   }}
                 />
               </div>
@@ -380,11 +399,20 @@ export default function ProductEditor({ product, onUpdate, onClose }) {
                       .taxPercentage || 0
                   }
                   onChange={(e) => {
-                    const updatedColors = [...form.colors];
-                    updatedColors[selectedColorIndex].sizes[
-                      selectedSizeIndex
-                    ].taxPercentage = Number(e.target.value);
-                    setForm((prev) => ({ ...prev, colors: updatedColors }));
+                    const newValue = Number(e.target.value);
+                    setForm((prev) => ({
+                      ...prev,
+                      colors: prev.colors.map((color, cIdx) => {
+                        if (cIdx !== selectedColorIndex) return color;
+                        return {
+                          ...color,
+                          sizes: color.sizes.map((size, sIdx) => {
+                            if (sIdx !== selectedSizeIndex) return size;
+                            return { ...size, taxPercentage: newValue };
+                          })
+                        };
+                      })
+                    }));
                   }}
                 />
               </div>

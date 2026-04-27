@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { createProduct } from "../api/productApi";
+import { fetchCategories, getCategoryById } from "../api/categoryAPI";
 import {
   Plus,
   ImagePlus,
@@ -22,6 +23,17 @@ import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import TiptapEditor from "./TiptapEditor";
 import imageCompression from "browser-image-compression";
+import { useParams } from "react-router-dom";
+
+// Configure DigitalOcean Spaces outside the component to avoid resource leaks across renders
+const s3 = new S3Client({
+  endpoint: "https://blr1.digitaloceanspaces.com",
+  region: "us-east-1", // Required by AWS SDK, though DO uses endpoint
+  credentials: {
+    accessKeyId: import.meta.env.VITE_DO_SPACES_KEY,
+    secretAccessKey: import.meta.env.VITE_DO_SPACES_SECRET,
+  },
+});
 
 export default function AddProduct({
   mode = "create",
@@ -29,10 +41,35 @@ export default function AddProduct({
   onSave,
   onCancel,
 }) {
+  const { id: urlCategoryId } = useParams();
   console.log("initial data", initialData);
   const brochureInputRef = React.useRef(null);
 
   useEffect(() => {
+    const fetchCategoryDetails = async () => {
+      // If we have a category ID in the URL and we are in create mode, ensure it's in localStorage
+      if (mode === "create" && urlCategoryId) {
+        localStorage.setItem("selectedCategoryId", urlCategoryId);
+
+        // Fetch details if name is missing from localStorage
+        if (!localStorage.getItem("selectedCategoryName")) {
+          try {
+            const { data } = await getCategoryById(urlCategoryId);
+            if (data?.category_name) {
+              localStorage.setItem("selectedCategoryName", data.category_name);
+              localStorage.setItem("selectedDescriptionName", data.description || "");
+              // Trigger a state update or re-render to show the name
+              setProductData(prev => ({ ...prev }));
+            }
+          } catch (err) {
+            console.error("Failed to fetch category details:", err);
+          }
+        }
+      }
+    };
+
+    fetchCategoryDetails();
+
     if (initialData) {
       if (initialData.category) {
         localStorage.setItem("selectedCategoryId", initialData.category);
@@ -150,6 +187,7 @@ export default function AddProduct({
       images: [],
       video: "",
       brochure: "",
+      stock: 0,
       productFeatures: [{ heading: "", description: "", image: "" }],
       techSpecs: [{ title: "", value: "" }],
       variant: [],
@@ -162,6 +200,13 @@ export default function AddProduct({
       installation: {
         videoUrl: "",
         content: "",
+      },
+      discount: {
+        type: "percentage",
+        value: 0,
+        startDate: new Date().toISOString(),
+        endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        isActive: false,
       },
     });
 
@@ -197,15 +242,10 @@ export default function AddProduct({
     return name === "Grey" ? "Custom Color" : name;
   }
 
-  // Configure DigitalOcean Spaces
-  const s3 = new S3Client({
-    endpoint: "https://blr1.digitaloceanspaces.com",
-    region: "us-east-1", // This value doesn't matter for DO, but is required
-    credentials: {
-      accessKeyId: import.meta.env.VITE_DO_SPACES_KEY,
-      secretAccessKey: import.meta.env.VITE_DO_SPACES_SECRET,
-    },
-  });
+  // Utility to get the current category ID from URL or localStorage
+  const getActiveCategoryId = () => {
+    return urlCategoryId || localStorage.getItem("selectedCategoryId");
+  };
 
 
 
@@ -402,7 +442,7 @@ export default function AddProduct({
         category:
           mode === "edit"
             ? productData.category || initialData?.category
-            : localStorage.getItem("selectedCategoryId"),
+            : getActiveCategoryId(),
 
         status: productData.status,
         images: allVariantImages,
@@ -569,7 +609,7 @@ export default function AddProduct({
           </div>
         ) : (
           <div className="text-lg font-semibold">
-            Categories & Products / Add Category / Add Product
+            Categories & Products / {localStorage.getItem("selectedCategoryName") || "Add Category"} / Add Product
           </div>
         )}
 
@@ -935,8 +975,8 @@ export default function AddProduct({
               <>
                 <button
                   className={`px-4 py-2 rounded-md text-white ${isSaving
-                      ? "bg-gray-500 cursor-not-allowed"
-                      : "bg-black cursor-pointer"
+                    ? "bg-gray-500 cursor-not-allowed"
+                    : "bg-black cursor-pointer"
                     }`}
                   onClick={handleSaveProduct}
                   disabled={isSaving}

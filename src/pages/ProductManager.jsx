@@ -107,7 +107,7 @@ export default function ProductManager() {
 
   // ✅ Infinite scroll for “All Products”
   useEffect(() => {
-    if (selectedCategory !== "all" || !hasMore) return;
+    if (!hasMore) return;
     let timer;
     const observer = new IntersectionObserver(
       (entries) => {
@@ -138,7 +138,7 @@ export default function ProductManager() {
 
   // ✅ Load more when page increments
   useEffect(() => {
-    if (page > 1 && selectedCategory === "all") {
+    if (page > 1) {
       fetchProducts();
     }
   }, [page]);
@@ -214,7 +214,7 @@ export default function ProductManager() {
             />
 
             {/* Infinite scroll trigger */}
-            {selectedCategory === "all" && hasMore && (
+            {hasMore && (
               <div ref={observerRef} className="h-10 mt-6 flex justify-center">
                 {loadingMore ? (
                   <p className="text-gray-500 text-sm">Loading more...</p>

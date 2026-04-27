@@ -122,7 +122,7 @@ export function ProductCard({ product, onClick }) {
         <img
           src={product?.variant?.[0].images?.[0]?.url || "/no-image.png"}
           alt={product.name}
-          className="h-[160px] w-full object-cover rounded-lg"
+          className="h-[160px] w-full object-contain rounded-lg"
         />
       </div>
 

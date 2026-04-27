@@ -282,7 +282,7 @@ const ColorVariants = ({ colors = [], setColors }) => {
       <div className="space-y-6">
         {colors.map((c, colorIndex) => (
           <div
-           key={`${c.hex}-${colorIndex}`}
+            key={colorIndex}
             className="p-4 border border-gray-300 bg-white rounded-md shadow-sm relative max-w-[950px]"
           >
             <button
@@ -304,16 +304,24 @@ const ColorVariants = ({ colors = [], setColors }) => {
                   className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
                   ref={(el) => (inlineColorInputRefs.current[c.hex] = el)}
                 />
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-14 h-8 border-2 border-gray-300 rounded-full cursor-pointer"
-                    style={{ backgroundColor: c.hex }}
-                    onClick={() => {
-                      inlineColorInputRefs.current[c.hex]?.click();
-                    }}
-                  ></div>
-                  <span className="text-xs text-gray-400">{c.hex}</span>
-                </div>
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-14 h-8 border-2 border-gray-300 rounded-full cursor-pointer"
+                      style={{ backgroundColor: c.hex }}
+                      onClick={() => {
+                        inlineColorInputRefs.current[c.hex]?.click();
+                      }}
+                    ></div>
+                    <input
+                      type="text"
+                      maxLength={7}
+                      value={c.hex}
+                      onChange={(e) =>
+                        handleInlineColorChange(c.hex, e.target.value)
+                      }
+                      className="text-xs text-gray-800 border border-gray-200 rounded px-2 py-1 w-20 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
               </div>
             </div>
             <input
