@@ -11,6 +11,21 @@
   background-size: contain;
   background-position: top center;
   background-color: white;
+  font-size: 10px !important;
+  color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+  box-sizing: border-box;
+}
+
+#invoice-to-download * {
+    font-size: 10px !important;
+    line-height: 1.2 !important;
+}
+
+/* Allow some very small details to be even smaller if they have text-xs */
+#invoice-to-download .text-xs, 
+#invoice-to-download small {
+    font-size: 9.5px !important;
 }
 
 /* Custom Semantic Colors */
@@ -40,25 +55,25 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 20px; /* Space between images */
+    /* gap: 20px; */
     width: auto; 
     height: auto;
-    margin-top: 10px;
+    margin:10px 0 ;
 }
 
 .sign-image-invoice {
-    height: 60px;
+   height: 80px;
     width: auto;
-    position: static; /* Remove absolute positioning */
-    transform: none;  /* Remove centering transform */
+    transform: rotate(-10deg) !important;
+    position: absolute;
     z-index: 10;
 }
 
 .seal-image-invoice {
-    height: 80px; /* Adjusted height for balance */
+    height: 85px; /* Adjusted height for balance */
     width: auto;
     object-fit: contain;
-    opacity: 0.8; /* Increased opacity as per likely preference for side-by-side */
+    opacity: 0.9; /* Increased opacity as per likely preference for side-by-side */
     display: block;
     margin: 0;
 }
@@ -76,17 +91,18 @@
 }
 
 /* PDF/Print Settings */
-/* PDF/Print Settings */
 #invoice-to-download {
-    overflow: hidden;
-    background-color: white;
+    overflow: visible;
 }
 
-#invoice-to-download * {
-    page-break-inside: avoid !important;
+.invoice-print-page {
+    flex: 0 0 auto;
 }
 
-/* Force A4 Page Size */
+.invoice-continued-note {
+    font-size: 9.5px !important;
+}
+
 /* Force A4 Page Size */
 @page {
     size: A4 portrait;
@@ -97,10 +113,14 @@
     /* Reset basic page styles */
     html, body {
         width: 210mm;
-        height: 297mm;
+        min-height: 297mm;
+        height: auto;
         margin: 0 !important;
         padding: 0 !important;
         background-color: white !important;
+        overflow: visible !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
     }
 
     /* Hide the entire body content visibility-wise */
@@ -108,23 +128,87 @@
         visibility: hidden;
     }
 
+    #root,
+    #root .h-screen,
+    #root .h-full,
+    #root .overflow-hidden,
+    #root .overflow-y-auto,
+    #root main {
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
     /* Make the specific invoice container visible */
     #invoice-to-download {
-        visibility: visible;
+        visibility: visible !important;
         position: absolute;
         left: 0;
         top: 0;
         width: 210mm !important;
-        min-height: 297mm !important; 
+        min-height: auto !important;
+        height: auto !important;
         margin: 0 !important;
         padding: 0 !important;
+        overflow: visible !important;
         z-index: 9999;
-        background-color: white;
+        background: transparent !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .invoice-print-page {
+        width: 210mm !important;
+        min-height: 297mm !important;
+        height: 297mm !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+        page-break-after: always;
+        break-after: page;
+        background-size: 210mm 297mm;
+    }
+
+    .invoice-print-page:last-child {
+        page-break-after: auto;
+        break-after: auto;
+    }
+
+    .invoice-page-content {
+        height: 297mm !important;
+        min-height: 297mm !important;
+        display: flex !important;
+        flex-direction: column !important;
     }
 
     /* Ensure all children of the invoice are visible */
     #invoice-to-download * {
         visibility: visible;
+        break-inside: auto !important;
+        page-break-inside: auto !important;
+    }
+
+    #invoice-to-download table {
+        page-break-inside: auto !important;
+        break-inside: auto !important;
+    }
+
+    #invoice-to-download thead {
+        display: table-header-group;
+    }
+
+    #invoice-to-download tfoot {
+        display: table-footer-group;
+    }
+
+    #invoice-to-download tr,
+    #invoice-to-download .bg-invoice-gray,
+    #invoice-to-download .sign-contain-invoice {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+
+    #invoice-to-download .mt-auto {
+        margin-top: auto !important;
     }
 
     /* Controls hidden */

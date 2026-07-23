@@ -24,7 +24,6 @@ import ProtectedRoute from "./components/Auth/ProtectedRoute";
 import AuthPage from "./pages/AuthPage";
 import Brochuer from "./components/Brochure/Brochure";
 import BroucherList from "./components/Brochure/BroucherList";
-import "bootstrap-icons/font/bootstrap-icons.css";
 import ViewEditProduct from "./pages/ViewEditProduct";
 import LockScreen from "./pages/LockScreen";
 import CustomerList from "./pages/CustomerList";
@@ -37,6 +36,7 @@ import ShelfManager from "./pages/ShelfManager";
 import EssentialAddProduct from "./components/EssentialAddProduct/EssentialAddProduct";
 import Invoice from "./components/Invoice/Invoice";
 import CategorySelectProducts from "./pages/CategorySelectProducts";
+import ProfessionalInvoicePreview from "./components/ProfessionalInvoice/ProfessionalInvoicePreview";
 
 function App() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -122,6 +122,7 @@ function App() {
               element={<EssentialAddProduct />}
             />
             <Route path="/invoice" element={<Invoice />} />
+            <Route path="/professional-invoice/:orderId" element={<ProfessionalInvoicePreview />} />
             <Route path="policy-edit" element={<PolicyEditorPage />} />
             <Route path="*" element={<DevelopmentOnProcess />} />
           </Route>

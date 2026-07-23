@@ -190,7 +190,7 @@ export default function OrderDetailsView() {
     };
 
     localStorage.setItem("latestInvoiceData", JSON.stringify(payload));
-    navigate("/invoice");
+    navigate(`/professional-invoice/${order.orderId}`);
   };
 
   const handleDownloadLabel = async (labelCode) => {
